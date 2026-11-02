@@ -1,0 +1,27 @@
+{
+  "schema_version": "1",
+  "generator_version": "1",
+  "seed": 20261103,
+  "synthetic": true,
+  "dataset_version": "a52c8961a7c1da92ab4d7d8cc8af9e9a636fe3e788cbf5bcd24c8eb16607cabc",
+  "term": "2026-T1",
+  "counts": {
+    "classes": 40,
+    "students": 1382,
+    "courses": 96,
+    "enrollments": 15194,
+    "grade_records": 15194
+  },
+  "grade_status_counts": {
+    "graded": 14729,
+    "missing": 311,
+    "exempt": 154
+  },
+  "file_sha256": {
+    "classes.csv": "591ef6ba08ab26b06b62a811a6bdfddf71995fa7c38aa3583c4a05631dc44526",
+    "students.csv": "5d9918dd09a1dabc5f397a84dabceae9f690a701aaffb6efdf9b308988cae1a7",
+    "courses.csv": "eeb41eac3261196c2c6f6aecce14208d0c8ec5ab73026e79398553a1b17b692d",
+    "enrollments.csv": "77597db3aef92cd969c177f452289b3451ce565e78a8dd55ab406a7988d3c451",
+    "grade_records.csv": "48b54aab15b51ea0f6f8a4591d8246ebe3dad13d6a1e1e36eab9e39d57f6a3aa"
+  }
+}

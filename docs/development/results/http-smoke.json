@@ -1,0 +1,48 @@
+{
+  "transport": "real TCP HTTP to local Uvicorn; no mocked analytics",
+  "checks": [
+    {
+      "check": "real_http_health",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "check": "generated_dataset_matches_export_manifest",
+      "counts": {
+        "classes": 40,
+        "students": 1382,
+        "courses": 96,
+        "enrollments": 15194,
+        "grade_records": 15194
+      },
+      "passed": true
+    },
+    {
+      "check": "filtered_statistics_over_http",
+      "average_score": "69.73",
+      "pass_rate_percent": "67.80",
+      "graded_count": 469,
+      "passed": true
+    },
+    {
+      "check": "class_comparison_over_http",
+      "passed": true
+    },
+    {
+      "check": "full_demo_csv_upload_over_http",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "check": "statistics_unchanged_after_roundtrip",
+      "passed": true
+    },
+    {
+      "check": "invalid_upload_rejected_without_data_loss",
+      "status": 415,
+      "passed": true
+    }
+  ],
+  "server_stopped": true,
+  "dataset_version": "a52c8961a7c1da92ab4d7d8cc8af9e9a636fe3e788cbf5bcd24c8eb16607cabc"
+}

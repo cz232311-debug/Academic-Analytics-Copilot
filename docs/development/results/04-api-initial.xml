@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="3" skipped="0" tests="14" time="2.479" timestamp="2026-11-03T07:15:02.123394+08:00" hostname="HUAWEIMateBookD14"><testcase classname="tests.test_api" name="test_health_openapi_dataset_and_catalog" time="0.073" /><testcase classname="tests.test_api" name="test_filtered_statistics_and_decimal_wire_format" time="0.037" /><testcase classname="tests.test_api" name="test_invalid_queries_are_rejected_and_not_echoed[params0]" time="0.048" /><testcase classname="tests.test_api" name="test_invalid_queries_are_rejected_and_not_echoed[params1]" time="0.031" /><testcase classname="tests.test_api" name="test_invalid_queries_are_rejected_and_not_echoed[params2]" time="0.031" /><testcase classname="tests.test_api" name="test_invalid_queries_are_rejected_and_not_echoed[params3]" time="0.033" /><testcase classname="tests.test_api" name="test_unknown_and_empty_scope" time="0.039" /><testcase classname="tests.test_api" name="test_class_comparison_and_bad_class_lists" time="0.040" /><testcase classname="tests.test_api" name="test_five_csv_uploads_activate_atomically" time="0.027"><failure message="AttributeError: 'bytes' object has no attribute 'encode'. Did you mean: 'decode'?">client = &lt;starlette.testclient.TestClient object at 0x00000133CF8DC490&gt;
+tiny_dataset = Dataset(classes=(ClassRecord(class_id='C001', grade_level=1, class_label='Synthetic Class 1'), ClassRecord(class_id='C...ed', score_cents=0), GradeRecord(grade_record_id='R00006', enrollment_id='E00006', status='exempt', score_cents=None)))
+
+    def test_five_csv_uploads_activate_atomically(client, tiny_dataset):
+&gt;       response = client.post("/api/datasets/import", files=csv_files(tiny_dataset))
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_api.py:68: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+.venv\Lib\site-packages\httpx\_client.py:1144: in post
+    return self.request(
+.venv\Lib\site-packages\starlette\testclient.py:518: in request
+    return super().request(
+.venv\Lib\site-packages\httpx\_client.py:812: in request
+    request = self.build_request(
+.venv\Lib\site-packages\httpx\_client.py:378: in build_request
+    return Request(
+.venv\Lib\site-packages\httpx\_models.py:408: in __init__
+    headers, stream = encode_request(
+.venv\Lib\site-packages\httpx\_content.py:212: in encode_request
+    return encode_multipart_data(data or {}, files, boundary)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\httpx\_content.py:156: in encode_multipart_data
+    headers = multipart.get_headers()
+              ^^^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\httpx\_multipart.py:288: in get_headers
+    content_length = self.get_content_length()
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\httpx\_multipart.py:274: in get_content_length
+    field_length = field.get_length()
+                   ^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\httpx\_multipart.py:172: in get_length
+    headers = self.render_headers()
+              ^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = &lt;httpx._multipart.FileField object at 0x00000133CF7B67B0&gt;
+
+    def render_headers(self) -&gt; bytes:
+        if not hasattr(self, "_headers"):
+            parts = [
+                b"Content-Disposition: form-data; ",
+                _format_form_param("name", self.name),
+            ]
+            if self.filename:
+                filename = _format_form_param("filename", self.filename)
+                parts.extend([b"; ", filename])
+            for header_name, header_value in self.headers.items():
+&gt;               key, val = f"\r\n{header_name}: ".encode(), header_value.encode()
+                                                            ^^^^^^^^^^^^^^^^^^^
+E               AttributeError: 'bytes' object has no attribute 'encode'. Did you mean: 'decode'?
+
+.venv\Lib\site-packages\httpx\_multipart.py:196: AttributeError</failure></testcase><testcase classname="tests.test_api" name="test_excel_upload_is_followed_by_actual_query" time="0.051" /><testcase classname="tests.test_api" name="test_invalid_upload_preserves_previous_data_and_sanitizes_error" time="0.031"><failure message="AttributeError: 'bytes' object has no attribute 'encode'. Did you mean: 'decode'?">client = &lt;starlette.testclient.TestClient object at 0x00000133CF8DE470&gt;
+tiny_dataset = Dataset(classes=(ClassRecord(class_id='C001', grade_level=1, class_label='Synthetic Class 1'), ClassRecord(class_id='C...ed', score_cents=0), GradeRecord(grade_record_id='R00006', enrollment_id='E00006', status='exempt', score_cents=None)))
+
+    def test_invalid_upload_preserves_previous_data_and_sanitizes_error(client, tiny_dataset):
+        before = client.get("/api/dataset").json()
+        files = csv_files(tiny_dataset)
+        name, mime, content = files["students"]
+        files["students"] = (name, mime, content.replace(b"Synthetic Student 0001", b"PRIVATE-NAME"))
+&gt;       response = client.post("/api/datasets/import", files=files)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_api.py:87: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+.venv\Lib\site-packages\httpx\_client.py:1144: in post
+    return self.request(
+.venv\Lib\site-packages\starlette\testclient.py:518: in request
+    return super().request(
+.venv\Lib\site-packages\httpx\_client.py:812: in request
+    request = self.build_request(
+.venv\Lib\site-packages\httpx\_client.py:378: in build_request
+    return Request(
+.venv\Lib\site-packages\httpx\_models.py:408: in __init__
+    headers, stream = encode_request(
+.venv\Lib\site-packages\httpx\_content.py:212: in encode_request
+    return encode_multipart_data(data or {}, files, boundary)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\httpx\_content.py:156: in encode_multipart_data
+    headers = multipart.get_headers()
+              ^^^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\httpx\_multipart.py:288: in get_headers
+    content_length = self.get_content_length()
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\httpx\_multipart.py:274: in get_content_length
+    field_length = field.get_length()
+                   ^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\httpx\_multipart.py:172: in get_length
+    headers = self.render_headers()
+              ^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = &lt;httpx._multipart.FileField object at 0x00000133CF86EAD0&gt;
+
+    def render_headers(self) -&gt; bytes:
+        if not hasattr(self, "_headers"):
+            parts = [
+                b"Content-Disposition: form-data; ",
+                _format_form_param("name", self.name),
+            ]
+            if self.filename:
+                filename = _format_form_param("filename", self.filename)
+                parts.extend([b"; ", filename])
+            for header_name, header_value in self.headers.items():
+&gt;               key, val = f"\r\n{header_name}: ".encode(), header_value.encode()
+                                                            ^^^^^^^^^^^^^^^^^^^
+E               AttributeError: 'bytes' object has no attribute 'encode'. Did you mean: 'decode'?
+
+.venv\Lib\site-packages\httpx\_multipart.py:196: AttributeError</failure></testcase><testcase classname="tests.test_api" name="test_wrong_media_size_and_incomplete_uploads" time="0.030"><failure message="AttributeError: 'bytes' object has no attribute 'encode'. Did you mean: 'decode'?">client = &lt;starlette.testclient.TestClient object at 0x00000133CF8DF790&gt;
+tiny_dataset = Dataset(classes=(ClassRecord(class_id='C001', grade_level=1, class_label='Synthetic Class 1'), ClassRecord(class_id='C...ed', score_cents=0), GradeRecord(grade_record_id='R00006', enrollment_id='E00006', status='exempt', score_cents=None)))
+
+    def test_wrong_media_size_and_incomplete_uploads(client, tiny_dataset):
+        assert client.post("/api/datasets/import").status_code == 422
+        files = csv_files(tiny_dataset)
+        files["students"] = ("students.pkl", b"untrusted", "application/octet-stream")
+&gt;       assert client.post("/api/datasets/import", files=files).status_code == 415
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_api.py:97: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+.venv\Lib\site-packages\httpx\_client.py:1144: in post
+    return self.request(
+.venv\Lib\site-packages\starlette\testclient.py:518: in request
+    return super().request(
+.venv\Lib\site-packages\httpx\_client.py:812: in request
+    request = self.build_request(
+.venv\Lib\site-packages\httpx\_client.py:378: in build_request
+    return Request(
+.venv\Lib\site-packages\httpx\_models.py:408: in __init__
+    headers, stream = encode_request(
+.venv\Lib\site-packages\httpx\_content.py:212: in encode_request
+    return encode_multipart_data(data or {}, files, boundary)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\httpx\_content.py:156: in encode_multipart_data
+    headers = multipart.get_headers()
+              ^^^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\httpx\_multipart.py:288: in get_headers
+    content_length = self.get_content_length()
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\httpx\_multipart.py:274: in get_content_length
+    field_length = field.get_length()
+                   ^^^^^^^^^^^^^^^^^^
+.venv\Lib\site-packages\httpx\_multipart.py:172: in get_length
+    headers = self.render_headers()
+              ^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = &lt;httpx._multipart.FileField object at 0x00000133CF8B3F20&gt;
+
+    def render_headers(self) -&gt; bytes:
+        if not hasattr(self, "_headers"):
+            parts = [
+                b"Content-Disposition: form-data; ",
+                _format_form_param("name", self.name),
+            ]
+            if self.filename:
+                filename = _format_form_param("filename", self.filename)
+                parts.extend([b"; ", filename])
+            for header_name, header_value in self.headers.items():
+&gt;               key, val = f"\r\n{header_name}: ".encode(), header_value.encode()
+                                                            ^^^^^^^^^^^^^^^^^^^
+E               AttributeError: 'bytes' object has no attribute 'encode'. Did you mean: 'decode'?
+
+.venv\Lib\site-packages\httpx\_multipart.py:196: AttributeError</failure></testcase><testcase classname="tests.test_api" name="test_request_byte_limit_checks_actual_bytes_without_trusting_length" time="0.032" /><testcase classname="tests.test_api" name="test_empty_database_and_default_bootstrap_are_real" time="0.538" /></testsuite></testsuites>

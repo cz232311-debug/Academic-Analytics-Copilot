@@ -1,3 +1,4 @@
 * text=auto
 docs/audit/evidence/** -text
+docs/development/results/** -text
 third_party/** -text

@@ -1,6 +1,8 @@
 # Academic Analytics Copilot — implementation proposal
 
-Status: **proposed; product code has not been implemented or verified**.
+Status: **independent-build approach accepted; first core/API increment implemented and tested**.
+Actual progress: [development/01-core-api.md](development/01-core-api.md). Remaining agent/UI/delivery sections below describe the target design, not completed features.
+The current user requirements supersede the original CSV-only/UI choices: support CSV and XLSX import, and use a Streamlit client connected to FastAPI. The first increment implements the importer and backend; the Streamlit client remains next.
 Prepared for an SAP STAR Application Engineer (2028 Graduates) portfolio.
 The upstream audit is the decision gate. Review `audit/UPSTREAM_REVIEW.md` before accepting this plan.
 
@@ -50,7 +52,7 @@ Treat model text, tool arguments, questions, filenames and cell values as untrus
 | I. Structured logging | `observability/logging.py` | JSON request/tool/validation events; tests prove no secrets or student rows in logs |
 | J. Docker/documentation | `Dockerfile`, `.dockerignore`, `compose.yaml`, `docs/` | Non-root image, healthcheck, build/run records, setup/demo/debug/interview guides |
 
-All paths above are planned files. They do not currently exist.
+This is the target module map. Implemented first-increment modules use a smaller layout under `src/copilot/`; the development record maps the actual files. Agent, UI, evaluation runner and container artifacts remain planned.
 
 ## Normalized synthetic data contract
 
@@ -122,4 +124,4 @@ Deliver a runnable local demo, an architecture diagram, normalized data ER diagr
 
 ## Acceptance gate
 
-The audit recommends an independent implementation. The next authorization decision is whether to accept that scope. No product module, generated 1,382-student dataset, hosted LLM integration or Docker run is claimed in this audit-only delivery.
+The independent implementation was accepted. Data generation, normalized storage, CSV/XLSX import, deterministic statistics and the basic FastAPI service now have execution evidence in the first-increment record. Hosted LLM integration, the Streamlit client, Agent evaluations and Docker verification remain future work.
