@@ -1,0 +1,39 @@
+{
+  "recorded_at_utc": "2026-11-02T22:54:05.541057+00:00",
+  "checks": [
+    {
+      "check": "retained_dependency_notice_hashes",
+      "files": 133,
+      "passed": true
+    },
+    {
+      "check": "unmodified_upstream_license",
+      "passed": true
+    },
+    {
+      "check": "install_inventory_advisory_package_coverage",
+      "packages": 52,
+      "passed": true
+    },
+    {
+      "check": "recorded_data_probe_completion",
+      "cases": 6,
+      "passed": true
+    },
+    {
+      "check": "proposed_evaluation_case_count",
+      "cases": 36,
+      "executed": false,
+      "passed": true
+    },
+    {
+      "check": "audit_script_syntax_only",
+      "files": 6,
+      "passed": true
+    },
+    {
+      "check": "local_document_links",
+      "passed": true
+    }
+  ]
+}

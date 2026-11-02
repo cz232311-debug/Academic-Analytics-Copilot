@@ -1,0 +1,66 @@
+{
+  "python": "3.13.6 (tags/v3.13.6:4e66535, Aug  6 2025, 14:36:00) [MSC v.1944 64 bit (AMD64)]",
+  "method": "AppTest; only file_uploader mocked; synthetic CSVs",
+  "cases": [
+    {
+      "case": "initial_page",
+      "probe_status": "harness_error",
+      "harness_error": "PermissionError: Audit probe blocks outbound sockets"
+    },
+    {
+      "case": "valid_two_subjects",
+      "probe_status": "harness_error",
+      "harness_error": "PermissionError: Audit probe blocks outbound sockets"
+    },
+    {
+      "case": "one_subject",
+      "probe_status": "harness_error",
+      "harness_error": "PermissionError: Audit probe blocks outbound sockets"
+    },
+    {
+      "case": "no_numeric_subject",
+      "probe_status": "harness_error",
+      "harness_error": "PermissionError: Audit probe blocks outbound sockets"
+    },
+    {
+      "case": "numeric_class",
+      "probe_status": "harness_error",
+      "harness_error": "PermissionError: Audit probe blocks outbound sockets"
+    },
+    {
+      "case": "out_of_range",
+      "probe_status": "harness_error",
+      "harness_error": "PermissionError: Audit probe blocks outbound sockets"
+    },
+    {
+      "case": "no_complete_rows",
+      "probe_status": "harness_error",
+      "harness_error": "PermissionError: Audit probe blocks outbound sockets"
+    },
+    {
+      "case": "constant_feature",
+      "probe_status": "harness_error",
+      "harness_error": "PermissionError: Audit probe blocks outbound sockets"
+    },
+    {
+      "case": "malformed_csv",
+      "probe_status": "harness_error",
+      "harness_error": "PermissionError: Audit probe blocks outbound sockets"
+    },
+    {
+      "case": "empty_file",
+      "probe_status": "harness_error",
+      "harness_error": "PermissionError: Audit probe blocks outbound sockets"
+    },
+    {
+      "case": "normalized_duplicate_headers",
+      "probe_status": "harness_error",
+      "harness_error": "PermissionError: Audit probe blocks outbound sockets"
+    },
+    {
+      "case": "partially_missing_scores",
+      "probe_status": "harness_error",
+      "harness_error": "PermissionError: Audit probe blocks outbound sockets"
+    }
+  ]
+}

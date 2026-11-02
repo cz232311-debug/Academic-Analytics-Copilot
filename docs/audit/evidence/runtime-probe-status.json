@@ -1,0 +1,14 @@
+{
+  "status": "blocked",
+  "method": "Streamlit AppTest over pinned upstream source with a mocked file uploader",
+  "planned_scenarios": 12,
+  "completed_scenarios_in_final_attempt": 0,
+  "final_attempt": "Main-thread native dependency preload; one numerical-library thread; 180-second import watchdog",
+  "observed_progress": ["Loaded pandas"],
+  "failure": "Timeout during seaborn/SciPy native dependency import before AppTest scenarios began",
+  "root_cause": "unresolved",
+  "trace_file": "runtime-probe-timeout.txt",
+  "earlier_harness_failures": "runtime-probes-initial-harness-failure.json",
+  "separate_successful_checks": ["server-smoke.json", "data-probes.json"],
+  "limitation": "No complete browser, plotting or prediction workflow was verified"
+}

@@ -1,0 +1,115 @@
+{
+  "method": "Exact upstream AST statements at lines 41-60 and 113-114; real pandas; no plotting, training or UI",
+  "cases": [
+    {
+      "case": "valid_totals_and_destroyed_gender",
+      "subject_cols": [
+        "math",
+        "science"
+      ],
+      "categorical_cols": [
+        "gender"
+      ],
+      "total_scores": [
+        110,
+        170
+      ],
+      "average_scores": [
+        55.0,
+        85.0
+      ],
+      "gender_all_null": true,
+      "passed": true
+    },
+    {
+      "case": "numeric_class_is_score",
+      "subject_cols": [
+        "class",
+        "math",
+        "science"
+      ],
+      "categorical_cols": [],
+      "total_scores": [
+        151,
+        172
+      ],
+      "average_scores": [
+        50.333333333333336,
+        57.333333333333336
+      ],
+      "passed": true
+    },
+    {
+      "case": "out_of_range_scores_accepted",
+      "subject_cols": [
+        "math",
+        "science"
+      ],
+      "categorical_cols": [],
+      "total_scores": [
+        140,
+        200
+      ],
+      "average_scores": [
+        70.0,
+        100.0
+      ],
+      "passed": true
+    },
+    {
+      "case": "missing_scores_change_denominator",
+      "subject_cols": [
+        "math",
+        "science"
+      ],
+      "categorical_cols": [],
+      "total_scores": [
+        140.0,
+        95.0,
+        0.0
+      ],
+      "average_scores": [
+        70.0,
+        95.0,
+        null
+      ],
+      "passed": true
+    },
+    {
+      "case": "keyword_excludes_valid_subject",
+      "subject_cols": [
+        "math",
+        "science"
+      ],
+      "categorical_cols": [],
+      "total_scores": [
+        140,
+        160
+      ],
+      "average_scores": [
+        70.0,
+        80.0
+      ],
+      "passed": true
+    },
+    {
+      "case": "history_negative_control",
+      "subject_cols": [
+        "history",
+        "math",
+        "science"
+      ],
+      "categorical_cols": [],
+      "total_scores": [
+        230,
+        255
+      ],
+      "average_scores": [
+        76.66666666666667,
+        85.0
+      ],
+      "note": "History is retained: negative control for substring assumptions.",
+      "passed": true
+    }
+  ]
+}

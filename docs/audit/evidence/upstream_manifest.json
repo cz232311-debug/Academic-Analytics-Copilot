@@ -1,0 +1,133 @@
+{
+  "repository": "https://github.com/CH-Anonymous/student-performance-analyzer",
+  "commit": "c691eff6ecc0de351ffcdf26bdce436e5daa64e2",
+  "files": [
+    {
+      "path": ".streamlit/config.toml",
+      "mode": "100644",
+      "git_blob": "51e43d7fd2085fb8a552db22636bb5c3a8a404e8",
+      "bytes": 134,
+      "sha256": "838592e91b71e4ea79a8eb4efe473f2c3cc5d753a3e36e27e6f13c91adb94d8f"
+    },
+    {
+      "path": "LICENSE",
+      "mode": "100644",
+      "git_blob": "5873e303a1fc7efa0d958894472df5b74277fc66",
+      "bytes": 1070,
+      "sha256": "91f6d1af5accc3dc1147a1188e0ee66b1ee6691a1293eaf13ece37e7c814beae"
+    },
+    {
+      "path": "app.py",
+      "mode": "100644",
+      "git_blob": "8b50d49eb50577726848aa0f7a24c1a57aa93f4d",
+      "bytes": 6664,
+      "sha256": "3690ea28eb3b3ed38938e19446968f98883f9e1c11fd50987eda8fd8336c371e"
+    },
+    {
+      "path": "model.pkl",
+      "mode": "100644",
+      "git_blob": "c93824d05be680697ed9376d7006db7af81b47bc",
+      "bytes": 555,
+      "sha256": "38ef61e6accb1f30a132bf34bd4eae90361c63695cdc280be98f9b2b1001110a"
+    },
+    {
+      "path": "multi_subject_student_data.csv",
+      "mode": "100644",
+      "git_blob": "29d7d4332d14352c6462751c673c6123fc0f6987",
+      "bytes": 3689,
+      "sha256": "e21f6d61c644477ac31826f6bb3a3a2d5ced5d1283a37c01ebaa99d3bd03b645"
+    },
+    {
+      "path": "readme.md",
+      "mode": "100644",
+      "git_blob": "780e38e1f1a0322c8a2c09eb7de4b7e497ee4ea9",
+      "bytes": 3701,
+      "sha256": "058c3c09a1b87ad8d511b37a9b54239bb1f2388cf3fd840c6b5af2b6f6f11835"
+    },
+    {
+      "path": "requirements.txt",
+      "mode": "100644",
+      "git_blob": "50e4e379d15b135f8e3de518b6a471aa00bdf6da",
+      "bytes": 68,
+      "sha256": "6878540d4a3b5f034872c851f99c4c28015921d19400b13a08c4f78616414d97"
+    },
+    {
+      "path": "screenshots/correlation.png",
+      "mode": "100644",
+      "git_blob": "ea54003cee56636dbf99c33875c1dd14d8b53677",
+      "bytes": 293894,
+      "sha256": "a80a27dbeaa9793a4716773c275b3eab3050c33a1f3cc6d2c2110a872162c8a7"
+    },
+    {
+      "path": "screenshots/dashboard.png",
+      "mode": "100644",
+      "git_blob": "123fc571629d103f896ec39df0c241cc04883272",
+      "bytes": 66498,
+      "sha256": "9724102c4323b9e5d5f1df45f6c6dba25a61b036a94bf588b91c9384945daea2"
+    },
+    {
+      "path": "screenshots/prediction.png",
+      "mode": "100644",
+      "git_blob": "998e2dc02cd4febf5faa3d2b885187d783f87a6d",
+      "bytes": 78157,
+      "sha256": "c20408a7effc7a8e59d7224da0916f4ae84afb866fe5de0aca71de58e45cbfc9"
+    },
+    {
+      "path": "screenshots/top_performers.png",
+      "mode": "100644",
+      "git_blob": "05a29b0d7e182c1503df31646b6a54ce614f0299",
+      "bytes": 120597,
+      "sha256": "8930e0d6778e85be35a10965425eed4f0aecadf49d3d226749d48248d55cef05"
+    }
+  ],
+  "upstream_csv": {
+    "rows": 200,
+    "columns": [
+      "math score",
+      "reading score",
+      "writing score",
+      "science score",
+      "social studies score",
+      "computer score"
+    ],
+    "provenance": "unverified; not used for runtime tests"
+  },
+  "python": {
+    "lines": 171,
+    "functions": 0,
+    "classes": 0,
+    "imports": [
+      {
+        "line": 1,
+        "statement": "import streamlit as st"
+      },
+      {
+        "line": 2,
+        "statement": "import pandas as pd"
+      },
+      {
+        "line": 3,
+        "statement": "import seaborn as sns"
+      },
+      {
+        "line": 4,
+        "statement": "import matplotlib.pyplot as plt"
+      },
+      {
+        "line": 5,
+        "statement": "import plotly.express as px"
+      },
+      {
+        "line": 140,
+        "statement": "from sklearn.linear_model import LinearRegression"
+      },
+      {
+        "line": 141,
+        "statement": "from sklearn.model_selection import train_test_split"
+      }
+    ],
+    "bare_except_lines": [
+      56
+    ]
+  }
+}
