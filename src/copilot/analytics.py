@@ -43,16 +43,16 @@ class AnalyticsEngine:
     def __init__(self, database: Database):
         self.database = database
 
-    def summary(self, scope: Scope) -> Statistics:
-        meta, frame = self.database.snapshot(scope)
+    def summary(self, scope: Scope, *, expected_version=None, generated_only=False) -> Statistics:
+        meta, frame = self.database.snapshot(scope, expected_version=expected_version, generated_only=generated_only)
         return summarize(frame, meta["dataset_version"], scope)
 
-    def compare_classes(self, course_id: str, class_ids: list[str], term="2026-T1"):
+    def compare_classes(self, course_id: str, class_ids: list[str], term="2026-T1", *, expected_version=None, generated_only=False):
         if not 2 <= len(class_ids) <= 40 or len(set(class_ids)) != len(class_ids):
             raise DataError("Choose between 2 and 40 distinct classes")
         scope = Scope(course_id=course_id, term=term)
         # One read transaction/frame gives every class the same dataset version.
-        meta, frame = self.database.snapshot(scope, class_ids=class_ids)
+        meta, frame = self.database.snapshot(scope, class_ids=class_ids, expected_version=expected_version, generated_only=generated_only)
         results = [summarize(frame.loc[frame["class_id"] == cid], meta["dataset_version"], Scope(class_id=cid, **scope.model_dump(exclude_none=True)))
                    for cid in sorted(class_ids)]
         means = {r.scope.class_id: Fraction(r.sum_score_cents, r.graded_count) for r in results if r.graded_count}

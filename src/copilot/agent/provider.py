@@ -1,0 +1,155 @@
+"""Small Chat Completions adapter and an explicitly simulated local demo provider."""
+import json
+import os
+import re
+from typing import Annotated, Literal, Protocol
+from urllib.parse import urlsplit
+
+import httpx
+from pydantic import BaseModel, ConfigDict, Field, SecretStr, ValidationError, model_validator
+
+from copilot.agent.models import AgentError, ModelMessage, ModelTurn, Usage, strict_json
+from copilot.models import Record
+
+
+class LLMSettings(Record):
+    provider: Literal["mock", "openai_compatible"] = "mock"
+    model: str = ""
+    api_key: SecretStr = Field(default_factory=lambda: SecretStr(""), repr=False)
+    base_url: str = "https://api.openai.com/v1"
+    timeout_seconds: Annotated[float, Field(gt=0, le=60, allow_inf_nan=False)] = 15.0
+    request_timeout_seconds: Annotated[float, Field(gt=0, le=120, allow_inf_nan=False)] = 45.0
+    strict_tools: bool = True
+
+    @model_validator(mode="after")
+    def live_configuration(self):
+        if self.provider == "openai_compatible":
+            if not self.api_key.get_secret_value().strip() or not re.fullmatch(r"[A-Za-z0-9._:/-]{1,100}", self.model):
+                raise ValueError("Live provider requires an API key and model ID")
+            parsed = urlsplit(self.base_url)
+            local = parsed.hostname in {"localhost", "127.0.0.1", "::1"}
+            if (not parsed.hostname or parsed.username or parsed.password or parsed.query or parsed.fragment
+                    or not (parsed.scheme == "https" or parsed.scheme == "http" and local)):
+                raise ValueError("Use HTTPS or a loopback HTTP endpoint without URL credentials/query")
+        return self
+
+    @classmethod
+    def from_env(cls):
+        try:
+            strict = os.environ.get("COPILOT_LLM_STRICT_TOOLS", "true").lower()
+            if strict not in {"true", "false"}:
+                raise ValueError
+            return cls(provider=os.environ.get("COPILOT_LLM_PROVIDER", "mock"),
+                       model=os.environ.get("COPILOT_LLM_MODEL", ""),
+                       api_key=SecretStr(os.environ.get("COPILOT_LLM_API_KEY", "")),
+                       base_url=os.environ.get("COPILOT_LLM_BASE_URL", "https://api.openai.com/v1").rstrip("/"),
+                       timeout_seconds=float(os.environ.get("COPILOT_LLM_TIMEOUT_SECONDS", "15")),
+                       request_timeout_seconds=float(os.environ.get("COPILOT_AGENT_TIMEOUT_SECONDS", "45")),
+                       strict_tools=strict == "true")
+        except (ValueError, ValidationError):
+            raise AgentError("llm_configuration_error", "Invalid LLM environment configuration; check the documented variables", 503) from None
+
+
+class ChatProvider(Protocol):
+    name: str
+    model: str
+    simulated: bool
+
+    async def complete(self, messages: list[dict], tools: list[dict]) -> ModelTurn: ...
+
+
+class Choice(BaseModel):
+    model_config = ConfigDict(strict=True, extra="ignore")
+    message: ModelMessage
+    finish_reason: Literal["stop", "tool_calls", "length", "content_filter"]
+
+
+class Completion(BaseModel):
+    model_config = ConfigDict(strict=True, extra="ignore")
+    choices: Annotated[list[Choice], Field(min_length=1, max_length=1)]
+    usage: Usage | None = None
+
+
+class OpenAICompatibleProvider:
+    name = "openai_compatible"
+    simulated = False
+
+    def __init__(self, settings: LLMSettings, *, transport=None):
+        self.settings, self.model, self.transport = settings, settings.model, transport
+
+    async def complete(self, messages, tools):
+        definitions = json.loads(json.dumps(tools))
+        if not self.settings.strict_tools:
+            for item in definitions:
+                item["function"].pop("strict", None)
+        body = {"model": self.model, "messages": messages, "tools": definitions, "tool_choice": "auto",
+                "parallel_tool_calls": False, "stream": False, "store": False, "max_completion_tokens": 2048}
+        try:
+            async with httpx.AsyncClient(timeout=self.settings.timeout_seconds, follow_redirects=False,
+                                         trust_env=False, transport=self.transport) as client:
+                async with client.stream("POST", self.settings.base_url.rstrip("/") + "/chat/completions",
+                                         headers={"Authorization": "Bearer " + self.settings.api_key.get_secret_value()}, json=body) as response:
+                    if response.status_code == 429:
+                        raise AgentError("llm_rate_limited", "LLM provider rate limit reached", 503)
+                    if not 200 <= response.status_code < 300:
+                        raise AgentError("llm_http_error", "LLM provider rejected the request; check server configuration")
+                    content = bytearray()
+                    async for chunk in response.aiter_bytes():
+                        if len(content) + len(chunk) > 131072:
+                            raise AgentError("llm_response_too_large", "LLM response exceeds its byte limit")
+                        content.extend(chunk)
+            completion = Completion.model_validate(strict_json(content.decode("utf-8")))
+        except AgentError:
+            raise
+        except httpx.TimeoutException:
+            raise AgentError("llm_timeout", "LLM provider request timed out", 504) from None
+        except httpx.RequestError:
+            raise AgentError("llm_connection_error", "LLM provider could not be reached", 502) from None
+        except (ValidationError, ValueError, RecursionError):
+            raise AgentError("invalid_model_response", "LLM returned malformed or unsupported response data") from None
+        choice = completion.choices[0]
+        if choice.finish_reason == "length":
+            raise AgentError("model_output_truncated", "LLM output exceeded its token limit")
+        if choice.finish_reason == "content_filter" or choice.message.refusal:
+            raise AgentError("model_refused", "LLM declined this request", 422)
+        if bool(choice.message.tool_calls) != (choice.finish_reason == "tool_calls"):
+            raise AgentError("invalid_model_response", "LLM finish reason and tool calls disagree")
+        return ModelTurn(message=choice.message, usage=completion.usage)
+
+
+class MockDemoProvider:
+    """Limited English routing for offline UI/debug demonstrations; NOT an LLM."""
+    name, model, simulated = "mock", "scripted-demo-v1", True
+
+    async def complete(self, messages, tools):
+        results = [strict_json(m["content"]) for m in messages if m["role"] == "tool"]
+        if results:
+            content = json.dumps({"status": "completed", "evidence_ids": [r["evidence_id"] for r in results]})
+            return ModelTurn(message=ModelMessage(role="assistant", content=content))
+        question = next(m["content"] for m in messages if m["role"] == "user")
+        courses = re.findall(r"\bg[1-3]-c[0-9]{2}\b", question)
+        classes = re.findall(r"\bc[0-9]{3}\b", question)
+        term = re.search(r"\b20[0-9]{2}-t[1-3]\b", question)
+        grade = re.search(r"\bgrade ([1-3])\b", question)
+        selected_term = term[0].upper() if term else "2026-T1"
+        if "compare" in question and len(courses) == 1 and len(classes) >= 2:
+            name, arguments = "compare_classes", {"course_id": courses[0].upper(), "class_ids": [c.upper() for c in classes], "term": selected_term}
+        elif "compare" in question:
+            return ModelTurn(message=ModelMessage(role="assistant", content='{"status":"needs_clarification","evidence_ids":[]}'))
+        elif any(word in question.split() for word in ("catalog", "list", "available")):
+            name, arguments = "get_catalog", {"grade_level": int(grade[1]) if grade else None}
+        elif len(courses) == 1 or grade or len(classes) == 1:
+            name, arguments = "get_score_summary", {"term": selected_term, "course_id": courses[0].upper() if len(courses) == 1 else None,
+                "class_id": classes[0].upper() if len(classes) == 1 else None, "grade_level": int(grade[1]) if grade else None}
+        elif "how many" in question or "overview" in question or "dataset" in question:
+            name, arguments = "get_dataset_overview", {}
+        elif any(word in question.split() for word in ("average", "mean", "pass", "distribution", "failures")):
+            name, arguments = "get_score_summary", {"term": selected_term, "course_id": None, "class_id": None, "grade_level": None}
+        else:
+            return ModelTurn(message=ModelMessage(role="assistant", content='{"status":"needs_clarification","evidence_ids":[]}'))
+        return ModelTurn(message=ModelMessage.model_validate({"role": "assistant", "tool_calls": [
+            {"id": "call_1", "type": "function", "function": {"name": name, "arguments": json.dumps(arguments)}}]}))
+
+
+def build_provider(settings: LLMSettings) -> ChatProvider:
+    return MockDemoProvider() if settings.provider == "mock" else OpenAICompatibleProvider(settings)

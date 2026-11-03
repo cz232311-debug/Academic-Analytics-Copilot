@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "academic-analytics-copilot"
-version = "0.1.0"
+version = "0.2.0"
 description = "Deterministic analytics over explicitly synthetic academic records"
 requires-python = ">=3.13,<3.14"
 dependencies = [
@@ -15,10 +15,11 @@ dependencies = [
   "openpyxl>=3.1.5,<4",
   "defusedxml>=0.7.1,<1",
   "python-multipart>=0.0.20,<1",
+  "httpx>=0.28,<1",
 ]
 
 [project.optional-dependencies]
-test = ["pytest>=8.4,<10", "httpx>=0.28,<1"]
+test = ["pytest>=8.4,<10"]
 
 [project.scripts]
 academic-demo = "copilot.data.generate:main"

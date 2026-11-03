@@ -1,6 +1,7 @@
 # Academic Analytics Copilot — implementation proposal
 
 Status: **independent-build approach accepted; first core/API increment implemented and tested**.
+Phase 2A update: four controlled tools, a configurable HTTP adapter, basic evidence selection, redacted logs and a natural-language API now have offline execution evidence. See [development/02-function-calling.md](development/02-function-calling.md). This round follows the updated 3–5-tool requirement, uses no automatic provider retries, and defers Streamlit to Phase 2B. The full Agent evaluation and Docker remain deferred.
 Actual progress: [development/01-core-api.md](development/01-core-api.md). Remaining agent/UI/delivery sections below describe the target design, not completed features.
 The current user requirements supersede the original CSV-only/UI choices: support CSV and XLSX import, and use a Streamlit client connected to FastAPI. The first increment implements the importer and backend; the Streamlit client remains next.
 Prepared for an SAP STAR Application Engineer (2028 Graduates) portfolio.

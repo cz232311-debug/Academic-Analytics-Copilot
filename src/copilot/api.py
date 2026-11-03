@@ -1,8 +1,9 @@
-"""Local FastAPI application. The first release has no external LLM calls."""
+"""Local FastAPI application with an explicitly configured function-calling agent."""
 from contextlib import asynccontextmanager
 import os
 from pathlib import Path
 from typing import Annotated
+from uuid import uuid4
 
 from fastapi import FastAPI, File, Query, Request, UploadFile
 from fastapi.exceptions import RequestValidationError
@@ -11,6 +12,10 @@ from starlette.concurrency import run_in_threadpool
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from copilot.analytics import AnalyticsEngine
+from copilot.agent.models import AgentError, AgentResponse, QueryRequest
+from copilot.agent.provider import LLMSettings, build_provider
+from copilot.agent.service import AgentService, MAX_MODEL_TURNS, MAX_TOOL_CALLS, configure_logging
+from copilot.agent.tools import TOOLS
 from copilot.data.generate import DEFAULT_SEED, generate_dataset
 from copilot.data.importing import MAX_FILE_BYTES, import_csv_tables, import_workbook
 from copilot.models import ClassId, CourseId, DataError, TABLE_NAMES, Term
@@ -27,11 +32,11 @@ def error_response(code: str, message: str, status: int):
 
 class UploadBodyLimit:
     """Limit the actual multipart bytes before the framework spools uploaded files."""
-    def __init__(self, app, limit):
-        self.app, self.limit = app, limit
+    def __init__(self, app, limit, path="/api/datasets/import"):
+        self.app, self.limit, self.path = app, limit, path
 
     async def __call__(self, scope, receive, send):
-        if scope["type"] != "http" or scope["method"] != "POST" or scope["path"] != "/api/datasets/import":
+        if scope["type"] != "http" or scope["method"] != "POST" or scope["path"] != self.path:
             return await self.app(scope, receive, send)
         headers = dict(scope.get("headers", []))
         try:
@@ -74,22 +79,32 @@ async def read_upload(file: UploadFile):
     return file.filename or "", file.content_type or "", bytes(content)
 
 
-def create_app(database_path: str | Path | None = None, *, bootstrap_demo=True, max_request_bytes=MAX_REQUEST_BYTES):
+def create_app(database_path: str | Path | None = None, *, bootstrap_demo=True, max_request_bytes=MAX_REQUEST_BYTES,
+               agent_provider=None, agent_timeout_seconds=None):
     store = Database(database_path or os.environ.get("ACADEMIC_DB_PATH", "data/academic.sqlite3"))
     engine = AnalyticsEngine(store)
 
     @asynccontextmanager
     async def lifespan(app):
+        configure_logging()
         store.initialize()
         if bootstrap_demo and not store.has_dataset():
             store.replace(generate_dataset(), source="generated", seed=DEFAULT_SEED)
         yield
 
-    application = FastAPI(title="Academic Analytics Copilot", version="0.1.0",
-                          description="Synthetic academic analytics. Deterministic statistics; no LLM integration in this release.",
+    application = FastAPI(title="Academic Analytics Copilot", version="0.2.0",
+                          description="Synthetic academic analytics with controlled function calling. Default provider is an explicitly simulated local demo.",
                           lifespan=lifespan)
     application.state.database = store
     application.add_middleware(UploadBodyLimit, limit=max_request_bytes)
+    application.add_middleware(UploadBodyLimit, limit=8192, path="/api/agent/query")
+
+    @application.exception_handler(AgentError)
+    async def agent_error(request: Request, exc: AgentError):
+        response = error_response(exc.code, str(exc), exc.status)
+        body = {"error": {"code": exc.code, "message": str(exc)}, "request_id": exc.request_id or uuid4().hex,
+                "tool_calls": [trace.model_dump(mode="json") for trace in exc.tool_calls]}
+        return JSONResponse(body, status_code=response.status_code)
 
     @application.exception_handler(DataError)
     async def data_error(request: Request, exc: DataError):
@@ -111,7 +126,24 @@ def create_app(database_path: str | Path | None = None, *, bootstrap_demo=True, 
 
     @application.get("/health")
     def health():
-        return {"status": "ok", "dataset_active": store.has_dataset(), "version": "0.1.0"}
+        return {"status": "ok", "dataset_active": store.has_dataset(), "version": "0.2.0"}
+
+    def agent_runtime():
+        settings = LLMSettings() if agent_provider is not None else LLMSettings.from_env()
+        return agent_provider or build_provider(settings), settings
+
+    @application.get("/api/agent/status")
+    def agent_status():
+        provider, settings = agent_runtime()
+        return {"provider": provider.name, "model": provider.model, "simulated": provider.simulated,
+                "tools": list(TOOLS), "max_model_turns": MAX_MODEL_TURNS, "max_tool_calls": MAX_TOOL_CALLS,
+                "request_timeout_seconds": agent_timeout_seconds or settings.request_timeout_seconds,
+                "question_policy": "restricted_english_aggregate_queries", "streaming": False}
+
+    @application.post("/api/agent/query", response_model=AgentResponse)
+    async def agent_query(payload: QueryRequest):
+        provider, settings = agent_runtime()
+        return await AgentService(store, provider, timeout_seconds=agent_timeout_seconds or settings.request_timeout_seconds).query(payload.question)
 
     @application.get("/api/dataset", response_model=DatasetInfo)
     def dataset():

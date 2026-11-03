@@ -86,6 +86,13 @@ class Database:
         return dict(row)
 
     @staticmethod
+    def check_access(metadata, *, expected_version=None, generated_only=False):
+        if generated_only and metadata["source"] != "generated":
+            raise DataError("Agent queries are restricted to generated synthetic data", code="agent_privacy_block", status=403)
+        if expected_version is not None and metadata["dataset_version"] != expected_version:
+            raise DataError("Dataset changed during this query; please retry", code="dataset_changed", status=409)
+
+    @staticmethod
     def check_scope(conn, scope: Scope):
         for value, query, label in (
             (scope.course_id, "SELECT 1 FROM courses WHERE course_id=?", "course"),
@@ -96,10 +103,11 @@ class Database:
             if value is not None and conn.execute(query, (value,)).fetchone() is None:
                 raise DataError(f"Unknown {label} in the active dataset", code="unknown_entity", status=404)
 
-    def snapshot(self, scope: Scope, *, class_ids=()):
+    def snapshot(self, scope: Scope, *, class_ids=(), expected_version=None, generated_only=False):
         with self.connect() as conn:
             conn.execute("BEGIN")
             metadata = self.metadata(conn)
+            self.check_access(metadata, expected_version=expected_version, generated_only=generated_only)
             self.check_scope(conn, scope)
             for class_id in class_ids:
                 if conn.execute("SELECT 1 FROM classes WHERE class_id=?", (class_id,)).fetchone() is None:
@@ -119,9 +127,10 @@ class Database:
             row = conn.execute(COUNTS_SQL + JOIN + " " + WHERE, scope.model_dump()).fetchone()
             return {key: int(row[key] or 0) for key in row.keys()}
 
-    def overview(self):
+    def overview(self, *, expected_version=None, generated_only=False):
         with self.connect() as conn:
             conn.execute("BEGIN")
+            self.check_access(self.metadata(conn), expected_version=expected_version, generated_only=generated_only)
             return self._overview(conn)
 
     def _overview(self, conn):
@@ -136,10 +145,11 @@ class Database:
                            minimum_courses_per_student=min((r[0] for r in loads), default=0),
                            maximum_courses_per_student=max((r[0] for r in loads), default=0))
 
-    def catalog(self):
+    def catalog(self, *, expected_version=None, generated_only=False):
         with self.connect() as conn:
             conn.execute("BEGIN")
             meta = self.metadata(conn)
+            self.check_access(meta, expected_version=expected_version, generated_only=generated_only)
             return Catalog(dataset_version=meta["dataset_version"],
                            classes=[ClassRecord(**dict(r)) for r in conn.execute("SELECT * FROM classes ORDER BY class_id")],
                            courses=[CourseRecord(**dict(r)) for r in conn.execute("SELECT * FROM courses ORDER BY course_id")])

@@ -1,0 +1,35 @@
+{
+  "transport": "real local TCP HTTP: client -> Uvicorn -> scripted model HTTP stub -> tools -> stub -> answer",
+  "upstream_model": "SCRIPTED LOCAL STUB; no real LLM or paid API used",
+  "checks": [
+    {
+      "check": "real_application_http_status",
+      "passed": true
+    },
+    {
+      "check": "two_model_turns_and_real_analytics",
+      "average_score": "69.73",
+      "pass_rate_percent": "67.80",
+      "passed": true
+    },
+    {
+      "check": "tool_result_returned_over_real_http_without_student_rows",
+      "passed": true
+    },
+    {
+      "check": "grounded_answer_and_debug_trace",
+      "passed": true
+    },
+    {
+      "check": "student_question_blocked_before_provider",
+      "passed": true
+    },
+    {
+      "check": "uploaded_source_blocked_before_provider",
+      "passed": true
+    }
+  ],
+  "upstream_requests": 2,
+  "servers_stopped": true,
+  "dataset_version": "a52c8961a7c1da92ab4d7d8cc8af9e9a636fe3e788cbf5bcd24c8eb16607cabc"
+}
