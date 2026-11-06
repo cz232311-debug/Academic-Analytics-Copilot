@@ -103,7 +103,8 @@ def create_app(database_path: str | Path | None = None, *, bootstrap_demo=True, 
     async def agent_error(request: Request, exc: AgentError):
         response = error_response(exc.code, str(exc), exc.status)
         body = {"error": {"code": exc.code, "message": str(exc)}, "request_id": exc.request_id or uuid4().hex,
-                "tool_calls": [trace.model_dump(mode="json") for trace in exc.tool_calls]}
+                "tool_calls": [trace.model_dump(mode="json") for trace in exc.tool_calls],
+                "model_trace": [trace.model_dump(mode="json") for trace in exc.model_trace]}
         return JSONResponse(body, status_code=response.status_code)
 
     @application.exception_handler(DataError)

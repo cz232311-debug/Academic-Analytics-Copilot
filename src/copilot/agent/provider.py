@@ -12,8 +12,12 @@ from copilot.agent.models import AgentError, ModelMessage, ModelTurn, Usage, str
 from copilot.models import Record
 
 
+DEEPSEEK_BASE_URL = "https://api.deepseek.com"
+DEEPSEEK_MODEL = "deepseek-flash"
+
+
 class LLMSettings(Record):
-    provider: Literal["mock", "openai_compatible"] = "mock"
+    provider: Literal["mock", "openai_compatible", "deepseek"] = "mock"
     model: str = ""
     api_key: SecretStr = Field(default_factory=lambda: SecretStr(""), repr=False)
     base_url: str = "https://api.openai.com/v1"
@@ -23,7 +27,9 @@ class LLMSettings(Record):
 
     @model_validator(mode="after")
     def live_configuration(self):
-        if self.provider == "openai_compatible":
+        if self.provider == "deepseek" and self.base_url.rstrip("/") != DEEPSEEK_BASE_URL:
+            raise ValueError("The DeepSeek profile requires the official HTTPS API origin")
+        if self.provider != "mock":
             if not self.api_key.get_secret_value().strip() or not re.fullmatch(r"[A-Za-z0-9._:/-]{1,100}", self.model):
                 raise ValueError("Live provider requires an API key and model ID")
             parsed = urlsplit(self.base_url)
@@ -36,13 +42,15 @@ class LLMSettings(Record):
     @classmethod
     def from_env(cls):
         try:
+            provider = os.environ.get("COPILOT_LLM_PROVIDER", "mock")
+            deepseek = provider == "deepseek"
             strict = os.environ.get("COPILOT_LLM_STRICT_TOOLS", "true").lower()
             if strict not in {"true", "false"}:
                 raise ValueError
-            return cls(provider=os.environ.get("COPILOT_LLM_PROVIDER", "mock"),
-                       model=os.environ.get("COPILOT_LLM_MODEL", ""),
+            return cls(provider=provider,
+                       model=os.environ.get("COPILOT_LLM_MODEL") or (DEEPSEEK_MODEL if deepseek else ""),
                        api_key=SecretStr(os.environ.get("COPILOT_LLM_API_KEY", "")),
-                       base_url=os.environ.get("COPILOT_LLM_BASE_URL", "https://api.openai.com/v1").rstrip("/"),
+                       base_url=(os.environ.get("COPILOT_LLM_BASE_URL") or (DEEPSEEK_BASE_URL if deepseek else "https://api.openai.com/v1")).rstrip("/"),
                        timeout_seconds=float(os.environ.get("COPILOT_LLM_TIMEOUT_SECONDS", "15")),
                        request_timeout_seconds=float(os.environ.get("COPILOT_AGENT_TIMEOUT_SECONDS", "45")),
                        strict_tools=strict == "true")
@@ -61,13 +69,14 @@ class ChatProvider(Protocol):
 class Choice(BaseModel):
     model_config = ConfigDict(strict=True, extra="ignore")
     message: ModelMessage
-    finish_reason: Literal["stop", "tool_calls", "length", "content_filter"]
+    finish_reason: Literal["stop", "tool_calls", "length", "content_filter", "insufficient_system_resource", "aborted"]
 
 
 class Completion(BaseModel):
     model_config = ConfigDict(strict=True, extra="ignore")
     choices: Annotated[list[Choice], Field(min_length=1, max_length=1)]
     usage: Usage | None = None
+    id: str | None = None
 
 
 class OpenAICompatibleProvider:
@@ -76,14 +85,18 @@ class OpenAICompatibleProvider:
 
     def __init__(self, settings: LLMSettings, *, transport=None):
         self.settings, self.model, self.transport = settings, settings.model, transport
+        self.name = settings.provider
 
     async def complete(self, messages, tools):
         definitions = json.loads(json.dumps(tools))
-        if not self.settings.strict_tools:
+        if self.name == "deepseek" or not self.settings.strict_tools:
             for item in definitions:
                 item["function"].pop("strict", None)
-        body = {"model": self.model, "messages": messages, "tools": definitions, "tool_choice": "auto",
-                "parallel_tool_calls": False, "stream": False, "store": False, "max_completion_tokens": 2048}
+        body = {"model": self.model, "messages": messages, "tools": definitions, "tool_choice": "auto", "stream": False}
+        if self.name == "deepseek":
+            body.update(thinking={"type": "disabled"}, max_tokens=2048, response_format={"type": "json_object"})
+        else:
+            body.update(parallel_tool_calls=False, store=False, max_completion_tokens=2048)
         try:
             async with httpx.AsyncClient(timeout=self.settings.timeout_seconds, follow_redirects=False,
                                          trust_env=False, transport=self.transport) as client:
@@ -91,6 +104,10 @@ class OpenAICompatibleProvider:
                                          headers={"Authorization": "Bearer " + self.settings.api_key.get_secret_value()}, json=body) as response:
                     if response.status_code == 429:
                         raise AgentError("llm_rate_limited", "LLM provider rate limit reached", 503)
+                    if self.name == "deepseek" and response.status_code == 401:
+                        raise AgentError("llm_authentication_error", "DeepSeek rejected the configured API credential", 502)
+                    if self.name == "deepseek" and response.status_code == 402:
+                        raise AgentError("llm_insufficient_balance", "DeepSeek rejected the request because the account balance is insufficient", 503)
                     if not 200 <= response.status_code < 300:
                         raise AgentError("llm_http_error", "LLM provider rejected the request; check server configuration")
                     content = bytearray()
@@ -108,13 +125,16 @@ class OpenAICompatibleProvider:
         except (ValidationError, ValueError, RecursionError):
             raise AgentError("invalid_model_response", "LLM returned malformed or unsupported response data") from None
         choice = completion.choices[0]
+        if choice.finish_reason in {"insufficient_system_resource", "aborted"}:
+            raise AgentError("llm_interrupted", "LLM provider interrupted generation", 503)
         if choice.finish_reason == "length":
             raise AgentError("model_output_truncated", "LLM output exceeded its token limit")
         if choice.finish_reason == "content_filter" or choice.message.refusal:
             raise AgentError("model_refused", "LLM declined this request", 422)
         if bool(choice.message.tool_calls) != (choice.finish_reason == "tool_calls"):
             raise AgentError("invalid_model_response", "LLM finish reason and tool calls disagree")
-        return ModelTurn(message=choice.message, usage=completion.usage)
+        response_id = completion.id if completion.id and re.fullmatch(r"[A-Za-z0-9_-]{1,128}", completion.id) else None
+        return ModelTurn(message=choice.message, usage=completion.usage, provider_response_id=response_id)
 
 
 class MockDemoProvider:
@@ -124,7 +144,15 @@ class MockDemoProvider:
     async def complete(self, messages, tools):
         results = [strict_json(m["content"]) for m in messages if m["role"] == "tool"]
         if results:
-            content = json.dumps({"status": "completed", "evidence_ids": [r["evidence_id"] for r in results]})
+            reply = {"status": "completed", "evidence_ids": [r["evidence_id"] for r in results]}
+            if len(results) == 1 and results[0]["tool"] == "get_score_summary":
+                tokens = results[0].get("narrative_slots", [])
+                scope = tokens[0] if tokens else None
+                mean = next((token for token in tokens if token.endswith(".mean}}")), None)
+                rate = next((token for token in tokens if token.endswith(".pass_rate}}")), None)
+                if scope and mean and rate:
+                    reply["narrative"] = [f"Looking at {scope}, {mean}, while {rate}."]
+            content = json.dumps(reply)
             return ModelTurn(message=ModelMessage(role="assistant", content=content))
         question = next(m["content"] for m in messages if m["role"] == "user")
         courses = re.findall(r"\bg[1-3]-c[0-9]{2}\b", question)

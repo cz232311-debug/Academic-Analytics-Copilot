@@ -60,6 +60,8 @@ class QueryRequest(Record):
 class FinalSelection(Record):
     status: Literal["completed", "needs_clarification", "unsupported"]
     evidence_ids: Annotated[list[Annotated[str, StringConstraints(pattern=r"^r[1-6]$")]], Field(max_length=6)]
+    narrative: Annotated[list[Annotated[str, StringConstraints(min_length=1, max_length=360)]], Field(max_length=8)] = Field(default_factory=list)
+    guidance: Annotated[list[Literal["review_score_bands", "check_sample_sizes", "review_missing_records"]], Field(max_length=3)] = Field(default_factory=list)
 
 
 class FunctionProposal(Record):
@@ -96,6 +98,14 @@ class Usage(Record):
 class ModelTurn(Record):
     message: ModelMessage
     usage: Usage | None = None
+    provider_response_id: str | None = None
+
+
+class ModelTrace(Record):
+    turn: int
+    provider_response_id: str | None
+    tool_call_count: int
+    usage: Usage | None
 
 
 class ToolTrace(Record):
@@ -129,6 +139,10 @@ class AgentResponse(Record):
     tool_calls: list[ToolTrace]
     evidence: list[Evidence]
     usage: Usage | None
+    model_trace: list[ModelTrace] = Field(default_factory=list)
+    answer_mode: Literal["grounded_narrative", "deterministic_fallback", "notice"] = "notice"
+    fallback_reason: Literal["missing_narrative", "invalid_narrative"] | None = None
+    guidance: list[str] = Field(default_factory=list)
 
 
 class AgentError(DataError):
@@ -136,3 +150,4 @@ class AgentError(DataError):
         super().__init__(message, code=code, status=status)
         self.request_id: str | None = None
         self.tool_calls: list[ToolTrace] = []
+        self.model_trace: list[ModelTrace] = []

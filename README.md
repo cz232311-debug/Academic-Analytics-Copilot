@@ -2,7 +2,7 @@
 
 An independent engineering portfolio project for SAP STAR Application Engineer (2028 Graduates).
 
-**Implemented and tested: synthetic data, CSV/XLSX import, deterministic analytics, FastAPI and a bounded Function Calling workflow.** LLM protocol tests use HTTP mocks and a local scripted model server; no paid/live model has been verified. Streamlit, the full 36-question Agent evaluation and Docker remain deferred.
+**Implemented and tested offline: synthetic data, CSV/XLSX import, deterministic analytics, FastAPI and a bounded Function Calling workflow with a DeepSeek profile.** The paid DeepSeek acceptance run is pending authorization.
 
 The owner's prior experience includes academic analysis and reporting covering 1,382 students and 40 classes. This demonstration uses entirely fabricated records; it contains no historical student data and claims no SAP integration or endorsement.
 
@@ -101,27 +101,29 @@ Invoke-RestMethod 'http://127.0.0.1:8000/api/agent/query' -Method Post -ContentT
 
 The default demo returns `provider: mock`, `simulated: true`, two model-interface turns, one tool call and the deterministic values **69.73**, **67.80%**, **469 graded records**. The mock uses limited English routing and canned evidence selection; it is not an LLM. Other demo questions include `How many students are in the dataset?`, `List courses in grade 1`, and `Compare C001 and C002 for G1-C01`.
 
-For a real Chat Completions-compatible HTTP provider, stop the service with Ctrl+C, set these variables in the service terminal, then restart. Enter the key interactively:
+For DeepSeek Flash, set these variables in the service terminal. The masked prompt keeps the key out of PowerShell command history. The dedicated database path selects the generated demonstration data.
 
 ```powershell
-$env:COPILOT_LLM_PROVIDER = 'openai_compatible'
-$env:COPILOT_LLM_BASE_URL = 'https://api.openai.com/v1'
-$env:COPILOT_LLM_MODEL = Read-Host 'Enter a model ID supporting Chat Completions function tools'
-$secret = Read-Host 'Enter LLM API key' -AsSecureString
-$env:COPILOT_LLM_API_KEY = [System.Net.NetworkCredential]::new('', $secret).Password
-Remove-Variable secret
+Set-Location -LiteralPath 'D:\Document\ChatGPT\SAP-ApplicationEngineer'
+$env:ACADEMIC_DB_PATH = 'data/agent-demo.sqlite3'
+$env:COPILOT_LLM_PROVIDER = 'deepseek'
+$env:COPILOT_LLM_BASE_URL = 'https://api.deepseek.com'
+$env:COPILOT_LLM_MODEL = 'deepseek-flash'
+$deepseekSecret = Read-Host 'DeepSeek API key' -AsSecureString
+$env:COPILOT_LLM_API_KEY = [System.Net.NetworkCredential]::new('', $deepseekSecret).Password
+Remove-Variable deepseekSecret
 & '.\.venv\Scripts\python.exe' -m uvicorn copilot.api:app --host 127.0.0.1 --port 8000
 ```
 
-Only the administrator's environment controls provider, endpoint and model. [.env.example](.env.example) documents the variables; `.env` is **not auto-loaded**. The base URL is a trusted HTTPS API prefix; the adapter appends `/chat/completions`. Loopback HTTP is allowed for tests. It sends `store=false`, disables redirects/proxy inheritance, uses a 15-second provider timeout and 45-second whole-query deadline, and caps each query at four model turns and six tool calls. There are no hidden retries or automatic live-to-mock fallback. Set `COPILOT_LLM_STRICT_TOOLS=false` only for compatible endpoints without remote strict-schema support; local validation remains strict. Real model/endpoint support, credentials and external connectivity have not been verified here.
+The provider reads process environment variables. The DeepSeek profile appends `/chat/completions` to the official origin, disables thinking, requests JSON output and caps each completion at 2,048 output tokens. The stable endpoint uses local strict argument validation. Defaults are a 15-second provider timeout, a 45-second query deadline, four model turns and six tool calls. The adapter disables redirects and proxy inheritance. The `openai_compatible` profile still supports its own configurable base URL, model and remote schema strictness. [.env.example](.env.example) is a reference for the process variables. The app does not auto-load it. [DeepSeek Chat Completions API](https://api-docs.deepseek.com/api/create-chat-completion/)
 
 Four tools wrap the existing core: `get_dataset_overview`, `get_score_summary`, `compare_classes`, `get_catalog`. Statistics delegate to `AnalyticsEngine.summary`; comparison delegates to `AnalyticsEngine.compare_classes`. Overview/catalog reuse the repository. The model cannot supply executable Python, SQL, arbitrary filter fields, URLs or filenames.
 
 The provider receives a canonicalized, restricted English academic question and aggregate/catalog results. Student IDs, unsupported vocabulary, non-ASCII questions, emails, phone numbers and code-like input are rejected before a provider request. This is a narrow domain gate, not a general PII detector. Only generated datasets are eligible; uploaded datasets remain blocked. Provenance/version are rechecked in the transaction reading each tool result. No student rows/display names are sent externally.
 
-The model receives a `role: tool` message linked by `tool_call_id`, then selects server-issued evidence IDs in a strict final JSON object. The server renders the factual English answer from those results. Arbitrary model prose/numbers, fabricated IDs, duplicate references and answers without evidence are rejected. This basic reference mechanism is not a general free-form claim verifier or a guarantee that a model chose the intended filter; returned arguments and evidence make its choice reviewable.
+The model receives a `role: tool` message linked by `tool_call_id`. It writes English sentences by choosing and ordering scoped evidence tokens and grammatical connectors. The backend validates each sentence and fills the tokens from the tool output. `guidance` carries separately labeled suggestions from an allowlist. Unsupported prose with valid evidence triggers a deterministic fallback with `fallback_reason`. Invalid final JSON or evidence selection returns a traceable error. The tool filters and evidence expose the chosen scope for review.
 
-Responses include request ID, provider mode, model turns, validated arguments, tool status, elapsed time, result digest and aggregate evidence. `copilot.agent` emits JSON events without raw questions, invalid raw arguments, provider bodies or keys. `simulated=false` identifies the HTTP adapter; it does not prove its upstream is a real model. The HTTP smoke test intentionally uses a scripted upstream.
+Responses include request ID, provider mode, validated arguments, tool status, elapsed time, result digest and aggregate evidence. `model_trace` records each returned provider response ID and token usage when supplied. `usage` totals the input, output and combined tokens when every completed turn reports them. Mock turns report `null`. The `copilot.agent` JSON events record the same safe identifiers and outcome fields.
 
 ## Verification and debugging
 
@@ -129,14 +131,15 @@ Responses include request ID, provider mode, model turns, validated arguments, t
 .venv/Scripts/python.exe -m pytest -q --basetemp=.test-tmp-manual
 .venv/Scripts/python.exe scripts/smoke_http.py
 .venv/Scripts/python.exe scripts/smoke_agent.py
+.venv/Scripts/python.exe scripts/smoke_deepseek.py --offline
 ```
 
-Latest recorded result: **153 passed, one dependency deprecation warning** (74 existing core/API tests plus 79 agent/provider tests). [Phase 2A results](docs/development/02-function-calling.md) retain the adapter failure and successful rerun. The Agent HTTP smoke passed **6/6** checks using real TCP, Uvicorn and a scripted model HTTP server; no real LLM was called. It creates temporary synthetic data and stops both services. The earlier [core record](docs/development/01-core-api.md) retains its seven-check HTTP result; `smoke_http.py` needs the export command first. Both scripts leave the default database unchanged.
+Latest recorded result is **167 passed** with one existing TestClient deprecation warning. The DeepSeek protocol test uses HTTPX MockTransport. The offline acceptance command exercises the full synthetic dataset and produces a response with real analytics, Mock model turns and `usage: null`. Run `scripts/smoke_deepseek.py` without arguments to review the paid test plan. After authorization, `--live` submits one acceptance question using the configured DeepSeek credential. The receipt is saved to the ignored `.audit/deepseek-live.json`. [Phase 2A completion record](docs/development/02a-deepseek.md)
 
 For debugging, start with `/health`, inspect `/api/dataset`, choose an ID from `/api/catalog`, then reproduce one query in Swagger. A 422 means a schema or dataset constraint failed; a 404 means a valid-format entity/term is absent. A 413 is a byte/row/expansion limit, and 415 is an unsupported file type. Match a response's dataset hash to the manifest before comparing numbers.
 
 ## Contribution boundary and next increment
 
-[The architecture](docs/IMPLEMENTATION_PLAN.md), [36-case English Agent evaluation design](docs/EVALUATION_PLAN.md) and [upstream audit](docs/audit/UPSTREAM_REVIEW.md) are retained. Phase 2A adds the tool loop, basic evidence selection and redacted agent events. Phase 2B will add Streamlit. Live-provider verification, the full Agent evaluation, richer report/claim workflows and Docker remain outstanding; no live-model accuracy or Docker verification is claimed.
+Phase 2A adds the tool loop, the DeepSeek profile and grounded prose. Phase 2B covers Streamlit. Phase 3 covers the full evaluation, Docker and delivery. [Architecture](docs/IMPLEMENTATION_PLAN.md) · [Evaluation design](docs/EVALUATION_PLAN.md) · [Upstream audit](docs/audit/UPSTREAM_REVIEW.md)
 
 Reference inspiration: [Student Performance Analyzer](https://github.com/CH-Anonymous/student-performance-analyzer) by Chirag Khatri, commit `c691eff6ecc0de351ffcdf26bdce436e5daa64e2`. Its original [MIT notice](third_party/student-performance-analyzer/LICENSE) and [author credit](NOTICE.md) remain intact. The new business core is independently implemented; upstream data, model, inference logic and screenshots are not product inputs.

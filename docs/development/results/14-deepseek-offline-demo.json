@@ -1,0 +1,125 @@
+{
+  "mode": "offline_mock",
+  "passed": true,
+  "question": "What is the average score and pass rate for G1-C01?",
+  "http_status": 200,
+  "response": {
+    "request_id": "c2cadf3aceee450f827e4908da00f28d",
+    "provider": "mock",
+    "model": "scripted-demo-v1",
+    "simulated": true,
+    "dataset_version": "a52c8961a7c1da92ab4d7d8cc8af9e9a636fe3e788cbf5bcd24c8eb16607cabc",
+    "status": "completed",
+    "answer": "Looking at course G1-C01 in term 2026-T1, the average score was 69.73 points, while 67.80% of graded enrollments passed (318 of 469). [r1]",
+    "model_turns": 2,
+    "tool_calls": [
+      {
+        "call_id": "call_1",
+        "tool": "get_score_summary",
+        "arguments": {
+          "term": "2026-T1",
+          "course_id": "G1-C01",
+          "class_id": null,
+          "grade_level": null
+        },
+        "status": "ok",
+        "elapsed_ms": 8,
+        "evidence_id": "r1",
+        "result_digest": "07fc6f2115f48be93b0b292c5fdb5834adf524fe36587685fc7eb0fca4a4d1b9",
+        "error_code": null
+      }
+    ],
+    "evidence": [
+      {
+        "evidence_id": "r1",
+        "tool": "get_score_summary",
+        "dataset_version": "a52c8961a7c1da92ab4d7d8cc8af9e9a636fe3e788cbf5bcd24c8eb16607cabc",
+        "arguments": {
+          "term": "2026-T1",
+          "course_id": "G1-C01",
+          "class_id": null,
+          "grade_level": null
+        },
+        "data": {
+          "dataset_version": "a52c8961a7c1da92ab4d7d8cc8af9e9a636fe3e788cbf5bcd24c8eb16607cabc",
+          "scope": {
+            "term": "2026-T1",
+            "grade_level": null,
+            "class_id": null,
+            "course_id": "G1-C01"
+          },
+          "metric": "enrollment_score_mean",
+          "enrollment_count": 484,
+          "student_count": 484,
+          "graded_count": 469,
+          "missing_count": 6,
+          "exempt_count": 9,
+          "passed_count": 318,
+          "failed_count": 151,
+          "failed_student_count": 151,
+          "sum_score_cents": 3270534,
+          "weighted_sum_score_cents": 9811602,
+          "graded_credits": 1407,
+          "average_score": "69.73",
+          "weighted_average_score": "69.73",
+          "pass_rate_percent": "67.80",
+          "distribution": [
+            {
+              "label": "[0,60)",
+              "lower_cents": 0,
+              "upper_cents": 6000,
+              "upper_inclusive": false,
+              "count": 151
+            },
+            {
+              "label": "[60,70)",
+              "lower_cents": 6000,
+              "upper_cents": 7000,
+              "upper_inclusive": false,
+              "count": 79
+            },
+            {
+              "label": "[70,80)",
+              "lower_cents": 7000,
+              "upper_cents": 8000,
+              "upper_inclusive": false,
+              "count": 103
+            },
+            {
+              "label": "[80,90)",
+              "lower_cents": 8000,
+              "upper_cents": 9000,
+              "upper_inclusive": false,
+              "count": 85
+            },
+            {
+              "label": "[90,100]",
+              "lower_cents": 9000,
+              "upper_cents": 10000,
+              "upper_inclusive": true,
+              "count": 51
+            }
+          ]
+        }
+      }
+    ],
+    "usage": null,
+    "model_trace": [
+      {
+        "turn": 1,
+        "provider_response_id": null,
+        "tool_call_count": 1,
+        "usage": null
+      },
+      {
+        "turn": 2,
+        "provider_response_id": null,
+        "tool_call_count": 0,
+        "usage": null
+      }
+    ],
+    "answer_mode": "grounded_narrative",
+    "fallback_reason": null,
+    "guidance": []
+  }
+}
