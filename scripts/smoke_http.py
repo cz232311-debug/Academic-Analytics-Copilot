@@ -10,7 +10,9 @@ import time
 
 import httpx
 
+from copilot.data.generate import DEFAULT_SEED, generate_dataset
 from copilot.models import TABLE_NAMES
+from copilot.storage import Database
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -20,6 +22,10 @@ def main():
     checks = []
     (ROOT / ".audit").mkdir(exist_ok=True)
     with tempfile.TemporaryDirectory(prefix="http-smoke-", dir=ROOT / ".audit") as directory:
+        # Pin this Phase 1 regression fixture, independently of newer demo bootstrap defaults.
+        database = Database(Path(directory) / "smoke.sqlite3")
+        database.initialize()
+        database.replace(generate_dataset(), source="generated", seed=DEFAULT_SEED)
         env = {k: os.environ[k] for k in ("SYSTEMROOT", "WINDIR", "COMSPEC", "PATH", "TEMP", "TMP") if k in os.environ}
         env["ACADEMIC_DB_PATH"] = str(Path(directory) / "smoke.sqlite3")
         env["OPENBLAS_NUM_THREADS"] = "1"

@@ -61,8 +61,9 @@ def _records(table: str, rows):
     headers = [h.strip().lower() for h in header]
     if len(headers) != len(set(headers)):
         raise DataError(f"{table}: duplicate normalized headers")
-    if set(headers) != set(model.model_fields):
-        raise DataError(f"{table}: headers must exactly match {', '.join(model.model_fields)}")
+    required = {name for name, field in model.model_fields.items() if field.is_required()}
+    if not required <= set(headers) or set(headers) - set(model.model_fields):
+        raise DataError(f"{table}: required headers are {', '.join(sorted(required))}; only declared optional columns are accepted")
     records, blank_rows = [], 0
     for row_number, row in enumerate(rows, 2):
         if row_number > MAX_ROWS[table] + 1:

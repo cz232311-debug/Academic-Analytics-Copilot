@@ -14,6 +14,8 @@ CourseId = Annotated[str, StringConstraints(pattern=r"^G[1-3]-C[0-9]{2}$")]
 EnrollmentId = Annotated[str, StringConstraints(pattern=r"^E[0-9]{5}$")]
 Term = Annotated[str, StringConstraints(pattern=r"^20[0-9]{2}-T[1-3]$")]
 GradeLevel = Annotated[int, Field(ge=1, le=3)]
+Major = Literal["computer_science", "business_administration", "information_systems", "unspecified"]
+CourseType = Literal["general_required", "professional_required", "professional_elective", "practical", "unspecified"]
 Label = Annotated[str, StringConstraints(min_length=1, max_length=100, pattern=r"^[A-Za-z0-9][A-Za-z0-9 ()&.,/-]*$")]
 
 
@@ -25,6 +27,7 @@ class ClassRecord(Record):
     class_id: ClassId
     grade_level: GradeLevel
     class_label: Label
+    major: Major = "unspecified"
 
 
 class StudentRecord(Record):
@@ -44,6 +47,7 @@ class CourseRecord(Record):
     course_name: Label
     grade_level: GradeLevel
     credits: Annotated[int, Field(ge=2, le=4)]
+    course_type: CourseType = "unspecified"
 
     @model_validator(mode="after")
     def matching_grade(self):
@@ -135,8 +139,15 @@ class Dataset:
         return self
 
     def payload(self) -> dict:
-        return {table: [row.model_dump() for row in sorted(getattr(self, table), key=lambda r: getattr(r, PRIMARY_KEYS[table]))]
-                for table in TABLE_NAMES}
+        # Optional reporting metadata is omitted when unknown. Legacy datasets
+        # retain their canonical payload/fingerprint; supplied metadata is hashed.
+        payload = {}
+        for table in TABLE_NAMES:
+            rows = sorted(getattr(self, table), key=lambda r: getattr(r, PRIMARY_KEYS[table]))
+            optional = "major" if table == "classes" else "course_type" if table == "courses" else None
+            exclude = {optional} if optional and all(getattr(row, optional) == "unspecified" for row in rows) else set()
+            payload[table] = [row.model_dump(exclude=exclude) for row in rows]
+        return payload
 
     @property
     def version(self) -> str:

@@ -1,7 +1,8 @@
 CREATE TABLE IF NOT EXISTS classes (
     class_id TEXT PRIMARY KEY NOT NULL,
     grade_level INTEGER NOT NULL CHECK (typeof(grade_level) = 'integer' AND grade_level BETWEEN 1 AND 3),
-    class_label TEXT NOT NULL
+    class_label TEXT NOT NULL,
+    major TEXT NOT NULL DEFAULT 'unspecified' CHECK (major IN ('computer_science','business_administration','information_systems','unspecified'))
 );
 CREATE TABLE IF NOT EXISTS students (
     student_id TEXT PRIMARY KEY NOT NULL,
@@ -12,7 +13,8 @@ CREATE TABLE IF NOT EXISTS courses (
     course_id TEXT PRIMARY KEY NOT NULL,
     course_name TEXT NOT NULL,
     grade_level INTEGER NOT NULL CHECK (typeof(grade_level) = 'integer' AND grade_level BETWEEN 1 AND 3),
-    credits INTEGER NOT NULL CHECK (typeof(credits) = 'integer' AND credits BETWEEN 2 AND 4)
+    credits INTEGER NOT NULL CHECK (typeof(credits) = 'integer' AND credits BETWEEN 2 AND 4),
+    course_type TEXT NOT NULL DEFAULT 'unspecified' CHECK (course_type IN ('general_required','professional_required','professional_elective','practical','unspecified'))
 );
 CREATE TABLE IF NOT EXISTS enrollments (
     enrollment_id TEXT PRIMARY KEY NOT NULL,

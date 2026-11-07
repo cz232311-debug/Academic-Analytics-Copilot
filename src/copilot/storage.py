@@ -6,7 +6,7 @@ import sqlite3
 import pandas as pd
 
 from copilot.models import ClassRecord, CourseRecord, DataError, Dataset, SCHEMA_VERSION, TABLE_NAMES
-from copilot.schemas import Catalog, DatasetInfo, Scope
+from copilot.schemas import Catalog, DatasetInfo, ReportingCatalog, Scope
 
 JOIN = """FROM enrollments e JOIN students s ON s.student_id=e.student_id
           JOIN classes c ON c.class_id=s.class_id JOIN courses cr ON cr.course_id=e.course_id
@@ -45,6 +45,21 @@ class Database:
         self.path.parent.mkdir(parents=True, exist_ok=True)
         with self.connect() as conn:
             conn.executescript(Path(__file__).with_name("schema.sql").read_text(encoding="utf-8"))
+            # Additive v1 extension. Existing rows remain explicitly unknown and
+            # their canonical fingerprint is unchanged. Never backfill guesses.
+            conn.execute("BEGIN IMMEDIATE")
+            try:
+                for table, column, definition in (
+                    ("classes", "major", "TEXT NOT NULL DEFAULT 'unspecified' CHECK (major IN ('computer_science','business_administration','information_systems','unspecified'))"),
+                    ("courses", "course_type", "TEXT NOT NULL DEFAULT 'unspecified' CHECK (course_type IN ('general_required','professional_required','professional_elective','practical','unspecified'))"),
+                ):
+                    columns = {r[1] for r in conn.execute(f"PRAGMA table_info({table})")}
+                    if column not in columns:
+                        conn.execute(f"ALTER TABLE {table} ADD COLUMN {column} {definition}")
+                conn.commit()
+            except Exception:
+                conn.rollback()
+                raise
 
     def has_dataset(self):
         with self.connect() as conn:
@@ -103,7 +118,7 @@ class Database:
             if value is not None and conn.execute(query, (value,)).fetchone() is None:
                 raise DataError(f"Unknown {label} in the active dataset", code="unknown_entity", status=404)
 
-    def snapshot(self, scope: Scope, *, class_ids=(), expected_version=None, generated_only=False):
+    def snapshot(self, scope: Scope, *, class_ids=(), expected_version=None, generated_only=False, reporting=False):
         with self.connect() as conn:
             conn.execute("BEGIN")
             metadata = self.metadata(conn)
@@ -112,9 +127,20 @@ class Database:
             for class_id in class_ids:
                 if conn.execute("SELECT 1 FROM classes WHERE class_id=?", (class_id,)).fetchone() is None:
                     raise DataError("Unknown class in the active dataset", code="unknown_entity", status=404)
-            rows = conn.execute("SELECT s.student_id,c.class_id,c.grade_level,e.course_id,e.term,cr.credits,g.status,g.score_cents "
-                                + JOIN + " " + WHERE + " ORDER BY e.enrollment_id", scope.model_dump()).fetchall()
-            frame = pd.DataFrame.from_records([tuple(r) for r in rows], columns=COLUMNS)
+            parameters = scope.model_dump()
+            extra_select = ",cr.course_name,cr.course_type,c.major" if reporting else ""
+            extra_where = " AND (:major IS NULL OR c.major=:major) AND (:course_type IS NULL OR cr.course_type=:course_type)" if reporting else ""
+            if reporting:
+                for value, query, label in (
+                    (parameters.get("major"), "SELECT 1 FROM classes WHERE major=?", "major"),
+                    (parameters.get("course_type"), "SELECT 1 FROM courses WHERE course_type=?", "course type"),
+                ):
+                    if value is not None and conn.execute(query, (value,)).fetchone() is None:
+                        raise DataError(f"Unknown {label} in the active dataset", code="unknown_entity", status=404)
+            rows = conn.execute("SELECT s.student_id,c.class_id,c.grade_level,e.course_id,e.term,cr.credits,g.status,g.score_cents"
+                                + extra_select + " " + JOIN + " " + WHERE + extra_where + " ORDER BY e.enrollment_id", parameters).fetchall()
+            columns = (*COLUMNS, "course_name", "course_type", "major") if reporting else COLUMNS
+            frame = pd.DataFrame.from_records([tuple(r) for r in rows], columns=columns)
             frame["score_cents"] = frame["score_cents"].astype("Int64")
             frame["credits"] = frame["credits"].astype("int64")
             return metadata, frame
@@ -153,3 +179,13 @@ class Database:
             return Catalog(dataset_version=meta["dataset_version"],
                            classes=[ClassRecord(**dict(r)) for r in conn.execute("SELECT * FROM classes ORDER BY class_id")],
                            courses=[CourseRecord(**dict(r)) for r in conn.execute("SELECT * FROM courses ORDER BY course_id")])
+
+    def reporting_catalog(self):
+        with self.connect() as conn:
+            conn.execute("BEGIN")
+            meta = self.metadata(conn)
+            classes = [ClassRecord(**dict(r)) for r in conn.execute("SELECT * FROM classes ORDER BY class_id")]
+            courses = [CourseRecord(**dict(r)) for r in conn.execute("SELECT * FROM courses ORDER BY course_id")]
+            return ReportingCatalog(dataset_version=meta["dataset_version"], classes=classes, courses=courses,
+                                    terms=[r[0] for r in conn.execute("SELECT DISTINCT term FROM enrollments ORDER BY term")],
+                                    majors=sorted({c.major for c in classes}), course_types=sorted({c.course_type for c in courses}))

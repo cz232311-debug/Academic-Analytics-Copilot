@@ -18,6 +18,7 @@ import httpx
 
 from copilot.data.generate import DEFAULT_SEED, export_dataset, generate_dataset
 from copilot.models import TABLE_NAMES
+from copilot.storage import Database
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -54,7 +55,12 @@ def main():
     checks = []
     with tempfile.TemporaryDirectory(prefix="agent-smoke-", dir=ROOT / ".audit") as folder:
         folder = Path(folder)
-        manifest = export_dataset(generate_dataset(), folder / "csv", DEFAULT_SEED)
+        dataset = generate_dataset()
+        manifest = export_dataset(dataset, folder / "csv", DEFAULT_SEED)
+        # Pin this Phase 2A regression fixture before newer demo bootstrap can run.
+        database = Database(folder / "agent.sqlite3")
+        database.initialize()
+        database.replace(dataset, source="generated", seed=DEFAULT_SEED)
         model_server = ThreadingHTTPServer(("127.0.0.1", 0), LocalModel)
         model_server.requests = []
         thread = threading.Thread(target=model_server.serve_forever, daemon=True)

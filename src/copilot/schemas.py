@@ -1,10 +1,10 @@
 """Public analytical contracts. Decimal display values serialize as JSON strings."""
 from decimal import Decimal
-from typing import Literal
+from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
-from copilot.models import ClassId, ClassRecord, CourseId, CourseRecord, GradeLevel, Record, Term
+from copilot.models import ClassId, ClassRecord, CourseId, CourseRecord, CourseType, GradeLevel, Major, Record, Term
 
 
 class Scope(BaseModel):
@@ -69,6 +69,59 @@ class Catalog(Record):
     dataset_version: str
     classes: list[ClassRecord]
     courses: list[CourseRecord]
+
+
+class ReportScope(Scope):
+    major: Major | None = None
+    course_type: CourseType | None = None
+
+    def base_scope(self) -> Scope:
+        return Scope(**self.model_dump(include=set(Scope.model_fields)))
+
+
+class CourseReportQuery(ReportScope):
+    expected_version: Annotated[str | None, Field(pattern=r"^[0-9a-f]{64}$")] = None
+
+
+class ReportingCatalog(Catalog):
+    terms: list[str]
+    majors: list[str]
+    course_types: list[str]
+
+
+class ReportPolicy(Record):
+    excellent_threshold_cents: int = 8000
+    pass_threshold_cents: int = 6000
+    score_bins: list[str]
+    mean_band_rule: str = "Classify the exact unrounded course mean; intervals are lower-inclusive and upper-exclusive, except 100 is included."
+    denominator: str = "Graded enrollment records only; missing and exempt are excluded from averages, rates and score bands. No records means null, never zero."
+    rounding: str = "Display scores and percentages to 2 decimal places using ROUND_HALF_UP."
+
+
+class CourseReportRow(Record):
+    course_id: CourseId
+    course_name: str
+    course_type: CourseType
+    statistics: Statistics
+    fail_rate_percent: Decimal | None
+    excellent_count: int
+    excellent_rate_percent: Decimal | None
+    average_band: str | None
+
+
+class CourseMeanBand(Record):
+    label: str
+    course_ids: list[str]
+
+
+class CourseReport(Record):
+    dataset_version: str
+    generated_at: str
+    scope: ReportScope
+    summary: Statistics
+    rows: list[CourseReportRow]
+    mean_bands: list[CourseMeanBand]
+    policy: ReportPolicy
 
 
 class ImportResult(Record):

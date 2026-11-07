@@ -19,8 +19,8 @@ from copilot.agent.tools import TOOLS
 from copilot.data.generate import DEFAULT_SEED, generate_dataset
 from copilot.data.importing import MAX_FILE_BYTES, import_csv_tables, import_workbook
 from copilot.models import ClassId, CourseId, DataError, TABLE_NAMES, Term
-from copilot.schemas import (Catalog, ClassComparison, DatasetInfo, ErrorDetail, ErrorResponse,
-                             ImportResult, Scope, Statistics)
+from copilot.schemas import (Catalog, ClassComparison, CourseReport, CourseReportQuery, DatasetInfo, ErrorDetail, ErrorResponse,
+                             ImportResult, ReportingCatalog, ReportScope, Scope, Statistics)
 from copilot.storage import Database
 
 MAX_REQUEST_BYTES = 26 * 1024 * 1024
@@ -89,7 +89,7 @@ def create_app(database_path: str | Path | None = None, *, bootstrap_demo=True, 
         configure_logging()
         store.initialize()
         if bootstrap_demo and not store.has_dataset():
-            store.replace(generate_dataset(), source="generated", seed=DEFAULT_SEED)
+            store.replace(generate_dataset(reporting_metadata=True), source="generated", seed=DEFAULT_SEED)
         yield
 
     application = FastAPI(title="Academic Analytics Copilot", version="0.2.0",
@@ -150,9 +150,19 @@ def create_app(database_path: str | Path | None = None, *, bootstrap_demo=True, 
     def dataset():
         return store.overview()
 
-    @application.get("/api/catalog", response_model=Catalog)
+    @application.get("/api/catalog", response_model=Catalog,
+                     response_model_exclude={"classes": {"__all__": {"major"}}, "courses": {"__all__": {"course_type"}}})
     def catalog():
         return store.catalog()
+
+    @application.get("/api/reports/catalog", response_model=ReportingCatalog)
+    def reporting_catalog():
+        return store.reporting_catalog()
+
+    @application.get("/api/reports/courses", response_model=CourseReport)
+    def course_report(parameters: Annotated[CourseReportQuery, Query()]):
+        scope = ReportScope(**parameters.model_dump(exclude={"expected_version"}))
+        return engine.course_report(scope, expected_version=parameters.expected_version)
 
     @application.get("/api/analytics/summary", response_model=Statistics)
     def summary(scope: Annotated[Scope, Query()]):

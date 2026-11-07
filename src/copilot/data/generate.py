@@ -19,7 +19,7 @@ COURSE_NAMES = (
 )
 
 
-def generate_dataset(seed: int = DEFAULT_SEED) -> Dataset:
+def generate_dataset(seed: int = DEFAULT_SEED, *, reporting_metadata: bool = False) -> Dataset:
     if type(seed) is not int or not 0 <= seed <= 2**32 - 1:
         raise ValueError("seed must be an integer from 0 to 2**32 - 1")
     rng = random.Random(seed)
@@ -55,6 +55,15 @@ def generate_dataset(seed: int = DEFAULT_SEED) -> Dataset:
             score = max(0, min(10000, 7300 + ability + rng.randint(-2600, 2200) - (index % 5) * 120))
             grades.append(GradeRecord(grade_record_id=f"R{number:05}", enrollment_id=enrollment_id,
                                       status=status, score_cents=score if status == "graded" else None))
+    if reporting_metadata:
+        # Explicit synthetic categories, independent of score RNG and not an
+        # inference about any real college curriculum or legacy data.
+        majors = ("computer_science", "business_administration", "information_systems")
+        classes = [row.model_copy(update={"major": majors[index % 3]}) for index, row in enumerate(classes)]
+        courses = [row.model_copy(update={"course_type": (
+            "general_required" if int(row.course_id[-2:]) <= 4 else
+            "professional_required" if int(row.course_id[-2:]) <= 8 else
+            "professional_elective" if int(row.course_id[-2:]) <= 28 else "practical")}) for row in courses]
     return Dataset(tuple(classes), tuple(students), tuple(courses), tuple(enrollments), tuple(grades)).validate()
 
 
@@ -69,7 +78,8 @@ def export_dataset(dataset: Dataset, directory: Path, seed: int) -> dict:
             writer.writeheader()
             writer.writerows(records)
         hashes[path.name] = hashlib.sha256(path.read_bytes()).hexdigest()
-    manifest = {"schema_version": "1", "generator_version": "1", "seed": seed, "synthetic": True,
+    enriched = any(row.major != "unspecified" for row in dataset.classes) or any(row.course_type != "unspecified" for row in dataset.courses)
+    manifest = {"schema_version": "1", "generator_version": "2" if enriched else "1", "seed": seed, "synthetic": True,
                 "dataset_version": dataset.version, "term": DEFAULT_TERM,
                 "counts": {table: len(getattr(dataset, table)) for table in TABLE_NAMES},
                 "grade_status_counts": {s: sum(r.status == s for r in dataset.grade_records) for s in ("graded", "missing", "exempt")},
@@ -82,8 +92,9 @@ def main():
     parser = argparse.ArgumentParser(description="Generate the entirely synthetic academic demo")
     parser.add_argument("--output", type=Path, default=Path("data/demo"))
     parser.add_argument("--seed", type=int, default=DEFAULT_SEED)
+    parser.add_argument("--reporting-metadata", action="store_true", help="Include synthetic major/course-type categories")
     args = parser.parse_args()
-    print(json.dumps(export_dataset(generate_dataset(args.seed), args.output, args.seed), indent=2))
+    print(json.dumps(export_dataset(generate_dataset(args.seed, reporting_metadata=args.reporting_metadata), args.output, args.seed), indent=2))
 
 
 if __name__ == "__main__":

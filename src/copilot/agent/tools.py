@@ -64,8 +64,8 @@ class ToolRegistry:
             catalog = self.database.catalog(**guard)
             level = args.grade_level
             data = {"dataset_version": catalog.dataset_version,
-                    "classes": [r.model_dump() for r in catalog.classes if level is None or r.grade_level == level],
-                    "courses": [r.model_dump() for r in catalog.courses if level is None or r.grade_level == level]}
+                    "classes": [r.model_dump(exclude={"major"}) for r in catalog.classes if level is None or r.grade_level == level],
+                    "courses": [r.model_dump(exclude={"course_type"}) for r in catalog.courses if level is None or r.grade_level == level]}
         result = Evidence(evidence_id=evidence_id, tool=name, dataset_version=version, arguments=values, data=data)
         if len(result.model_dump_json().encode()) > 32768:
             raise AgentError("tool_result_too_large", "Aggregate tool result exceeds its output limit")

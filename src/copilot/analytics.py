@@ -1,11 +1,13 @@
 """Deterministic Pandas metrics; denominator, scope and exact sums stay visible."""
 from decimal import Decimal, ROUND_HALF_UP
 from fractions import Fraction
+from datetime import datetime, timezone
 
 import pandas as pd
 
 from copilot.models import DataError
-from copilot.schemas import ClassComparison, Scope, ScoreBin, Statistics
+from copilot.schemas import (ClassComparison, CourseMeanBand, CourseReport, CourseReportRow,
+                             ReportPolicy, ReportScope, Scope, ScoreBin, Statistics)
 from copilot.storage import Database
 
 BINS = (("[0,60)", 0, 6000, False), ("[60,70)", 6000, 7000, False),
@@ -47,6 +49,27 @@ class AnalyticsEngine:
         meta, frame = self.database.snapshot(scope, expected_version=expected_version, generated_only=generated_only)
         return summarize(frame, meta["dataset_version"], scope)
 
+    def course_report(self, scope: ReportScope, *, expected_version=None) -> CourseReport:
+        # All views derive from the same transaction/frame and summarize().
+        meta, frame = self.database.snapshot(scope, expected_version=expected_version, reporting=True)
+        version = meta["dataset_version"]
+        base = scope.base_scope()
+        rows = []
+        for course_id, group in frame.groupby("course_id", sort=True):
+            statistics = summarize(group, version, base.model_copy(update={"course_id": course_id}))
+            excellent = int(((group["status"] == "graded") & (group["score_cents"] >= 8000)).sum())
+            band = course_mean_band(statistics.sum_score_cents, statistics.graded_count)
+            rows.append(CourseReportRow(course_id=course_id, course_name=group.iloc[0]["course_name"],
+                        course_type=group.iloc[0]["course_type"], statistics=statistics,
+                        fail_rate_percent=ratio(statistics.failed_count * 100, statistics.graded_count),
+                        excellent_count=excellent, excellent_rate_percent=ratio(excellent * 100, statistics.graded_count),
+                        average_band=band))
+        return CourseReport(dataset_version=version, generated_at=datetime.now(timezone.utc).isoformat(), scope=scope,
+                            summary=summarize(frame, version, base), rows=rows,
+                            mean_bands=[CourseMeanBand(label=label, course_ids=[r.course_id for r in rows if r.average_band == label])
+                                        for label, *_ in reversed(BINS)],
+                            policy=ReportPolicy(score_bins=[b[0] for b in BINS]))
+
     def compare_classes(self, course_id: str, class_ids: list[str], term="2026-T1", *, expected_version=None, generated_only=False):
         if not 2 <= len(class_ids) <= 40 or len(set(class_ids)) != len(class_ids):
             raise DataError("Choose between 2 and 40 distinct classes")
@@ -59,3 +82,15 @@ class AnalyticsEngine:
         highest = [cid for cid in sorted(means) if means[cid] == max(means.values())]
         return ClassComparison(dataset_version=meta["dataset_version"], course_id=course_id, term=term,
                                results=results, highest_mean_class_ids=highest)
+
+
+def course_mean_band(sum_score_cents: int, graded_count: int) -> str | None:
+    """Classify exact rational means before display rounding, using integer comparisons."""
+    if not graded_count:
+        return None
+    for label, lower, upper, inclusive in BINS:
+        if sum_score_cents >= lower * graded_count and (
+            sum_score_cents <= upper * graded_count if inclusive else sum_score_cents < upper * graded_count
+        ):
+            return label
+    raise ValueError("Mean is outside the valid score range")
