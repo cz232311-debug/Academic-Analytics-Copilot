@@ -79,6 +79,26 @@ class Completion(BaseModel):
     id: str | None = None
 
 
+def _remove_deepseek_tool_indexes(payload):
+    """Discard DeepSeek's positional metadata before strict tool-call validation."""
+    if not isinstance(payload, dict) or not isinstance(payload.get("choices"), list):
+        return
+    for choice in payload["choices"]:
+        message = choice.get("message") if isinstance(choice, dict) else None
+        calls = message.get("tool_calls") if isinstance(message, dict) else None
+        if isinstance(calls, list):
+            for call in calls:
+                if isinstance(call, dict) and type(call.get("index")) is int:
+                    call.pop("index")
+
+
+def _safe_error_path(error: ValidationError) -> str:
+    fields = {"choices", "message", "finish_reason", "content", "role", "refusal", "tool_calls", "id", "type",
+              "function", "name", "arguments", "usage", "prompt_tokens", "completion_tokens", "total_tokens"}
+    location = error.errors(include_input=False, include_context=False, include_url=False)[0]["loc"]
+    return ".".join(str(part) if isinstance(part, int) or part in fields else "<field>" for part in location) or "response"
+
+
 class OpenAICompatibleProvider:
     name = "openai_compatible"
     simulated = False
@@ -115,15 +135,22 @@ class OpenAICompatibleProvider:
                         if len(content) + len(chunk) > 131072:
                             raise AgentError("llm_response_too_large", "LLM response exceeds its byte limit")
                         content.extend(chunk)
-            completion = Completion.model_validate(strict_json(content.decode("utf-8")))
         except AgentError:
             raise
         except httpx.TimeoutException:
             raise AgentError("llm_timeout", "LLM provider request timed out", 504) from None
         except httpx.RequestError:
             raise AgentError("llm_connection_error", "LLM provider could not be reached", 502) from None
-        except (ValidationError, ValueError, RecursionError):
-            raise AgentError("invalid_model_response", "LLM returned malformed or unsupported response data") from None
+        try:
+            payload = strict_json(content.decode("utf-8"))
+        except (ValueError, RecursionError):
+            raise AgentError("invalid_model_response", "LLM response body was not valid JSON") from None
+        if self.name == "deepseek":
+            _remove_deepseek_tool_indexes(payload)
+        try:
+            completion = Completion.model_validate(payload)
+        except ValidationError as error:
+            raise AgentError("invalid_model_response", f"LLM response schema mismatch at {_safe_error_path(error)}") from None
         choice = completion.choices[0]
         if choice.finish_reason in {"insufficient_system_resource", "aborted"}:
             raise AgentError("llm_interrupted", "LLM provider interrupted generation", 503)

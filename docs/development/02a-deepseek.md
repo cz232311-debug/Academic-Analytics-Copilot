@@ -1,6 +1,6 @@
 # Phase 2A DeepSeek and grounded prose
 
-November 6, 2026 (Asia/Shanghai). The implementation and offline verification are complete. The single paid acceptance query awaits explicit user authorization and a credential in the execution environment.
+Phase 2A implementation, offline regression and one user-run DeepSeek acceptance query are complete.
 
 ## Changes
 
@@ -31,7 +31,8 @@ The controlled grammar is a design choice. The model selects the emphasis, sente
 
 - **167 passed**, with one pre-existing TestClient deprecation warning. This includes 153 prior tests and 14 new tests. The DeepSeek round trip used MockTransport, including a scripted token total of 240 across two mocked completions. [JUnit report](results/13-deepseek-offline.xml)
 - **Offline full dataset example passed.** The actual question was `What is the average score and pass rate for G1-C01?` The response was `Looking at course G1-C01 in term 2026-T1, the average score was 69.73 points, while 67.80% of graded enrollments passed (318 of 469). [r1]` It used two Mock turns and one successful `get_score_summary` call. [Offline receipt](results/14-deepseek-offline-demo.json)
-- **Paid DeepSeek verification is pending.** The dry run showed the exact question, endpoint and budgets with zero outbound requests. No real response, latency, model accuracy or billable token count has been measured.
+- The first live attempt returned `502 invalid_model_response` before any tool executed. The adapter was updated to strip DeepSeek tool-call index metadata and report a safe field path on schema errors. The next offline regression passed **168 tests** with the same TestClient warning.
+- The user reran the live acceptance successfully. The local receipt records HTTP 200, `passed: true`, `simulated: false`, `grounded_narrative` and `fallback_reason: null`. `deepseek-flash` selected `get_score_summary` in its first turn and produced the grounded answer in its second. Evidence `r1` reports 69.73 points, a 67.80% pass rate and 318 passes out of 469 graded enrollments. DeepSeek reported 3,312 prompt tokens and 170 completion tokens, totaling 3,482. The receipt is in `.audit/deepseek-live.json`.
 
 The response groups `tool_calls`, `evidence`, `dataset_version` and `model_trace` by `request_id`. Each tool trace records validated arguments, latency, evidence ID and result digest. Each model trace records its turn, tool count, provider response ID and prompt/completion/total tokens when reported. The aggregate `usage` is present only when every completed turn supplied usage. The offline receipt has `null` usage. Server JSON events record the validation outcome without persisting raw prompts, provider response bodies or keys.
 
@@ -62,4 +63,4 @@ The current gate only accepts a restricted English vocabulary, approved academic
 
 Chinese support would require local Unicode normalization, an explicit Chinese analytics vocabulary and local parsing into the same structured course, class, term and metric intents. Approved catalog aliases could map Chinese course names to known IDs. Unknown spans, student IDs and personal identifiers should be rejected locally. Tests should cover mixed scripts, full-width IDs, confusables and private input. The provider would receive the canonical aggregate intent. This increment leaves the English privacy gate in place.
 
-Phase 2B covers the Dashboard and chat UI. Phase 3 covers the full Agent evaluation and deployment. Live DeepSeek behavior and answer quality remain to be measured.
+Phase 2B covers the Dashboard and chat UI. Phase 3 covers the full Agent evaluation and deployment. The live receipt verifies the specific course query. Tool selection and answer quality across a broader question set remain evaluation targets.

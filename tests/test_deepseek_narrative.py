@@ -64,7 +64,10 @@ def test_deepseek_chat_completions_full_api_round_trip(agent_db, caplog):
             assert evidence["evidence_id"] == "r1" and evidence["data"]["average_score"] == "73.33"
             assert "{{r1.mean}}" in evidence["narrative_slots"]
             turn, reason = final_turn(narrative=NARRATIVE, guidance=["review_score_bands"]), "stop"
-        return httpx.Response(200, json=completion(turn.message.model_dump(), reason, id=f"ds-mock-{len(sent)}",
+        message = turn.message.model_dump()
+        if reason == "tool_calls":
+            message["tool_calls"][0]["index"] = 0
+        return httpx.Response(200, json=completion(message, reason, id=f"ds-mock-{len(sent)}",
             usage={"prompt_tokens": 100, "completion_tokens": 20, "total_tokens": 120, "prompt_cache_hit_tokens": 40}))
 
     settings = LLMSettings(provider="deepseek", model="deepseek-flash", base_url="https://api.deepseek.com", api_key=SecretStr("fake-deepseek-key"))
@@ -83,6 +86,18 @@ def test_deepseek_chat_completions_full_api_round_trip(agent_db, caplog):
     assert all(entry["usage"]["total_tokens"] == 120 for entry in result["model_trace"])
     assert "fake-deepseek-key" not in json.dumps(sent) + response.text + caplog.text
     assert '"student_id"' not in json.dumps(sent) and "Synthetic Student" not in json.dumps(sent)
+    assert "index" not in sent[1]["messages"][-2]["tool_calls"][0]
+
+
+def test_schema_diagnostic_omits_untrusted_field_names_and_values():
+    message = tool_turn().message.model_dump()
+    message["tool_calls"][0]["secret-shaped-field"] = "private-response-data"
+    settings = LLMSettings(provider="deepseek", model="deepseek-flash", base_url="https://api.deepseek.com",
+                           api_key=SecretStr("fake-deepseek-key"))
+    transport = httpx.MockTransport(lambda _: httpx.Response(200, json=completion(message, "tool_calls")))
+    with pytest.raises(AgentError) as error:
+        asyncio.run(OpenAICompatibleProvider(settings, transport=transport).complete([], []))
+    assert str(error.value) == "LLM response schema mismatch at choices.0.message.tool_calls.0.<field>"
 
 
 @pytest.mark.parametrize("bad_sentence", [
