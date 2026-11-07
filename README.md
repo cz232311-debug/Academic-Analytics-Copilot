@@ -2,9 +2,23 @@
 
 An independent engineering portfolio project for SAP STAR Application Engineer (2028 Graduates).
 
-**Implemented and tested offline: synthetic data, CSV/XLSX import, deterministic analytics, FastAPI and a bounded Function Calling workflow with a DeepSeek profile.** The paid DeepSeek acceptance run is pending authorization.
+**Phase 2B adds a runnable Streamlit academic analysis workbench connected to FastAPI over HTTP.** It includes multidimensional course reports, charts, CSV downloads and the existing evidence-grounded Copilot. Phase 2A's user-run real DeepSeek check passed separately. [Workbench implementation and verification](docs/development/02b-workbench.md)
 
 The owner's prior experience includes academic analysis and reporting covering 1,382 students and 40 classes. This demonstration uses entirely fabricated records; it contains no historical student data and claims no SAP integration or endorsement.
+
+For the complete first-install and post-reboot PowerShell workflow, read [本机启动说明](START_HERE.zh-CN.md). After installing dependencies, keep two PowerShell windows open from the repository root:
+
+```powershell
+# Window A — FastAPI, offline Mock provider by default
+.\scripts\start_backend.ps1
+```
+
+```powershell
+# Window B — Streamlit, reads only the FastAPI service
+.\scripts\start_dashboard.ps1
+```
+
+Open [the workbench](http://127.0.0.1:8501). The sidebar supports term, grade, class, major, course type and course. Click **Load analysis** to update the three report views. Excellent rate means graded scores ≥80. Tables, charts and CSV share one backend report and version. The AI area keeps its existing scope and does not inherit sidebar filters. External model calls require an explicit form submission and authorization.
 
 ## Run locally
 
@@ -30,15 +44,17 @@ The default seed is `20261103`, term `2026-T1`. Actual generated counts are **1,
 
 | Table | Typed columns |
 |---|---|
-| `classes` | `class_id`: string ID; `grade_level`: integer 1–3; `class_label`: text |
+| `classes` | `class_id`: string ID; `grade_level`: integer 1–3; `class_label`: text; optional `major`: enum |
 | `students` | `student_id`: string ID; `class_id`: FK; `display_name`: exact `Synthetic Student NNNN` |
-| `courses` | `course_id`: string ID; `course_name`: text; `grade_level`: integer; `credits`: integer 2–4 |
+| `courses` | `course_id`: string ID; `course_name`: text; `grade_level`: integer; `credits`: integer 2–4; optional `course_type`: enum |
 | `enrollments` | `enrollment_id`: string ID; `student_id` / `course_id`: FKs; `term`: typed term |
 | `grade_records` | `grade_record_id`: string ID; `enrollment_id`: unique FK; `status`: graded/missing/exempt; `score_cents`: nullable integer 0–10,000 |
 
 `score_cents=6000` means **60.00 points**. Graded records require a score; missing/exempt records require null. Every enrollment requires exactly one final record. Duplicate keys, duplicate student/course/term selections, orphan rows and cross-grade enrollments are rejected. Class IDs are never inferred to be scores.
 
 Exports in `data/demo/` include five CSVs and a manifest with seed, counts and SHA-256 hashes. Generated data and local databases are ignored by Git; the code and [recorded manifest](docs/development/results/demo-manifest.json) reproduce them.
+
+Major/course-type fields default to `unspecified` for legacy data and may be omitted from normalized CSV/XLSX uploads. Existing databases migrate without guessed classifications. New empty API databases receive explicit synthetic categories; the legacy generator default keeps its original payload and hash. Add `--reporting-metadata` to the generator command to export the enriched variant. Scores and enrollment counts are identical between variants; metadata is included in the enriched fingerprint. [Reporting policy and compatibility](docs/development/02b-workbench.md)
 
 ## Statistics and APIs
 
@@ -47,6 +63,8 @@ Exports in `data/demo/` include five CSVs and a manifest with seed, counts and S
 | `GET /health` | Service and dataset activation status |
 | `GET /api/dataset` | Counts, populations, course loads, dataset hash and provenance |
 | `GET /api/catalog` | Class/course IDs and labels for controlled filters |
+| `GET /api/reports/catalog` | Versioned filter catalog, including major and course type |
+| `GET /api/reports/courses` | Course-grouped report with six filters, exact mean bands, fail/excellent rates and version checking |
 | `GET /api/analytics/summary` | Filter by `term`, `grade_level`, `class_id`, `course_id` |
 | `GET /api/analytics/compare-classes` | Compare 2–40 distinct `class_ids` on one required `course_id` and term |
 | `POST /api/datasets/import` | Activate five CSV files or one five-sheet XLSX workbook atomically |
@@ -134,12 +152,14 @@ Responses include request ID, provider mode, validated arguments, tool status, e
 .venv/Scripts/python.exe scripts/smoke_deepseek.py --offline
 ```
 
-Latest recorded result is **167 passed** with one existing TestClient deprecation warning. The DeepSeek protocol test uses HTTPX MockTransport. The offline acceptance command exercises the full synthetic dataset and produces a response with real analytics, Mock model turns and `usage: null`. Run `scripts/smoke_deepseek.py` without arguments to review the paid test plan. After authorization, `--live` submits one acceptance question using the configured DeepSeek credential. The receipt is saved to the ignored `.audit/deepseek-live.json`. [Phase 2A completion record](docs/development/02a-deepseek.md)
+The Phase 2B regression contains **230 tests**, including the original 168 and actual TCP/Streamlit checks. Its [JUnit receipt](docs/development/results/phase2b-pytest.xml) records the completed result. The [workbench HTTP smoke receipt](docs/development/results/phase2b-http-smoke.json) records 15 passed checks. One existing TestClient deprecation warning remains. All Phase 2B automatic model calls use Mock/scripted transports. The user-run Phase 2A live check separately passed with `grounded_narrative`, one tool call and 3,482 reported tokens across two model turns. [Phase 2A completion record](docs/development/02a-deepseek.md)
+
+Run the complete workbench HTTP acceptance with `.venv/Scripts/python.exe scripts/smoke_dashboard.py`. It starts isolated Uvicorn/Streamlit processes, tests the rendered page against real HTTP, and stops its own processes. No real API key is inherited. Streamlit AppTest verifies page behavior; browser pixel layout and a live DeepSeek submission through the new page remain unverified. [Official Streamlit app testing guide](https://docs.streamlit.io/develop/concepts/app-testing/get-started)
 
 For debugging, start with `/health`, inspect `/api/dataset`, choose an ID from `/api/catalog`, then reproduce one query in Swagger. A 422 means a schema or dataset constraint failed; a 404 means a valid-format entity/term is absent. A 413 is a byte/row/expansion limit, and 415 is an unsupported file type. Match a response's dataset hash to the manifest before comparing numbers.
 
 ## Contribution boundary and next increment
 
-Phase 2A adds the tool loop, the DeepSeek profile and grounded prose. Phase 2B covers Streamlit. Phase 3 covers the full evaluation, Docker and delivery. [Architecture](docs/IMPLEMENTATION_PLAN.md) · [Evaluation design](docs/EVALUATION_PLAN.md) · [Upstream audit](docs/audit/UPSTREAM_REVIEW.md)
+Phase 2A adds the tool loop, the DeepSeek profile and grounded prose. Phase 2B's first increment adds Streamlit and standardized course reporting. Full Word/PDF export, the complete evaluation, Docker and delivery remain future work. [Architecture](docs/IMPLEMENTATION_PLAN.md) · [Evaluation design](docs/EVALUATION_PLAN.md) · [Upstream audit](docs/audit/UPSTREAM_REVIEW.md)
 
 Reference inspiration: [Student Performance Analyzer](https://github.com/CH-Anonymous/student-performance-analyzer) by Chirag Khatri, commit `c691eff6ecc0de351ffcdf26bdce436e5daa64e2`. Its original [MIT notice](third_party/student-performance-analyzer/LICENSE) and [author credit](NOTICE.md) remain intact. The new business core is independently implemented; upstream data, model, inference logic and screenshots are not product inputs.

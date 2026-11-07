@@ -1,0 +1,14 @@
+Initially untracked source files before retrospective commits:
+scripts/smoke_dashboard.py
+scripts/start_backend.ps1
+scripts/start_dashboard.ps1
+src/copilot/dashboard/__init__.py
+src/copilot/dashboard/app.py
+src/copilot/dashboard/client.py
+src/copilot/dashboard/presentation.py
+streamlit_app.py
+tests/test_course_reports.py
+tests/test_dashboard.py
+tests/test_dashboard_http.py
+
+At implementation checkpoint: all listed source files are now tracked. No source deletions.
