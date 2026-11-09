@@ -83,15 +83,19 @@ class Database:
             return conn.execute("SELECT 1 FROM dataset_metadata").fetchone() is not None
 
     def replace(self, dataset: Dataset, *, source="uploaded_local_only", seed=None,
-                expected_version=None, preserve_courses=False):
+                expected_version=None, expected_empty=False, preserve_courses=False):
         dataset.validate()
         if source not in {"generated", "uploaded_local_only"}:
             raise ValueError("Unknown dataset source")
         if source == "uploaded_local_only" and seed is not None:
             raise ValueError("Imported datasets cannot claim a generator seed")
+        if expected_empty and expected_version is not None:
+            raise ValueError("Choose an empty-state guard or an expected dataset version")
         with self.connect() as conn:
             conn.execute("BEGIN IMMEDIATE")
             try:
+                if expected_empty and conn.execute("SELECT 1 FROM dataset_metadata").fetchone() is not None:
+                    raise DataError("Dataset changed during this query; please retry", code="dataset_changed", status=409)
                 if expected_version is not None:
                     self.check_access(self.metadata(conn), expected_version=expected_version)
                 if preserve_courses:

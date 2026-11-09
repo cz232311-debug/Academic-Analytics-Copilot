@@ -103,6 +103,8 @@ class CollegeCommitResult(Record):
     dataset: DatasetInfo
     imported_counts: dict[str, int]
     retained_course_count: int
+    archive_id: str | None = None
+    archive_status: Literal["complete", "pending"] | None = None
 
 
 @dataclass

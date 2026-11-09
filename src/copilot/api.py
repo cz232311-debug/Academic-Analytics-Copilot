@@ -233,4 +233,6 @@ def create_app(database_path: str | Path | None = None, *, bootstrap_demo=True, 
     return application
 
 
-app = create_app()
+# The staff workflow starts with an upload. Example activation is explicit;
+# callers of create_app may still opt into the original seeded test fixture.
+app = create_app(bootstrap_demo=False)
