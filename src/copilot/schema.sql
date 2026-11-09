@@ -1,8 +1,8 @@
 CREATE TABLE IF NOT EXISTS classes (
     class_id TEXT PRIMARY KEY NOT NULL,
-    grade_level INTEGER NOT NULL CHECK (typeof(grade_level) = 'integer' AND grade_level BETWEEN 1 AND 3),
+    grade_level INTEGER NOT NULL CHECK (typeof(grade_level) = 'integer' AND (grade_level BETWEEN 1 AND 3 OR grade_level BETWEEN 1900 AND 2199)),
     class_label TEXT NOT NULL,
-    major TEXT NOT NULL DEFAULT 'unspecified' CHECK (major IN ('computer_science','business_administration','information_systems','unspecified'))
+    major TEXT NOT NULL DEFAULT 'unspecified' CHECK (major IN ('computer_science','business_administration','information_systems','software_engineering','network_engineering','unspecified'))
 );
 CREATE TABLE IF NOT EXISTS students (
     student_id TEXT PRIMARY KEY NOT NULL,
@@ -12,9 +12,17 @@ CREATE TABLE IF NOT EXISTS students (
 CREATE TABLE IF NOT EXISTS courses (
     course_id TEXT PRIMARY KEY NOT NULL,
     course_name TEXT NOT NULL,
-    grade_level INTEGER NOT NULL CHECK (typeof(grade_level) = 'integer' AND grade_level BETWEEN 1 AND 3),
-    credits INTEGER NOT NULL CHECK (typeof(credits) = 'integer' AND credits BETWEEN 2 AND 4),
-    course_type TEXT NOT NULL DEFAULT 'unspecified' CHECK (course_type IN ('general_required','professional_required','professional_elective','practical','unspecified'))
+    grade_level INTEGER NOT NULL CHECK (typeof(grade_level) = 'integer' AND (grade_level BETWEEN 1 AND 3 OR grade_level BETWEEN 1900 AND 2199)),
+    credits NUMERIC NOT NULL CHECK (typeof(credits) IN ('integer','real') AND credits > 0 AND credits <= 100 AND round(credits,2) = credits),
+    course_type TEXT NOT NULL DEFAULT 'unspecified' CHECK (course_type IN ('general_required','general_elective','professional_required','professional_elective','practical','unspecified')),
+    source_header TEXT,
+    source_key TEXT,
+    course_category TEXT,
+    study_nature TEXT,
+    hours INTEGER CHECK (hours IS NULL OR (typeof(hours)='integer' AND hours BETWEEN 0 AND 2000)),
+    academic_year TEXT,
+    source_term TEXT,
+    source_code TEXT
 );
 CREATE TABLE IF NOT EXISTS enrollments (
     enrollment_id TEXT PRIMARY KEY NOT NULL,

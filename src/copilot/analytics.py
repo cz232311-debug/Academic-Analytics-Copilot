@@ -25,8 +25,13 @@ def summarize(frame: pd.DataFrame, version: str, scope: Scope) -> Statistics:
     failed = graded.loc[scores < 6000]
     count = len(graded)
     score_sum = int(scores.sum())
-    weighted_sum = int((scores * graded["credits"]).sum())
-    credits = int(graded["credits"].sum())
+    # Fractional credits remain exact, while legacy whole-credit receipts keep
+    # their integer representation. Do not truncate 0.25/0.75-credit courses.
+    weighted_sum = sum((Decimal(int(score)) * Decimal(str(credit))
+                        for score, credit in zip(scores, graded["credits"], strict=True)), Decimal(0))
+    credits = sum((Decimal(str(credit)) for credit in graded["credits"]), Decimal(0))
+    weighted_sum = int(weighted_sum) if weighted_sum == weighted_sum.to_integral_value() else weighted_sum
+    credits = int(credits) if credits == credits.to_integral_value() else credits
     passed = int((scores >= 6000).sum())
     distribution = [ScoreBin(label=label, lower_cents=low, upper_cents=high, upper_inclusive=inclusive,
                              count=int(((scores >= low) & ((scores <= high) if inclusive else (scores < high))).sum()))

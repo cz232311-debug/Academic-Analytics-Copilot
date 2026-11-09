@@ -49,8 +49,8 @@ class Statistics(Record):
     failed_count: int
     failed_student_count: int
     sum_score_cents: int
-    weighted_sum_score_cents: int
-    graded_credits: int
+    weighted_sum_score_cents: int | Decimal
+    graded_credits: int | Decimal
     average_score: Decimal | None
     weighted_average_score: Decimal | None
     pass_rate_percent: Decimal | None

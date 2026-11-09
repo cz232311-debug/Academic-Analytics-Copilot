@@ -1,22 +1,32 @@
 """Explicit normalized record types; scores use integer hundredths of a point."""
 from dataclasses import dataclass
+from decimal import Decimal
 import hashlib
 import json
 from typing import Annotated, Literal
+import unicodedata
 
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints, ValidationError, model_validator
+from pydantic import AfterValidator, BaseModel, ConfigDict, Field, StringConstraints, ValidationError, field_validator, model_serializer, model_validator
 
 SCHEMA_VERSION = "1"
 TABLE_NAMES = ("classes", "students", "courses", "enrollments", "grade_records")
 StudentId = Annotated[str, StringConstraints(pattern=r"^S[0-9]{4}$")]
 ClassId = Annotated[str, StringConstraints(pattern=r"^C[0-9]{3}$")]
-CourseId = Annotated[str, StringConstraints(pattern=r"^G[1-3]-C[0-9]{2}$")]
+CourseId = Annotated[str, StringConstraints(pattern=r"^(?:G[1-3]-C[0-9]{2}|I[0-9a-f]{24})$")]
 EnrollmentId = Annotated[str, StringConstraints(pattern=r"^E[0-9]{5}$")]
 Term = Annotated[str, StringConstraints(pattern=r"^20[0-9]{2}-T[1-3]$")]
-GradeLevel = Annotated[int, Field(ge=1, le=3)]
-Major = Literal["computer_science", "business_administration", "information_systems", "unspecified"]
-CourseType = Literal["general_required", "professional_required", "professional_elective", "practical", "unspecified"]
-Label = Annotated[str, StringConstraints(min_length=1, max_length=100, pattern=r"^[A-Za-z0-9][A-Za-z0-9 ()&.,/-]*$")]
+GradeLevel = Annotated[int, Field(ge=1, le=3)] | Annotated[int, Field(ge=1900, le=2199)]
+Major = Literal["computer_science", "business_administration", "information_systems", "software_engineering", "network_engineering", "unspecified"]
+CourseType = Literal["general_required", "general_elective", "professional_required", "professional_elective", "practical", "unspecified"]
+
+
+def safe_label(value: str) -> str:
+    if not value.strip() or any(unicodedata.category(char).startswith("C") for char in value):
+        raise ValueError("Labels must contain visible text without control characters")
+    return value
+
+
+Label = Annotated[str, StringConstraints(min_length=1, max_length=200), AfterValidator(safe_label)]
 
 
 class Record(BaseModel):
@@ -37,8 +47,8 @@ class StudentRecord(Record):
 
     @model_validator(mode="after")
     def synthetic_identity(self):
-        if self.display_name != f"Synthetic Student {self.student_id[1:]}":
-            raise ValueError("Only synthetic display names matching the student ID are allowed")
+        if self.display_name not in {f"Synthetic Student {self.student_id[1:]}", f"Imported Student {self.student_id[1:]}"}:
+            raise ValueError("Only canonical synthetic or imported aliases matching the student ID are allowed")
         return self
 
 
@@ -46,12 +56,43 @@ class CourseRecord(Record):
     course_id: CourseId
     course_name: Label
     grade_level: GradeLevel
-    credits: Annotated[int, Field(ge=2, le=4)]
+    credits: Annotated[int | Decimal, Field(gt=0, le=100)]
     course_type: CourseType = "unspecified"
+    source_header: Annotated[str, Field(max_length=1000)] | None = None
+    source_key: Annotated[str, Field(max_length=128)] | None = None
+    course_category: Annotated[str, Field(max_length=100)] | None = None
+    study_nature: Annotated[str, Field(max_length=40)] | None = None
+    hours: Annotated[int, Field(ge=0, le=2000)] | None = None
+    academic_year: Annotated[str, Field(pattern=r"^[12][0-9]{3}-[12][0-9]{3}$")] | None = None
+    source_term: Term | None = None
+    source_code: Annotated[str, Field(max_length=100)] | None = None
+
+    @model_serializer(mode="wrap")
+    def serialize_course(self, handler):
+        # Absent additive metadata must not change legacy catalog/tool payloads.
+        values = handler(self)
+        return {key: value for key, value in values.items() if value is not None}
+
+    @field_validator("credits")
+    @classmethod
+    def exact_credits(cls, value):
+        decimal = Decimal(value)
+        if not decimal.is_finite() or decimal * 100 != (decimal * 100).to_integral_value():
+            raise ValueError("Credits must be finite and have at most two decimal places")
+        # Preserve the canonical representation and fingerprints of legacy rows.
+        return int(decimal) if decimal == decimal.to_integral_value() else decimal.normalize()
+
+    @field_validator("source_header", "source_key", "course_category", "study_nature", "source_code")
+    @classmethod
+    def safe_source_metadata(cls, value, info):
+        allowed = {"\n", "\r", "\t"} if info.field_name == "source_header" else set()
+        if value is not None and any(unicodedata.category(char).startswith("C") and char not in allowed for char in value):
+            raise ValueError("Course metadata contains unsupported control characters")
+        return value
 
     @model_validator(mode="after")
     def matching_grade(self):
-        if int(self.course_id[1]) != self.grade_level:
+        if self.course_id.startswith("G") and int(self.course_id[1]) != self.grade_level:
             raise ValueError("Course ID and grade_level disagree")
         return self
 
@@ -146,7 +187,7 @@ class Dataset:
             rows = sorted(getattr(self, table), key=lambda r: getattr(r, PRIMARY_KEYS[table]))
             optional = "major" if table == "classes" else "course_type" if table == "courses" else None
             exclude = {optional} if optional and all(getattr(row, optional) == "unspecified" for row in rows) else set()
-            payload[table] = [row.model_dump(exclude=exclude) for row in rows]
+            payload[table] = [row.model_dump(mode="json", exclude=exclude, exclude_none=table == "courses") for row in rows]
         return payload
 
     @property
