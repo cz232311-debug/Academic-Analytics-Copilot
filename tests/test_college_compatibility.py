@@ -15,6 +15,17 @@ from copilot.schemas import ReportScope, Scope
 from copilot.storage import Database
 
 
+def test_extended_normalized_csv_and_xlsx_reuse_exact_credit_and_metadata_validation(college_dataset):
+    from copilot.data.importing import XLSX_TYPE, import_csv_tables, import_workbook
+    from tests.test_imports import csv_files
+    from tests.workbook_fixture import workbook_bytes
+
+    parsed, _ = import_csv_tables(csv_files(college_dataset))
+    assert parsed.version == college_dataset.version
+    parsed, _ = import_workbook("synthetic-normalized.xlsx", XLSX_TYPE, workbook_bytes(college_dataset.payload()))
+    assert parsed.version == college_dataset.version
+
+
 @pytest.fixture
 def college_dataset(tiny_dataset):
     courses = tuple(CourseRecord(

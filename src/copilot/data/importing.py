@@ -4,6 +4,7 @@ Only the five normalized tables are accepted. Imports are local-only, even if
 their labels look synthetic; display-name checks cannot establish provenance.
 """
 import csv
+from decimal import Decimal, InvalidOperation
 import io
 import math
 from pathlib import PurePosixPath
@@ -21,7 +22,7 @@ from copilot.models import DataError, Dataset, RECORD_TYPES, TABLE_NAMES
 MAX_FILE_BYTES = 5 * 1024 * 1024
 MAX_EXPANDED_BYTES = 32 * 1024 * 1024
 MAX_ROWS = {"classes": 100, "students": 5000, "courses": 500, "enrollments": 50000, "grade_records": 50000}
-INTEGER_FIELDS = {"grade_level", "credits", "score_cents"}
+INTEGER_FIELDS = {"grade_level", "score_cents", "hours"}
 CSV_TYPES = {"text/csv", "application/csv", "text/plain", "application/vnd.ms-excel"}
 XLSX_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 
@@ -37,6 +38,16 @@ def validate_file(filename: str, content_type: str, content: bytes, suffix: str)
 
 
 def _clean(field: str, value):
+    if field == "credits":
+        try:
+            if isinstance(value, bool):
+                raise ValueError
+            credit = Decimal(str(value).strip())
+            if not credit.is_finite() or credit <= 0 or credit > 100 or credit * 100 != (credit * 100).to_integral_value():
+                raise ValueError
+            return int(credit) if credit == credit.to_integral_value() else credit
+        except (ValueError, InvalidOperation):
+            raise DataError("Credits require a finite positive number with at most two decimal places") from None
     if field in INTEGER_FIELDS:
         if value is None or (isinstance(value, str) and not value.strip()):
             return None
@@ -76,7 +87,8 @@ def _records(table: str, rows):
         if any(isinstance(v, str) and (len(v) > 200 or "\x00" in v) for v in row):
             raise DataError(f"{table} row {row_number}: invalid field length or NUL")
         try:
-            cleaned = {field: _clean(field, value) for field, value in zip(headers, row)}
+            cleaned = {field: None if value in (None, "") and not model.model_fields[field].is_required()
+                       else _clean(field, value) for field, value in zip(headers, row)}
             records.append(model.model_validate(cleaned))
         except (ValidationError, DataError, ValueError) as exc:
             # Do not echo invalid names, scores, cell content or Pydantic input values.
