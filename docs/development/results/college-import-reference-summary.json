@@ -1,0 +1,151 @@
+{
+  "scope": "isolated temporary database only; the running application database was not modified",
+  "raw_identity_output": false,
+  "external_llm_calls": 0,
+  "results": [
+    {
+      "duplicate_policy": "block",
+      "can_import": false,
+      "counts": {
+        "student_rows": 177,
+        "invalid_student_rows": 2,
+        "duplicate_student_rows": 5,
+        "unknown_status_cells": 0,
+        "summary_columns": 8,
+        "course_columns": 69,
+        "header_row": 3,
+        "excluded_duplicate_score_cells": 56,
+        "students": 170,
+        "classes": 8,
+        "courses": 72,
+        "enrollments": 2447,
+        "grade_records": 2447,
+        "excluded_empty_courses": 1,
+        "blank_score_cells": 9283,
+        "excluded_unparsed_courses": 0,
+        "graded": 2447,
+        "missing": 0,
+        "exempt": 0,
+        "issues_omitted": 0
+      },
+      "issues": {
+        "merged_title": 1,
+        "same_name_distinct_courses": 4,
+        "conflicting_student": 5,
+        "invalid_student": 2,
+        "unknown_major": 3,
+        "mixed_classes": 1,
+        "mixed_cohorts": 1,
+        "empty_course": 1
+      }
+    },
+    {
+      "duplicate_policy": "first",
+      "can_import": true,
+      "counts": {
+        "student_rows": 177,
+        "invalid_student_rows": 2,
+        "duplicate_student_rows": 5,
+        "unknown_status_cells": 0,
+        "summary_columns": 8,
+        "course_columns": 69,
+        "header_row": 3,
+        "excluded_duplicate_score_cells": 56,
+        "students": 170,
+        "classes": 8,
+        "courses": 72,
+        "enrollments": 2447,
+        "grade_records": 2447,
+        "excluded_empty_courses": 1,
+        "blank_score_cells": 9283,
+        "excluded_unparsed_courses": 0,
+        "graded": 2447,
+        "missing": 0,
+        "exempt": 0,
+        "issues_omitted": 0
+      },
+      "issues": {
+        "merged_title": 1,
+        "same_name_distinct_courses": 4,
+        "conflicting_student": 5,
+        "invalid_student": 2,
+        "unknown_major": 3,
+        "mixed_classes": 1,
+        "mixed_cohorts": 1,
+        "empty_course": 1
+      },
+      "before_counts": {
+        "classes": 2,
+        "students": 4,
+        "courses": 3,
+        "enrollments": 6,
+        "grade_records": 6
+      },
+      "after_counts": {
+        "classes": 8,
+        "students": 170,
+        "courses": 75,
+        "enrollments": 2447,
+        "grade_records": 2447
+      },
+      "normalized_dataset_validated": true,
+      "existing_statistics_and_three_views": true,
+      "external_llm_allowed": false,
+      "same_scope_report_enrollment_count": 2447
+    },
+    {
+      "duplicate_policy": "last",
+      "can_import": true,
+      "counts": {
+        "student_rows": 177,
+        "invalid_student_rows": 2,
+        "duplicate_student_rows": 5,
+        "unknown_status_cells": 0,
+        "summary_columns": 8,
+        "course_columns": 69,
+        "header_row": 3,
+        "excluded_duplicate_score_cells": 20,
+        "students": 170,
+        "classes": 6,
+        "courses": 70,
+        "enrollments": 2483,
+        "grade_records": 2483,
+        "excluded_empty_courses": 1,
+        "blank_score_cells": 9247,
+        "excluded_unparsed_courses": 0,
+        "graded": 2483,
+        "missing": 0,
+        "exempt": 0,
+        "issues_omitted": 0
+      },
+      "issues": {
+        "merged_title": 1,
+        "same_name_distinct_courses": 4,
+        "conflicting_student": 5,
+        "invalid_student": 2,
+        "unknown_major": 1,
+        "mixed_classes": 1,
+        "mixed_cohorts": 1,
+        "empty_course": 1
+      },
+      "before_counts": {
+        "classes": 2,
+        "students": 4,
+        "courses": 3,
+        "enrollments": 6,
+        "grade_records": 6
+      },
+      "after_counts": {
+        "classes": 6,
+        "students": 170,
+        "courses": 73,
+        "enrollments": 2483,
+        "grade_records": 2483
+      },
+      "normalized_dataset_validated": true,
+      "existing_statistics_and_three_views": true,
+      "external_llm_allowed": false,
+      "same_scope_report_enrollment_count": 2483
+    }
+  ]
+}

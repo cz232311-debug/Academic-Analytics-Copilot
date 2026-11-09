@@ -4,7 +4,9 @@ An independent engineering portfolio project for SAP STAR Application Engineer (
 
 **Phase 2B adds a runnable Streamlit academic analysis workbench connected to FastAPI over HTTP.** It includes multidimensional course reports, charts, CSV downloads and the existing evidence-grounded Copilot. Phase 2A's user-run real DeepSeek check passed separately. [Workbench implementation and verification](docs/development/02b-workbench.md)
 
-The owner's prior experience includes academic analysis and reporting covering 1,382 students and 40 classes. This demonstration uses entirely fabricated records; it contains no historical student data and claims no SAP integration or endorsement.
+The next Phase 2B increment adds a local-only **college XLSX adapter**: upload one wide grade sheet, review detected columns, exclusions and a de-identified preview, then explicitly confirm activation. The application stores internal student aliases rather than source names/IDs; uploaded data is barred from the Agent. The accepted export format and business limitations are documented in [学院成绩导入与验证记录](docs/development/02b-college-import.md).
+
+The owner's prior experience includes academic analysis and reporting covering 1,382 students and 40 classes. The bundled demonstration and test fixtures use entirely fabricated records; no historical workbook or student record is distributed in the repository. A user may separately import an authorized local workbook. The project claims no SAP integration or endorsement.
 
 For the complete first-install and post-reboot PowerShell workflow, read [本机启动说明](START_HERE.zh-CN.md). After installing dependencies, keep two PowerShell windows open from the repository root:
 
@@ -44,9 +46,9 @@ The default seed is `20261103`, term `2026-T1`. Actual generated counts are **1,
 
 | Table | Typed columns |
 |---|---|
-| `classes` | `class_id`: string ID; `grade_level`: integer 1–3; `class_label`: text; optional `major`: enum |
-| `students` | `student_id`: string ID; `class_id`: FK; `display_name`: exact `Synthetic Student NNNN` |
-| `courses` | `course_id`: string ID; `course_name`: text; `grade_level`: integer; `credits`: integer 2–4; optional `course_type`: enum |
+| `classes` | `class_id`: string ID; `grade_level`: demo 1–3 or entry cohort 1900–2199; `class_label`: text; optional `major`: enum |
+| `students` | `student_id`: internal ID; `class_id`: FK; canonical `Synthetic Student NNNN` or `Imported Student NNNN` alias |
+| `courses` | legacy or stable imported ID; Unicode name; cohort; exact credits >0 through100 (at most2 decimals); optional type and source header/key/category/nature/hours/academic year/term/code |
 | `enrollments` | `enrollment_id`: string ID; `student_id` / `course_id`: FKs; `term`: typed term |
 | `grade_records` | `grade_record_id`: string ID; `enrollment_id`: unique FK; `status`: graded/missing/exempt; `score_cents`: nullable integer 0–10,000 |
 
@@ -68,6 +70,8 @@ Major/course-type fields default to `unspecified` for legacy data and may be omi
 | `GET /api/analytics/summary` | Filter by `term`, `grade_level`, `class_id`, `course_id` |
 | `GET /api/analytics/compare-classes` | Compare 2–40 distinct `class_ids` on one required `course_id` and term |
 | `POST /api/datasets/import` | Activate five CSV files or one five-sheet XLSX workbook atomically |
+| `POST /api/datasets/college/preview` | Identify/validate one college grade matrix; return exclusions, masked sample and a 15-minute signed preview token; no activation |
+| `POST /api/datasets/college/commit` | Revalidate the same workbook and token after explicit confirmation; version-checked atomic replacement preserving the course directory |
 | `GET /api/agent/status` | Provider mode, model ID, four tools and request budgets; no keys |
 | `POST /api/agent/query` | Restricted English aggregate question → controlled tool calls → evidence-grounded English answer |
 
@@ -83,7 +87,7 @@ Pandas owns deterministic result calculation; SQLite stores the normalized data 
 
 ## Import CSV or Excel
 
-Use only synthetic inputs. CSV import requires five multipart file fields named `classes`, `students`, `courses`, `enrollments`, `grade_records`. Headers must match the table above exactly after trimming/lowercasing. Supply blank `score_cents` for missing/exempt records. UTF-8 BOM, surrounding whitespace, blank rows and status capitalization are cleaned explicitly. Invalid numeric cells and duplicates are rejected instead of silently dropped or coerced into missing values.
+The original normalized import path is retained for prepared tables and synthetic examples. To import an authorized college export, use the workbench's **学院成绩 XLSX 导入** panel and its separate preview/confirmation API. CSV import requires five multipart file fields named `classes`, `students`, `courses`, `enrollments`, `grade_records`. Headers must match the declared fields after trimming/lowercasing. Supply blank `score_cents` for missing/exempt records. UTF-8 BOM, surrounding whitespace, blank rows and status capitalization are cleaned explicitly. Invalid numeric cells and duplicates are rejected instead of silently dropped or coerced into missing values.
 
 ```powershell
 curl.exe -X POST http://127.0.0.1:8000/api/datasets/import `
@@ -96,7 +100,7 @@ curl.exe -X POST http://127.0.0.1:8000/api/datasets/import `
 
 For Excel, send a single file field `workbook`, with `.xlsx` media type `application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`. The workbook must have exactly five visible sheets with the same table names/headers. Only literal cell values are accepted. `.xls`, `.xlsm`, formulas, external relationships, embedded objects, encryption and oversized ZIP expansion are unsupported. The Excel importer was exercised through real OOXML fixtures and the FastAPI upload endpoint.
 
-Limits: 5 MiB/file, 26 MiB/actual HTTP body, 32 MiB/expanded workbook and table-specific row caps. Filenames are never used as storage paths. Type, size, field, primary-key and relationship validation precede activation. Expected errors use `{ "error": { "code": "...", "message": "..." } }` with HTTP 400/413/415/422/404 as appropriate and do not echo cell contents. Imported data is marked `uploaded_local_only` and cannot claim external-LLM permission. Synthetic-looking names alone do not prove a file's provenance; do not upload historical records.
+Limits: 5 MiB/file, 26 MiB/actual normalized-import body, 32 MiB/expanded workbook and table-specific row caps. College-upload endpoints allow5 MiB plus multipart overhead, at most256 columns/5000 students/50000 grade records, with coordinate checks before row allocation. Filenames are never used as storage paths. Type, size, field, primary-key and relationship validation precede activation. Expected errors use `{ "error": { "code": "...", "message": "..." } }` and do not echo cell contents. Imported data is marked `uploaded_local_only` and cannot claim external-LLM permission. Source identities are removed by the college adapter. Do not commit original workbooks, local databases or private logs; only synthetic fixtures belong in tests. Framework upload spooling may use temporary disk storage; handlers close uploads and the application does not persist originals.
 
 ## Phase 2A: function calling
 
@@ -152,7 +156,7 @@ Responses include request ID, provider mode, validated arguments, tool status, e
 .venv/Scripts/python.exe scripts/smoke_deepseek.py --offline
 ```
 
-The Phase 2B regression contains **230 tests**, including the original 168 and actual TCP/Streamlit checks. Its [JUnit receipt](docs/development/results/phase2b-pytest.xml) records the completed result. The [workbench HTTP smoke receipt](docs/development/results/phase2b-http-smoke.json) records 15 passed checks. One existing TestClient deprecation warning remains. All Phase 2B automatic model calls use Mock/scripted transports. The user-run Phase 2A live check separately passed with `grounded_narrative`, one tool call and 3,482 reported tokens across two model turns. [Phase 2A completion record](docs/development/02a-deepseek.md)
+The first Phase 2B workbench regression contained **230 tests**, including the original168 and actual TCP/Streamlit checks. Its [historical JUnit receipt](docs/development/results/phase2b-pytest.xml) and [15-check HTTP smoke receipt](docs/development/results/phase2b-http-smoke.json) are retained. The college-import increment completed **291 passed, zero failed/skipped, one existing TestClient warning, 54.69 seconds**, including61 new synthetic-only checks. [Current JUnit receipt](docs/development/results/college-import-pytest.xml). All automatic model calls used Mock/scripted transports. The user-run Phase 2A live check remains separate from this increment. [Phase 2A completion record](docs/development/02a-deepseek.md)
 
 Run the complete workbench HTTP acceptance with `.venv/Scripts/python.exe scripts/smoke_dashboard.py`. It starts isolated Uvicorn/Streamlit processes, tests the rendered page against real HTTP, and stops its own processes. No real API key is inherited. Streamlit AppTest verifies page behavior; browser pixel layout and a live DeepSeek submission through the new page remain unverified. [Official Streamlit app testing guide](https://docs.streamlit.io/develop/concepts/app-testing/get-started)
 
