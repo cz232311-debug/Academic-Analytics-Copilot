@@ -1,0 +1,19 @@
+[theme]
+font = "sans serif"
+baseFontSize = 18
+headingFontSizes = ["2rem", "1.5rem", "1.25rem"]
+metricValueFontSize = "2rem"
+
+[theme.light]
+primaryColor = "#175CD3"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F2F4F7"
+textColor = "#182230"
+dataframeHeaderTextColor = "#182230"
+
+[theme.dark]
+primaryColor = "#84ADFF"
+backgroundColor = "#101828"
+secondaryBackgroundColor = "#1D2939"
+textColor = "#F2F4F7"
+dataframeHeaderTextColor = "#F2F4F7"

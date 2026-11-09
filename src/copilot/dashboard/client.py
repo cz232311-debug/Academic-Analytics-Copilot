@@ -35,9 +35,9 @@ class DashboardError(Exception):
 
 
 ERROR_MESSAGES = {
-    "unknown_entity": "A selected term or ID is unavailable. Refresh the page and select from the current catalog.",
-    "invalid_request": "The selected filters or question are invalid. Review the values and try again.",
-    "dataset_changed": "The dataset changed while loading. Refresh the page and load the analysis again.",
+    "unknown_entity": "所选学期、班级或课程已经不可用。请重新选择分析范围，再更新统计。",
+    "invalid_request": "所选条件无法使用。请检查分析范围后重试；仍有问题时，请联系负责系统的同事。",
+    "dataset_changed": "数据已经更新，本页结果已暂停。请返回核对页，重新解析并确认成绩单，再查看统计。",
     "no_dataset": "当前尚无已确认的数据，请先上传、核对并确认成绩单。",
     "agent_privacy_block": "AI queries are available only for generated synthetic data. Uploaded datasets stay local.",
     "question_privacy_block": "Use a supported English aggregate question with course or class IDs. Omit names and personal information.",
@@ -62,7 +62,7 @@ ERROR_MESSAGES = {
     "preview_invalid": "文件或预览凭据已改变，请重新解析预览。",
     "preview_expired": "预览已过期或后端已重启，请重新解析预览。",
     "college_not_ready": "成绩表仍有阻止提交的问题，请修正后重新预览。",
-    "course_conflict": "同一课程标识与已有目录定义冲突，数据未覆盖。请核对课程元数据。",
+    "course_conflict": "这门课程的资料与之前保存的不一致，本次没有导入。请核对原表的课程名称、学期和学时后重试。",
     "archive_unavailable": "本地原件留存暂不可写，本次没有提交。请检查本地存储空间和目录权限后重试。",
     "archive_cleanup_failed": "提交失败，本地暂存需检查；请先重新预览，勿重复确认。",
 }
@@ -76,7 +76,7 @@ class DashboardClient:
             if url.scheme not in {"http", "https"} or not url.host or url.username or url.password or url.query or url.fragment:
                 raise ValueError
         except (httpx.InvalidURL, ValueError):
-            raise DashboardError("configuration", "COPILOT_API_BASE_URL must be an HTTP(S) service URL without credentials.") from None
+            raise DashboardError("configuration", "本机连接设置不正确。请联系负责启动系统的同事检查服务地址，然后重试。") from None
         self.transport = transport
 
     def _request(self, method, path, model, *, params=None, payload=None, files=None, data=None):
@@ -86,9 +86,9 @@ class DashboardClient:
                               trust_env=False, follow_redirects=False, transport=self.transport) as client:
                 response = client.request(method, path, params=params, json=payload, files=files, data=data)
         except httpx.TimeoutException:
-            raise DashboardError("timeout", "The API request timed out. Check the backend terminal and try again.") from None
+            raise DashboardError("timeout", "本次处理时间较长，暂时没有完成。请稍后重试；已确认的数据仍会保留。") from None
         except httpx.TransportError:
-            raise DashboardError("connection", "Cannot reach FastAPI. Start the backend on port 8000 and keep its terminal open.") from None
+            raise DashboardError("connection", "暂时无法连接本机分析服务。请确认服务已经启动，再点击“重试连接”；必要时联系负责系统的同事。") from None
         if not response.is_success:
             code, request_id = "api_error", None
             try:
@@ -100,12 +100,12 @@ class DashboardClient:
                     request_id = body.get("request_id")
             except ValueError:
                 pass
-            message = ERROR_MESSAGES.get(code, f"The API could not complete this request (HTTP {response.status_code}). Check the backend terminal.")
+            message = ERROR_MESSAGES.get(code, "暂时无法完成这项操作。请稍后重试；仍然失败时，请联系负责系统的同事。")
             raise DashboardError(code, message, request_id=request_id if isinstance(request_id, str) else None)
         try:
             return model.model_validate_json(response.content)
         except (ValidationError, ValueError):
-            raise DashboardError("invalid_response", "The API response does not match the expected contract. Restart matching frontend and backend versions.") from None
+            raise DashboardError("invalid_response", "收到的结果暂时无法使用。请联系负责系统的同事更新并重启服务，再重新核对数据。") from None
 
     def dataset(self) -> DatasetInfo:
         return self._request("GET", "/api/dataset", DatasetInfo)

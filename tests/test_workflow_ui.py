@@ -1,6 +1,8 @@
 """Staff workflow acceptance through Streamlit and the real API, synthetic only."""
 from dataclasses import replace
+from io import BytesIO
 from pathlib import Path
+import zipfile
 
 import pytest
 from streamlit.testing.v1 import AppTest
@@ -37,8 +39,11 @@ def test_first_open_is_upload_centered_and_does_not_select_existing_demo(page_ba
     assert set(client.request_paths) == {"/health"}
     assert store.overview() == before
     assert button(page, "使用示例数据体验")
-    for label in ("3 分析", "4 撰写", "5 导出"):
+    for label in ("2 核对", "3 分析"):
         assert button(page, label).disabled
+    assert not any(item.label in {"4 撰写", "5 导出"} for item in page.button)
+    assert any("当前步骤" in item.value and "上传Excel" in item.value for item in page.markdown)
+    assert any("Word导出正在开发中" in item.value for item in page.info)
 
 
 def test_example_requires_review_and_confirmation_instead_of_activation(page_backend, monkeypatch):
@@ -129,10 +134,12 @@ def test_filter_change_immediately_invalidates_old_report_before_update(page_bac
     assert state.scope.class_id == "C001"
     assert state.report is state.context is state.draft is None
     assert not page.dataframe
+    assert not page.get("download_button")
     button(page, "更新统计预览").click().run()
     state = page.session_state.workflow
     assert not page.exception and state.has_current_context
     assert state.report.scope.class_id == "C001" and state.report.summary.student_count == 2
+    assert len(page.get("download_button")) == 1
 
 
 def test_report_content_and_sections_are_applied_without_changing_statistics(page_backend, monkeypatch):
@@ -156,7 +163,7 @@ def test_clearing_content_selection_revokes_existing_context_and_draft(page_back
     state = page.session_state.workflow
     assert not page.exception and state.report is not None
     assert state.context is state.draft is None
-    assert button(page, "4 撰写").disabled and button(page, "5 导出").disabled
+    assert not any(item.label in {"4 撰写", "5 导出", "保存内容选择，进入撰写"} for item in page.button)
 
 
 def test_backward_navigation_preserves_confirmed_data_and_cleaning_record(page_backend, monkeypatch):
@@ -249,8 +256,78 @@ def test_writing_and_export_are_navigation_only_and_context_is_deidentified(page
         assert raw not in text
     assert "synthetic-college.xlsx" not in text
     assert context.external_llm_allowed is context.report_generation_implemented is context.docx_export_implemented is False
-    button(page, "保存内容选择，进入撰写").click().run()
-    assert not page.exception and page.session_state.workflow.step == "writing"
-    button(page, "5 导出").click().run()
-    assert not page.exception and page.session_state.workflow.step == "export"
+    assert not any(item.label in {"4 撰写", "5 导出", "保存内容选择，进入撰写"} for item in page.button)
+    assert any("报告撰写与审阅、Word导出正在开发中" in item.value for item in page.info)
+    assert not page.exception and page.session_state.workflow.step == "analysis"
     assert not any(path.startswith("/api/agent") for path in client.request_paths)
+
+
+def test_main_workflow_hides_engineering_structures_and_offers_one_zip_download(page_backend, monkeypatch):
+    import copilot.dashboard.workbench as workbench
+
+    downloads = []
+    native_download = workbench.st.download_button
+
+    def record_download(label, data, **kwargs):
+        downloads.append((label, data, kwargs))
+        return native_download(label, data, **kwargs)
+
+    monkeypatch.setattr(workbench.st, "download_button", record_download)
+    no_upload(monkeypatch)
+    page = AppTest.from_file(ENTRY, default_timeout=30).run()
+    assert not page.exception and not page.json and not page.get("download_button")
+    button(page, "使用示例数据体验").click().run()
+    assert page.session_state.workflow.step == "review" and not page.json
+    assert not page.get("download_button") and downloads == []
+    confirmation(page).check().run()
+    button(page, "确认数据并进入分析").click().run()
+    assert not page.exception and not page.json
+    assert len(page.get("download_button")) == 1
+    label, data, settings = downloads[-1]
+    assert label == "下载完整分析与数据明细"
+    assert settings["mime"] == "application/zip" and settings["file_name"].endswith(".zip")
+    assert zipfile.is_zipfile(BytesIO(data))
+    assert any(item.label == "分析资料与明细下载" and not item.proto.expanded for item in page.expander)
+    assert all("dataset_version" not in item.value and "archive_id" not in item.value for item in page.markdown)
+
+
+def test_table_modes_keep_backend_statistics_and_mean_band_assignments(page_backend, monkeypatch):
+    from copilot.dashboard.presentation import BAND_LABELS
+
+    page = confirmed_page(monkeypatch)
+    original = page.session_state.workflow.report.model_copy(deep=True)
+    first = page.dataframe[0].value
+    assert list(first.columns) == ["课程", "有效成绩数", "平均分", "及格率", "不及格率", "优良率（≥80）"]
+    mode = next(item for item in page.radio if item.label == "成绩表查看内容")
+    mode.set_value("分数段人数").run()
+    assert not page.exception and page.session_state.workflow.report == original
+    table = page.dataframe[0].value.set_index("课程")
+    for row in original.rows:
+        for band in row.statistics.distribution:
+            assert table.loc[row.course_name, BAND_LABELS[band.label]] == band.count
+    next(item for item in page.radio if item.label == "成绩表查看内容").set_value("缺考与免修").run()
+    assert not page.exception and page.session_state.workflow.report == original
+    table = page.dataframe[0].value.set_index("课程")
+    for row in original.rows:
+        assert table.loc[row.course_name, "缺考/缺失"] == row.statistics.missing_count
+        assert table.loc[row.course_name, "免修数"] == row.statistics.exempt_count
+    bands = page.dataframe[1].value.set_index("课程")
+    assert len(bands) == len(original.rows)
+    for row in original.rows:
+        expected = BAND_LABELS[row.average_band] if row.average_band else "暂无有效成绩"
+        assert bands.loc[row.course_name, "课程均分区间"] == expected
+        assert bands.loc[row.course_name, "平均分"] == (f"{row.statistics.average_score:.2f}" if row.statistics.average_score is not None else "—")
+    assert page.session_state.workflow.context.report == original
+
+
+def test_long_course_names_are_available_in_full_without_technical_identifiers(page_backend, monkeypatch):
+    name = "合成软件工程项目中的复杂系统设计与实践课程名称完整显示验证"
+    header = WEB.replace("Web技术基础", name)
+    page = uploaded_page(monkeypatch, college_workbook(headers=["学号", "姓名", "班级", header],
+        rows=[["FIXTURE240001", "合成甲", "24软工1班", 80]]))
+    confirmation(page).check().run()
+    button(page, "确认数据并进入分析").click().run()
+    assert not page.exception and page.session_state.workflow.has_current_report
+    assert name in set(page.dataframe[0].value["课程"])
+    assert any(item.label == "查看完整课程名称" for item in page.expander)
+    assert any(item.value == name for item in page.markdown)

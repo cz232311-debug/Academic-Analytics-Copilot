@@ -4,8 +4,8 @@ from collections import Counter
 import streamlit as st
 
 from copilot.dashboard.client import DashboardClient, DashboardError
-from copilot.dashboard.presentation import (TYPE_LABELS, STAFF_TYPE_LABELS, course_table, decimal_text,
-                                           mean_bands_table, rates_chart, report_csv, staff_scope_text)
+from copilot.dashboard.presentation import (BAND_LABELS, TYPE_LABELS, STAFF_TYPE_LABELS, course_table, decimal_text,
+                                           mean_bands_rows, rates_chart, staff_scope_text)
 from copilot.dashboard.workflow import VIEW_LABELS
 
 
@@ -17,15 +17,15 @@ def show_error(exc):
 
 
 def show_report(report, selected_views=tuple(VIEW_LABELS)):
-    st.caption("统计范围：" + staff_scope_text(report))
+    st.write("**当前统计范围：** " + staff_scope_text(report))
     summary = report.summary
     cells = st.columns(4)
     for cell, label, value in zip(cells, ("平均分", "及格率", "有效成绩数", "范围内学生"),
                                   (decimal_text(summary.average_score), decimal_text(summary.pass_rate_percent, percent=True),
                                    str(summary.graded_count), str(summary.student_count))):
         cell.metric(label, value)
-    st.caption(f"成绩记录 {summary.enrollment_count} · 缺考/缺失 {summary.missing_count} · 免修 {summary.exempt_count}。"
-               "均分和比率只使用有效成绩；空白不补零。")
+    st.write(f"共 {summary.enrollment_count} 条成绩记录，其中缺考/缺失 {summary.missing_count} 条、免修 {summary.exempt_count} 条。"
+             "平均分和比率只计算有分数的成绩；空白不会算作零分。")
     names = Counter(row.course_name for row in report.rows)
     labels = {row.course_id: row.course_name if names[row.course_name] == 1 else f"{row.course_name}（课程{i+1}）"
               for i, row in enumerate(report.rows)}
@@ -42,27 +42,31 @@ def show_report(report, selected_views=tuple(VIEW_LABELS)):
                         "Average": "平均分", "Pass rate": "及格率", "Fail rate": "不及格率", "Excellent ≥80": "优良率（≥80）",
                         "Graded n": "有效成绩数", "Passed n": "及格数", "Failed n": "不及格数",
                         "Missing n": "缺考/缺失", "Exempt n": "免修数", "Enrolled n": "成绩记录数"})
-                    st.dataframe(table, hide_index=True, width="stretch")
-                    st.download_button("下载当前成绩分布（CSV）", report_csv(report), mime="text/csv",
-                                       file_name=f"course-analysis-{report.scope.term}.csv")
+                    mode = st.radio("成绩表查看内容", ["均分与比率", "分数段人数", "缺考与免修"], horizontal=True)
+                    visible = {"均分与比率": ["课程", "有效成绩数", "平均分", "及格率", "不及格率", "优良率（≥80）"],
+                               "分数段人数": ["课程", *BAND_LABELS.values(), "有效成绩数"],
+                               "缺考与免修": ["课程", "有效成绩数", "缺考/缺失", "免修数", "成绩记录数"]}[mode]
+                    st.dataframe(table[visible], hide_index=True, width="stretch", row_height=42,
+                                 column_config={"课程": st.column_config.TextColumn(width="large", help="双击单元格可查看完整课程名称。")})
                 elif view == "rates_chart":
                     if summary.graded_count:
                         st.altair_chart(rates_chart(report, course_labels=labels, staff_labels=True), width="stretch")
                     else:
                         st.info("没有有效成绩，比率不可用，不显示为零。")
-                    st.caption("绿色为及格率，橙色为不及格率。悬停可查看人数和有效样本量。")
+                    st.write("绿色表示及格率，橙色表示不及格率。将鼠标停在柱形上，可查看人数和参与计算的成绩数。")
                 else:
-                    st.caption("每一项是一门课程的精确均分，不是学生成绩分段。显示四舍五入不会改变分层。")
-                    bands = mean_bands_table(report, include_ids=False, course_labels=labels)
-                    bands = bands.rename(columns={"Course mean band": "课程均分区间", **{label: STAFF_TYPE_LABELS[code] for code, label in TYPE_LABELS.items()}})
-                    bands = bands.map(lambda value: value.replace("mean ", "均分 ").replace(", n=", "，有效数=") if isinstance(value, str) else value)
-                    st.dataframe(bands, hide_index=True, width="stretch")
-    with st.expander("统计口径与证据来源"):
+                    st.write("按每门课程的平均分分组，一门课程占一行。分组使用四舍五入前的均分。")
+                    st.dataframe(mean_bands_rows(report, labels), hide_index=True, width="stretch", row_height=42,
+                                 column_config={"课程": st.column_config.TextColumn(width="large", help="双击单元格可查看完整课程名称。")})
+        long_names = [name for name in labels.values() if len(name) > 24]
+        if long_names:
+            with st.expander("查看完整课程名称"):
+                for name in long_names:
+                    st.write(name)
+    with st.expander("这些数字怎么算？"):
         st.write("及格：≥60分；不及格：<60分；优良：≥80分。分母为有效成绩记录。缺考/缺失、免修单列。")
-        st.write("课程均分按未舍入值分层，分数和比率按半入方式保留两位小数。同名课程序号可在下方查证。")
-        st.json({"dataset_version": report.dataset_version, "generated_at": report.generated_at,
-                 "scope": report.scope.model_dump(exclude_none=True), "policy": report.policy.model_dump(mode="json"),
-                 "course_labels": labels, "source": "/api/reports/courses → AnalyticsEngine.course_report"})
+        st.write("课程均分按四舍五入前的数值分组，页面保留两位小数。同名课程用序号区分，完整课程标识保留在明细包中。")
+        st.write("例如：100条有分数的成绩中有80条达到60分，及格率就是80%。详细统计与计算说明可从下方明细包下载。")
 
 
 def show_agent_result(result, report, active_version):

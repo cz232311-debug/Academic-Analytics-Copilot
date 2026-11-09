@@ -84,7 +84,7 @@ def test_confirmed_upload_refreshes_report_filters_charts_and_disables_agent(pag
     assert page.session_state.workflow.report is None
     button(page, "更新统计预览").click().run()
     assert not page.exception and page.session_state.workflow.report.scope.grade_level == 2024
-    assert any("2024级" in item.value for item in page.caption)
+    assert any("2024级" in item.value for item in page.markdown)
     assert all(item.label != "Ask Copilot" for item in page.button)
     assert page.session_state.workflow.context.external_llm_allowed is False
     assert page.session_state.workflow.preview is not None

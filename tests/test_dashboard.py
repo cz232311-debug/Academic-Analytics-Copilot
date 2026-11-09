@@ -112,8 +112,10 @@ def test_client_safe_api_errors_preserve_trace_id(code, status):
 
 @pytest.mark.parametrize("body", [b"not JSON", b"{}", b'{"dataset_version": 123}'])
 def test_client_rejects_success_with_invalid_response_contract(body):
-    with pytest.raises(DashboardError, match="expected contract"):
+    with pytest.raises(DashboardError) as error:
         DashboardClient(transport=httpx.MockTransport(lambda request: httpx.Response(200, content=body))).dataset()
+    assert error.value.code == "invalid_response"
+    assert "重启服务" in str(error.value)
 
 
 def test_client_query_only_sends_question_field():
@@ -141,8 +143,11 @@ def test_empty_csv_keeps_header_and_chart_data_has_contract(report):
 
 @pytest.mark.parametrize("url", ["file:///private", "https://user:secret@example.com", "not-a-url", "http://localhost/?key=secret"])
 def test_client_disallows_credentials_and_invalid_service_urls(url):
-    with pytest.raises(DashboardError, match="without credentials"):
+    with pytest.raises(DashboardError) as error:
         DashboardClient(url)
+    assert error.value.code == "configuration"
+    assert "联系" in str(error.value) and "重试" in str(error.value)
+    assert "secret" not in str(error.value)
 
 
 def test_streamlit_api_failure_is_actionable_and_does_not_crash(monkeypatch):
@@ -154,12 +159,12 @@ def test_streamlit_api_failure_is_actionable_and_does_not_crash(monkeypatch):
         base_url = "http://127.0.0.1:8000"
 
         def health(self):
-            raise DashboardError("connection", "Cannot reach FastAPI. Start the backend on port 8000 and keep its terminal open.")
+            raise DashboardError("connection", "暂时无法连接本机分析服务。请联系负责系统的同事，确认服务启动后重试。")
 
     monkeypatch.setattr(dashboard_app, "DashboardClient", OfflineClient)
     page = AppTest.from_file(str(Path(__file__).resolve().parents[1] / "streamlit_app.py")).run()
     assert not page.exception
-    assert any("Start the backend" in item.value for item in page.error)
+    assert any("连接本机分析服务" in item.value and "重试" in item.value for item in page.error)
     assert len(page.code) == 1
 
 

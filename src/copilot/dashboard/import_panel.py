@@ -1,6 +1,5 @@
 """Staff-facing upload and review steps. Parsing and activation use HTTP."""
 import hashlib
-import json
 
 import streamlit as st
 
@@ -31,7 +30,7 @@ def parse_selected(client, state, policy="block"):
 
 def show_upload(client, state):
     st.markdown("### 从一份成绩单开始")
-    st.write("上传学院导出的 Excel，先检查识别与清洗结果，再预览统一口径的统计和图表。")
+    st.write("**先选择一份学院导出的Excel成绩单。** 系统会自动整理课程和成绩，随后请你核对，再查看统计结果。")
     epoch = st.session_state.get("college_upload_epoch", 0)
     with st.container(border=True):
         uploaded = st.file_uploader("选择学院成绩单", type=["xlsx"], key=f"college_upload_{epoch}", max_upload_size=5,
@@ -39,7 +38,7 @@ def show_upload(client, state):
         if uploaded is not None and state.select_upload(uploaded.name, uploaded.getvalue()):
             parse_selected(client, state)
             st.rerun()
-        st.caption("仅支持 XLSX · 先核对后提交 · 真实学生数据不发送外部模型")
+        st.write("支持.xlsx文件，最大5 MB。上传后先核对，点击确认才会替换当前数据。")
     if state.upload:
         st.info("本次工作簿与核对记录仍保留，可返回继续；只有再次确认才会替换本地分析数据。")
         if st.button("继续数据核对", width="stretch"):
@@ -58,10 +57,10 @@ def show_upload(client, state):
         parse_selected(client, state)
         st.rerun()
     with st.expander("开始前需要了解什么？"):
-        st.write("1. 成绩单应含学号、班级及带学分、学时、学期的课程表头。")
-        st.write("2. 空白不被当成缺考或零分；重复学号、未知状态等需要核对。")
-        st.write("3. 确认后替换当前学生及成绩，已有课程目录保留。原件与清洗、确认记录仅在本地私有目录留存。")
-        st.write("4. 本轮提供上传、核对、分析；AI报告撰写和Word导出将在后续开放。")
+        st.write("成绩单应只有一个成绩工作表，包含学号、班级，以及带学分、学时、学期的课程表头。")
+        st.write("空白不会算作零分或缺考。重复学号、无法识别的成绩等问题，会在下一步提示你核对。")
+        st.write("原件和处理记录只在本机保留；真实学生数据不会发送给外部AI。")
+    st.info("目前可完成：上传 → 核对与确认 → 统计分析及图表预览。报告撰写与审阅、Word导出正在开发中。")
 
 
 def issue_table(items):
@@ -73,7 +72,9 @@ def show_review(client, state):
     if state.upload is None:
         state.step = "upload"
         st.rerun()
-    st.caption("合成示例工作簿" if state.upload.source == "example" else "当前本地工作簿 · 先核对再使用")
+    st.write("请先看人数和课程是否符合原表，再检查下方提示。没有阻止项后，勾选确认并进入分析。")
+    if state.upload.source == "example":
+        st.write("当前为合成示例，学生与成绩均为虚构。")
     preview = state.preview
     if preview is None:
         st.warning(state.invalid_reason or "本次工作簿尚未完成解析。")
@@ -86,13 +87,13 @@ def show_review(client, state):
                                   (preview.counts["course_columns"], preview.counts["classes"],
                                    preview.counts["enrollments"], preview.counts["excluded_empty_courses"])):
         cell.metric(label, value)
-    st.caption(f"已识别 {preview.counts['students']} 名学生的有效信息；统计只覆盖成功解析的成绩或明确状态。")
+    st.write(f"已识别 **{preview.counts['students']} 名学生**。空白成绩不计入统计，零分会保留。")
     st.write("学期：" + "；".join(term_text(term) for term in preview.terms))
     errors = [i for i in preview.issues if i.severity == "error"]
     important = [i for i in preview.issues if i.severity != "error" and i.code in IMPORTANT_CODES]
     informational = [i for i in preview.issues if i not in errors and i not in important]
     if errors:
-        st.error("存在必须先解决的问题，当前不能确认数据。请对照原表按行列坐标核查。")
+        st.error("还有问题需要处理，暂时不能进入分析。请按下表位置检查Excel，修改后重新上传；重复学号也可在下方核实处理。")
         st.dataframe(issue_table(errors), hide_index=True, width="stretch")
     if preview.issue_counts.get("conflicting_student"):
         st.warning("学号重复且记录冲突。以下策略会取舍整行，不拼接成绩，也不判断重修或留级。")
@@ -106,30 +107,23 @@ def show_review(client, state):
             st.warning("确认前请检查这些处理结果；异常值不会被默认为零分或缺考。")
             st.dataframe(issue_table(important), hide_index=True, width="stretch")
     if informational:
-        with st.expander("其他清洗说明与结构提醒"):
+        with st.expander(f"查看自动整理说明（{len(informational)}条）"):
             st.dataframe(issue_table(informational), hide_index=True, width="stretch")
-    with st.expander("查看课程识别、排除清单和脱敏样例"):
+    if preview.counts["excluded_empty_courses"]:
+        st.info(f"有{preview.counts['excluded_empty_courses']}列课程没有任何成绩，本次已跳过。你可以展开课程清单核对。")
+    with st.expander("核对课程清单与跳过的课程"):
         st.dataframe([{"原列": c.column, "课程": c.name, "学期": c.term, "学分": c.credits,
                        "学时": c.hours, "处理": c.reason if c.excluded else "保留明确成绩与状态"} for c in preview.courses],
                      hide_index=True, width="stretch")
-        if preview.sample:
-            st.caption("最多8条别名样例，不含原姓名、学号。")
-            st.dataframe(preview.sample, hide_index=True, width="stretch")
-        st.write({"专业人数": preview.majors, "班级": preview.classes, "全部问题计数": preview.issue_counts})
-        for assumption in preview.assumptions:
-            st.write("• " + assumption)
+        st.write("班级：" + "、".join(preview.classes))
         if preview.counts.get("issues_omitted"):
             st.warning("明细最多展示200条；分类计数包含全部问题。请先核查完整原表。")
-    with st.expander("原件、清洗步骤与确认记录（仅本地）"):
-        st.download_button("下载本次原始工作簿", state.upload.content, file_name="成绩单原件.xlsx",
-                           mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-        st.download_button("下载清洗与确认摘要", json.dumps(state.history, ensure_ascii=False, indent=2).encode("utf-8"),
-                           file_name="导入核对记录.json", mime="application/json")
-        if state.confirmed:
-            st.json(state.confirmed.model_dump(mode="json"))
-        st.caption("原件保留于当前会话，确认后另存本地私有档案。关闭或刷新浏览器会清空会话，但不会删除已确认数据及本地档案。")
+    with st.expander("数据会如何处理和保存？"):
+        st.write("确认后会替换当前学生与成绩，已有课程目录保留。空白不生成成绩；零分保留；明确的缺考与免修单独记录。")
+        st.write("原件、整理摘要和确认记录保存在本机。分析完成后，可从统一入口下载不含学生名单和原件的详细统计。")
+        st.write("返回上一步不会删除已确认的数据。整页刷新后会回到上传页，本机数据仍保留。")
     if state.confirmed_matches_upload:
-        st.success("这些数据已确认，返回核对不会重复提交或改变数据库。")
+        st.success("这些数据已确认。下一步点击“返回统计与图表”，无需再次提交。")
         if state.confirmed.archive_status == "pending":
             st.warning("数据已提交，本地原件已留存，但档案整理未完成；请核查本地档案，勿重复提交。")
         if st.button("返回统计与图表", type="primary"):
@@ -140,7 +134,7 @@ def show_review(client, state):
         st.info("请先处理上述阻止项，或修正原表后重新上传。")
         st.button("确认数据并进入分析", disabled=True)
         return
-    st.info("确认将使用本次清洗后的数据替换当前学生及成绩；原件、清洗步骤和确认记录仅本地留存。")
+    st.write("**下一步：** 核对完毕后，勾选下方确认，再点击“确认数据并进入分析”。这会替换当前学生与成绩。")
     signature = hashlib.sha256((state.upload.sha256 + preview.duplicate_policy + (preview.preview_token or "")).encode()).hexdigest()
     checked = st.checkbox("我已核对清洗结果、异常项及重复行处理，确认使用这些数据", key=f"workflow_confirm_{signature}")
     if st.button("确认数据并进入分析", disabled=not checked, type="primary"):

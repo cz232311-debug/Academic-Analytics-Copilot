@@ -120,7 +120,7 @@ def rates_chart(report: CourseReport, *, course_labels=None, staff_labels=False)
         y=alt.Y("Course:N", sort=None, title=None, axis=alt.Axis(labelLimit=350)),
         yOffset=alt.YOffset("Series:N", sort=series),
         x=alt.X("Rate:Q", title="有效成绩占比（%）" if staff_labels else "Percent of graded records", scale=alt.Scale(domain=[0, 100])),
-        color=alt.Color("Series:N", title=None, scale=alt.Scale(domain=series, range=[PASS_COLOR, FAIL_COLOR]),
+        color=alt.Color("Series:N", title=None, scale=alt.Scale(domain=series, range=["#116855", "#A4431E"] if staff_labels else [PASS_COLOR, FAIL_COLOR]),
                         legend=alt.Legend(orient="top", direction="horizontal") if staff_labels else alt.Undefined),
         tooltip=[alt.Tooltip("Course:N", title="课程" if staff_labels else "Course"),
                  alt.Tooltip("Series:N", title="指标" if staff_labels else "Series"),
@@ -131,12 +131,37 @@ def rates_chart(report: CourseReport, *, course_labels=None, staff_labels=False)
     labels = base.mark_text(align="left", dx=3, color="#283D47").encode(text="Rate label:N")
     chart = bars + labels
     if staff_labels:
-        outside = base.transform_filter(alt.datum.Rate < 95).mark_text(align="left", dx=3).encode(text="Rate label:N", color=alt.value("#283D47"))
-        inside = base.transform_filter(alt.datum.Rate >= 95).mark_text(align="right", dx=-4, fontWeight="bold").encode(text="Rate label:N", color=alt.value("white"))
+        outside = base.transform_filter(alt.datum.Rate < 95).mark_text(align="left", dx=3, fontSize=14).encode(text="Rate label:N", color=alt.value("#182230"))
+        inside = base.transform_filter(alt.datum.Rate >= 95).mark_text(align="right", dx=-4, fontSize=14, fontWeight="bold").encode(text="Rate label:N", color=alt.value("white"))
         chart = bars + outside + inside
     height = max(320, 140 + 46 * len(report.rows)) if staff_labels else max(180, 46 * len(report.rows))
-    return chart.properties(height=height,
-                                     title="课程及格与不及格率 · 仅有效成绩" if staff_labels else "Course pass and fail rates — graded records only")
+    chart = chart.properties(height=height,
+                             title="课程及格与不及格率 · 仅有效成绩" if staff_labels else "Course pass and fail rates — graded records only")
+    if staff_labels:
+        # A neutral plot surface keeps exported/chart text readable in either
+        # app theme, including during native theme switches without a rerun.
+        chart = chart.properties(background="#FFFFFF").configure_axis(
+            labelFontSize=14, titleFontSize=15, labelColor="#182230", titleColor="#182230").configure_legend(
+            labelFontSize=15, labelColor="#182230").configure_title(fontSize=17, color="#182230").configure_view(stroke=None)
+    return chart
+
+
+def mean_bands_rows(report: CourseReport, course_labels=None) -> pd.DataFrame:
+    """Display backend-assigned mean bands one course per row, without rebinning."""
+    lookup = {row.course_id: row for row in report.rows}
+    rows = []
+    for band in report.mean_bands:
+        for course_id in band.course_ids:
+            row = lookup[course_id]
+            rows.append({"课程均分区间": BAND_LABELS[band.label],
+                         "课程": course_labels.get(course_id, row.course_name) if course_labels else row.course_name,
+                         "课程类别": STAFF_TYPE_LABELS[row.course_type], "平均分": decimal_text(row.statistics.average_score),
+                         "有效成绩数": row.statistics.graded_count})
+    for row in report.rows:
+        if row.average_band is None:
+            rows.append({"课程均分区间": "暂无有效成绩", "课程": course_labels.get(row.course_id, row.course_name) if course_labels else row.course_name,
+                         "课程类别": STAFF_TYPE_LABELS[row.course_type], "平均分": "—", "有效成绩数": row.statistics.graded_count})
+    return pd.DataFrame(rows, columns=["课程均分区间", "课程", "课程类别", "平均分", "有效成绩数"])
 
 
 def mean_bands_table(report: CourseReport, *, include_ids=True, course_labels=None) -> pd.DataFrame:
