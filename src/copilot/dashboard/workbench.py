@@ -3,7 +3,7 @@ import streamlit as st
 
 from copilot.dashboard.client import DashboardError
 from copilot.dashboard.import_panel import show_review, show_upload
-from copilot.dashboard.presentation import STAFF_MAJOR_LABELS, STAFF_TYPE_LABELS, term_text
+from copilot.dashboard.presentation import STAFF_MAJOR_LABELS, STAFF_TYPE_LABELS, course_option_labels, term_text
 from copilot.dashboard.workflow import SECTION_LABELS, VIEW_LABELS, WorkflowError, WorkflowState
 from copilot.schemas import ReportScope
 
@@ -49,6 +49,7 @@ def show_analysis(client, state, render_report):
     previous = state.scope or ReportScope(term=catalog.terms[0])
     suffix = str(state.selection_revision) + "_" + state.confirmed.dataset_version
     classes, courses = {c.class_id: c for c in catalog.classes}, {c.course_id: c for c in catalog.courses}
+    course_labels = course_option_labels(courses)
     with st.container(border=True):
         st.markdown("**报告范围**")
         top = st.columns(3)
@@ -72,7 +73,7 @@ def show_analysis(client, state, render_report):
                                          on_change=state.invalidate_analysis)
         course_options = [None, *courses]
         course_id = bottom[2].selectbox("课程", course_options, index=_index(course_options, previous.course_id), key="wf_course_" + suffix,
-                                       format_func=lambda v: "全部课程" if v is None else f"{courses[v].course_name} · {courses[v].grade_level}级",
+                                       format_func=lambda v: "全部课程" if v is None else course_labels[v],
                                        on_change=state.invalidate_analysis)
         state.set_scope(ReportScope(term=term, grade_level=grade, major=major, class_id=class_id, course_type=course_type, course_id=course_id))
         update = st.button("更新统计预览", type="primary")

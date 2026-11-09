@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 from streamlit.testing.v1 import AppTest
 
-from tests.college_fixture import ROWS, college_workbook
+from tests.college_fixture import ROWS, WEB, college_workbook
 from tests.test_college_dashboard import button, confirmation, page_backend, uploaded_page
 
 ENTRY = str(Path(__file__).resolve().parents[1] / "streamlit_app.py")
@@ -81,6 +81,41 @@ def test_confirmed_analysis_builds_one_version_context_with_all_three_views(page
     assert len(page.dataframe) >= 2
     assert all(row.statistics.dataset_version == state.report.dataset_version for row in state.report.rows)
     assert not any(path.startswith("/api/agent") for path in client.request_paths)
+
+
+def test_same_name_courses_with_different_hours_are_distinguishable_and_keep_original_ids(page_backend, monkeypatch):
+    from copilot.dashboard.presentation import course_option_labels
+
+    _, client = page_backend
+    content = college_workbook(headers=["学号", "姓名", "班级", WEB, WEB.replace("学时32", "学时48")],
+        rows=[["FIXTURE240001", "合成甲", "24软工1班", 60, 80], ["FIXTURE240002", "合成乙", "24软工1班", 70, 90]])
+    page = uploaded_page(monkeypatch, content)
+    confirmation(page).check().run()
+    button(page, "确认数据并进入分析").click().run()
+    assert not page.exception
+    imported = {c.course_id: c for c in client.catalog().courses if c.course_name == "Web技术基础" and c.grade_level == 2024}
+    assert len(imported) == 2 and {c.hours for c in imported.values()} == {32, 48}
+    course_select = next(item for item in page.selectbox if item.label == "课程")
+    names = [label for label in course_select.options if "Web技术基础" in label]
+    assert len(names) == len(set(names)) == 2
+    assert any("32学时" in label for label in names) and any("48学时" in label for label in names)
+    assert all(identifier not in label for identifier in imported for label in names)
+    target = next(c for c in imported.values() if c.hours == 48)
+    course_select.set_value(target.course_id).run()
+    assert page.session_state.workflow.scope.course_id == target.course_id
+    assert page.session_state.workflow.report is None
+    button(page, "更新统计预览").click().run()
+    report = page.session_state.workflow.report
+    assert not page.exception and report.scope.course_id == target.course_id
+    assert [row.course_id for row in report.rows] == [target.course_id]
+    assert str(report.summary.average_score) == "85.00" and report.summary.graded_count == 2
+    # Identical available metadata still receives stable, non-ID display labels.
+    duplicate_id = "I" + ("0" if target.course_id != "I" + "0" * 24 else "1") * 24
+    duplicate = target.model_copy(update={"course_id": duplicate_id})
+    choices = {target.course_id: target, duplicate_id: duplicate}
+    labels = course_option_labels(choices)
+    assert len(set(labels.values())) == 2
+    assert labels == course_option_labels(dict(reversed(list(choices.items()))))
 
 
 def test_filter_change_immediately_invalidates_old_report_before_update(page_backend, monkeypatch):

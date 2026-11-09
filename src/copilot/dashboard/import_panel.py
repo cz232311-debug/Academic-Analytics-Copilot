@@ -34,7 +34,7 @@ def show_upload(client, state):
     st.write("上传学院导出的 Excel，先检查识别与清洗结果，再预览统一口径的统计和图表。")
     epoch = st.session_state.get("college_upload_epoch", 0)
     with st.container(border=True):
-        uploaded = st.file_uploader("选择学院成绩单", type=["xlsx"], key=f"college_upload_{epoch}",
+        uploaded = st.file_uploader("选择学院成绩单", type=["xlsx"], key=f"college_upload_{epoch}", max_upload_size=5,
                                     help="支持单工作表学院成绩单，最多5 MiB；上传与解析不会替换现有数据。")
         if uploaded is not None and state.select_upload(uploaded.name, uploaded.getvalue()):
             parse_selected(client, state)

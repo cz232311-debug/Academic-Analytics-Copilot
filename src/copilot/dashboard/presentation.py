@@ -1,4 +1,5 @@
 """Display-only projections of one backend report, never statistical calculations."""
+from collections import Counter, defaultdict
 import csv
 from io import StringIO
 
@@ -30,6 +31,37 @@ def decimal_text(value, *, percent=False):
 def term_text(term):
     year, semester = term.split("-T")
     return f"{year}–{int(year)+1}学年 · 第{semester}学期"
+
+
+def course_option_labels(courses):
+    """Distinguish catalog options without changing their IDs or merging courses."""
+    groups = defaultdict(list)
+    for course in courses.values():
+        groups[(course.course_name, course.grade_level)].append(course)
+    labels = {}
+    for group in groups.values():
+        ordered = sorted(group, key=lambda course: course.course_id)
+        candidates = {}
+        for course in ordered:
+            label = f"{course.course_name} · {course.grade_level}级"
+            if len(ordered) > 1:
+                details = [course.course_category or STAFF_TYPE_LABELS[course.course_type], f"{course.credits}学分"]
+                if course.hours is not None:
+                    details.append(f"{course.hours}学时")
+                if course.source_term:
+                    details.append(term_text(course.source_term))
+                if course.study_nature:
+                    details.append(course.study_nature)
+                label += " · " + " / ".join(details)
+            candidates[course.course_id] = label
+        frequencies, positions = Counter(candidates.values()), Counter()
+        for course in ordered:
+            label = candidates[course.course_id]
+            if frequencies[label] > 1:
+                positions[label] += 1
+                label += f" · 目录项{positions[label]}"
+            labels[course.course_id] = label
+    return labels
 
 
 def staff_scope_text(report):
