@@ -2,6 +2,8 @@
 
 An independent engineering portfolio project for SAP STAR Application Engineer (2028 Graduates).
 
+**Current interface: Phase 2B.1 — a staff report workspace.** Start with **Upload → Review → Analysis**; **Writing → Export** are navigation placeholders. A new session shows no default statistics and the production entry does not seed a demonstration dataset. “使用示例数据体验” is an explicit secondary action and still requires review/confirmation. [Current operator guide](START_HERE.zh-CN.md) · [Workflow design and evidence](docs/development/02b1-workflow.md)
+
 **Phase 2B adds a runnable Streamlit academic analysis workbench connected to FastAPI over HTTP.** It includes multidimensional course reports, charts, CSV downloads and the existing evidence-grounded Copilot. Phase 2A's user-run real DeepSeek check passed separately. [Workbench implementation and verification](docs/development/02b-workbench.md)
 
 The next Phase 2B increment adds a local-only **college XLSX adapter**: upload one wide grade sheet, review detected columns, exclusions and a de-identified preview, then explicitly confirm activation. The application stores internal student aliases rather than source names/IDs; uploaded data is barred from the Agent. The accepted export format and business limitations are documented in [学院成绩导入与验证记录](docs/development/02b-college-import.md).
@@ -20,7 +22,7 @@ For the complete first-install and post-reboot PowerShell workflow, read [本机
 .\scripts\start_dashboard.ps1
 ```
 
-Open [the workbench](http://127.0.0.1:8501). The sidebar supports term, grade, class, major, course type and course. Click **Load analysis** to update the three report views. Excellent rate means graded scores ≥80. Tables, charts and CSV share one backend report and version. The AI area keeps its existing scope and does not inherit sidebar filters. External model calls require an explicit form submission and authorization.
+Open [the workbench](http://127.0.0.1:8501), upload an XLSX, inspect the cleaning summary and explicitly confirm. Scope controls appear only in Analysis. Changing a scope immediately invalidates the old statistics/context; click **更新统计预览** to generate the new scope. Tables and charts share one versioned backend report. Select the views and sections to retain in an aggregate-only `ReportContext`. The new workflow does not call the Agent, generate final prose or export DOCX. The existing Agent API/component remains regression-tested separately.
 
 ## Run locally
 
@@ -34,15 +36,15 @@ python -m venv .venv
 .venv/Scripts/python.exe -m uvicorn copilot.api:app --host 127.0.0.1 --port 8000
 ```
 
-Open [Swagger UI](http://127.0.0.1:8000/docs), [health](http://127.0.0.1:8000/health), or [course statistics](http://127.0.0.1:8000/api/analytics/summary?course_id=G1-C01). For the default dataset, that course has an average of `69.73`, a pass rate of `67.80%` and 469 graded records. These were checked over real HTTP.
+Open [Swagger UI](http://127.0.0.1:8000/docs) or [health](http://127.0.0.1:8000/health). Before the first explicit confirmation, data/report APIs return `no_dataset`; upload preview already works. Legacy generated-dataset metrics such as G1-C01=69.73 are historical regression fixtures, not content loaded on the staff homepage.
 
-First startup creates `data/academic.sqlite3` and seeds the demo only if no dataset exists. Restarting preserves an uploaded dataset. To use a separate database, set `$env:ACADEMIC_DB_PATH = 'data/my-demo.sqlite3'` before starting the service. CSV export is a separate, reproducible command; it does not replace the database. This is a loopback demo without authentication. No API key or external model is needed.
+First startup initializes the database schema without seeding data. Restarting preserves existing confirmed data and private import receipts, but a fresh browser session starts at Upload and does not silently reuse them as a report. To use a separate database, set `$env:ACADEMIC_DB_PATH = 'data/my-demo.sqlite3'` before starting the service. The application factory retains an explicit legacy-bootstrap option for regression fixtures; the production `copilot.api:app` disables it. This remains a loopback application without multiuser authentication. No API key or external model is needed for the three implemented steps.
 
 `requirements.lock.txt` records the tested dependency versions, including the local build tools. It is a version lock, not a hash-enforced distribution lock. The first installation needs PyPI access. Linux, containers and other Python versions have not been verified in this increment.
 
 ## Implemented data contract
 
-The default seed is `20261103`, term `2026-T1`. Actual generated counts are **1,382 students, 40 classes, three grades, 96 catalog courses and 15,194 enrollments/final records**. Each student takes eight core courses and two to four electives within the student's grade. Grade populations are 484 / 449 / 449. There are 14,729 graded, 311 missing and 154 exempt records. The full scores matrix is never fabricated for all 96 courses per student.
+The standalone regression generator uses seed `20261103`, term `2026-T1`; it is not automatically activated by the staff interface. Its generated counts are **1,382 students, 40 classes, three grades, 96 catalog courses and 15,194 enrollments/final records**. Each student takes eight core courses and two to four electives within the student's grade. Grade populations are 484 / 449 / 449. There are 14,729 graded, 311 missing and 154 exempt records. The full scores matrix is never fabricated for all 96 courses per student.
 
 | Table | Typed columns |
 |---|---|
@@ -56,7 +58,7 @@ The default seed is `20261103`, term `2026-T1`. Actual generated counts are **1,
 
 Exports in `data/demo/` include five CSVs and a manifest with seed, counts and SHA-256 hashes. Generated data and local databases are ignored by Git; the code and [recorded manifest](docs/development/results/demo-manifest.json) reproduce them.
 
-Major/course-type fields default to `unspecified` for legacy data and may be omitted from normalized CSV/XLSX uploads. Existing databases migrate without guessed classifications. New empty API databases receive explicit synthetic categories; the legacy generator default keeps its original payload and hash. Add `--reporting-metadata` to the generator command to export the enriched variant. Scores and enrollment counts are identical between variants; metadata is included in the enriched fingerprint. [Reporting policy and compatibility](docs/development/02b-workbench.md)
+Major/course-type fields default to `unspecified` for legacy data and may be omitted from normalized CSV/XLSX uploads. Existing databases migrate without guessed classifications. Explicit regression fixtures can use synthetic categories; production startup leaves an empty database empty. The legacy generator default keeps its original payload and hash. Add `--reporting-metadata` to the generator command to export the enriched variant. Scores and enrollment counts are identical between variants; metadata is included in the enriched fingerprint. [Reporting policy and compatibility](docs/development/02b-workbench.md)
 
 ## Statistics and APIs
 
@@ -100,17 +102,17 @@ curl.exe -X POST http://127.0.0.1:8000/api/datasets/import `
 
 For Excel, send a single file field `workbook`, with `.xlsx` media type `application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`. The workbook must have exactly five visible sheets with the same table names/headers. Only literal cell values are accepted. `.xls`, `.xlsm`, formulas, external relationships, embedded objects, encryption and oversized ZIP expansion are unsupported. The Excel importer was exercised through real OOXML fixtures and the FastAPI upload endpoint.
 
-Limits: 5 MiB/file, 26 MiB/actual normalized-import body, 32 MiB/expanded workbook and table-specific row caps. College-upload endpoints allow5 MiB plus multipart overhead, at most256 columns/5000 students/50000 grade records, with coordinate checks before row allocation. Filenames are never used as storage paths. Type, size, field, primary-key and relationship validation precede activation. Expected errors use `{ "error": { "code": "...", "message": "..." } }` and do not echo cell contents. Imported data is marked `uploaded_local_only` and cannot claim external-LLM permission. Source identities are removed by the college adapter. Do not commit original workbooks, local databases or private logs; only synthetic fixtures belong in tests. Framework upload spooling may use temporary disk storage; handlers close uploads and the application does not persist originals.
+Limits: 5 MiB/file, 26 MiB/actual normalized-import body, 32 MiB/expanded workbook and table-specific row caps. College-upload endpoints allow5 MiB plus multipart overhead, at most256 columns/5000 students/50000 grade records, with coordinate checks before row allocation. Filenames are never used as storage paths. Expected errors do not echo cell contents. Uploaded data remains `uploaded_local_only` and is barred from the Agent. Source identities are removed from the five analytical tables. **After explicit confirmation**, original bytes plus de-identified cleaning/confirmation receipts are retained only under `<database directory>/.import-history/`, excluded from Git and review exports. Preview does not create that archive. Archival preparation failure prevents the DB write; post-commit finalization failure returns a visible `pending` status. Do not commit originals, databases or private logs. Framework upload spooling is temporary; handlers close uploads.
 
 ## Phase 2A: function calling
 
-Run an **offline, explicitly simulated** demonstration in PowerShell. A separate database path avoids overwriting or relabeling a previously uploaded dataset:
+Run an **offline, explicitly simulated** legacy Agent demonstration in PowerShell. This optional developer path explicitly selects the demo-enabled application factory; the staff workflow uses `copilot.api:app` without seeding. The separate database path avoids overwriting or relabeling uploaded data. The factory seeds only if that database is empty:
 
 ```powershell
 Set-Location -LiteralPath 'D:\Document\ChatGPT\SAP-ApplicationEngineer'
 $env:ACADEMIC_DB_PATH = 'data/agent-demo.sqlite3'
 $env:COPILOT_LLM_PROVIDER = 'mock'
-& '.\.venv\Scripts\python.exe' -m uvicorn copilot.api:app --host 127.0.0.1 --port 8000
+& '.\.venv\Scripts\python.exe' -m uvicorn copilot.api:create_app --factory --host 127.0.0.1 --port 8000
 ```
 
 Keep that terminal open. In another PowerShell window:
@@ -134,7 +136,7 @@ $env:COPILOT_LLM_MODEL = 'deepseek-flash'
 $deepseekSecret = Read-Host 'DeepSeek API key' -AsSecureString
 $env:COPILOT_LLM_API_KEY = [System.Net.NetworkCredential]::new('', $deepseekSecret).Password
 Remove-Variable deepseekSecret
-& '.\.venv\Scripts\python.exe' -m uvicorn copilot.api:app --host 127.0.0.1 --port 8000
+& '.\.venv\Scripts\python.exe' -m uvicorn copilot.api:create_app --factory --host 127.0.0.1 --port 8000
 ```
 
 The provider reads process environment variables. The DeepSeek profile appends `/chat/completions` to the official origin, disables thinking, requests JSON output and caps each completion at 2,048 output tokens. The stable endpoint uses local strict argument validation. Defaults are a 15-second provider timeout, a 45-second query deadline, four model turns and six tool calls. The adapter disables redirects and proxy inheritance. The `openai_compatible` profile still supports its own configurable base URL, model and remote schema strictness. [.env.example](.env.example) is a reference for the process variables. The app does not auto-load it. [DeepSeek Chat Completions API](https://api-docs.deepseek.com/api/create-chat-completion/)
@@ -158,7 +160,9 @@ Responses include request ID, provider mode, validated arguments, tool status, e
 
 The first Phase 2B workbench regression contained **230 tests**, including the original168 and actual TCP/Streamlit checks. Its [historical JUnit receipt](docs/development/results/phase2b-pytest.xml) and [15-check HTTP smoke receipt](docs/development/results/phase2b-http-smoke.json) are retained. The college-import increment completed **291 passed, zero failed/skipped, one existing TestClient warning, 54.69 seconds**, including61 new synthetic-only checks. [Current JUnit receipt](docs/development/results/college-import-pytest.xml). All automatic model calls used Mock/scripted transports. The user-run Phase 2A live check remains separate from this increment. [Phase 2A completion record](docs/development/02a-deepseek.md)
 
-Run the complete workbench HTTP acceptance with `.venv/Scripts/python.exe scripts/smoke_dashboard.py`. It starts isolated Uvicorn/Streamlit processes, tests the rendered page against real HTTP, and stops its own processes. No real API key is inherited. Streamlit AppTest verifies page behavior; browser pixel layout and a live DeepSeek submission through the new page remain unverified. [Official Streamlit app testing guide](https://docs.streamlit.io/develop/concepts/app-testing/get-started)
+Phase 2B.1 completed **344 full-suite tests**, followed by focused UI/display checks. It also passed **15 real HTTP smoke checks** and **10 actual headless Edge workflow checks** using synthetic workbooks. The [current workflow record](docs/development/02b1-workflow.md) distinguishes each test checkpoint, final presentation changes, screenshots and remaining limits. No new live DeepSeek call was made.
+
+Run the workbench HTTP acceptance with `.venv/Scripts/python.exe scripts/smoke_dashboard.py`. It starts isolated Uvicorn/Streamlit processes, tests page logic against real HTTP, and stops its own processes. No real API key is inherited. AppTest verifies page behavior; the separate Edge run supplies actual browser screenshots. Mobile, accessibility and cross-browser acceptance remain unverified. [Official Streamlit app testing guide](https://docs.streamlit.io/develop/concepts/app-testing/get-started)
 
 For debugging, start with `/health`, inspect `/api/dataset`, choose an ID from `/api/catalog`, then reproduce one query in Swagger. A 422 means a schema or dataset constraint failed; a 404 means a valid-format entity/term is absent. A 413 is a byte/row/expansion limit, and 415 is an unsupported file type. Match a response's dataset hash to the manifest before comparing numbers.
 

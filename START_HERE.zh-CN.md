@@ -1,163 +1,104 @@
-# 在本机启动 Academic Analytics Copilot
+# 学业分析报告工作台 — 本机使用说明
 
-项目自带完全合成的演示数据，也支持经过预览和确认的本地学院成绩导入，尚未在学院正式部署。VS Code 是可选的代码编辑器，启动系统只需要 PowerShell 和浏览器。真实上传数据禁止进入Agent或外部模型。
+当前版本为 Phase 2B.1。工作流程是 **上传 → 核对 → 分析 → 撰写 → 导出**。前三步可以使用，后两步仅预留导航，不调用模型、不生成最终报告或Word文件。
 
-## 第一次安装，或本轮更新后安装新增依赖
+首页不展示模拟学生统计，也不会默认激活示例数据。原有本地数据保留，但新浏览器会话不会自动把它当成本次报告的数据。
 
-在项目目录打开 PowerShell，依次执行。已经存在 `.venv` 时跳过创建环境的第一条 Python 命令。
+## 安装与启动
+
+使用Python 3.13。本轮没有新增依赖；已有环境无需重新安装。首次安装：
 
 ```powershell
 Set-Location -LiteralPath 'D:\Document\ChatGPT\SAP-ApplicationEngineer'
 python -m venv .venv
 & '.\.venv\Scripts\python.exe' -m pip install --only-binary=:all: -r requirements.lock.txt
 & '.\.venv\Scripts\python.exe' -m pip install --no-deps --no-build-isolation -e .
-& '.\.venv\Scripts\python.exe' -m pip check
 ```
 
-使用 Python 3.13。锁定文件包含本轮实际运行的 Pandas 2.3.3、Streamlit 和 Altair。虚拟环境目录仍存在时，电脑重启后不需要重新安装。
+两个PowerShell窗口分别启动服务，并保持打开。修改本轮代码后需要重启旧后端，再刷新页面。
 
-## 每次电脑重启后的标准启动
-
-需要两个 PowerShell 窗口。它们运行两个服务，请保持窗口打开。
-
-**窗口 A，启动 FastAPI 后端**
+窗口A：
 
 ```powershell
 Set-Location -LiteralPath 'D:\Document\ChatGPT\SAP-ApplicationEngineer'
 .\scripts\start_backend.ps1
 ```
 
-默认使用 Mock。统计数据由真实 SQLite/Pandas 计算，AI 选择工具与回答流程是离线模拟，不会产生模型费用。
-
-看到 `Uvicorn running on http://127.0.0.1:8000` 后，后端已启动。
-
-**窗口 B，启动 Streamlit 页面**
+窗口B：
 
 ```powershell
 Set-Location -LiteralPath 'D:\Document\ChatGPT\SAP-ApplicationEngineer'
 .\scripts\start_dashboard.ps1
 ```
 
-在浏览器打开 [学业分析工作台](http://127.0.0.1:8501)。8501 是用户页面端口，8000 是后端 API 端口。
-
-如果 PowerShell 阻止运行 `.ps1`，使用下面的等效手动命令即可，无需修改系统执行策略。
-
-窗口 A
+在浏览器打开[学业分析报告工作台](http://127.0.0.1:8501)。如果脚本被执行策略阻止，可使用等效命令，无需修改系统策略：
 
 ```powershell
-Set-Location -LiteralPath 'D:\Document\ChatGPT\SAP-ApplicationEngineer'
+# 窗口A
 $env:ACADEMIC_DB_PATH = 'data/workbench-demo.sqlite3'
 $env:COPILOT_LLM_PROVIDER = 'mock'
 & '.\.venv\Scripts\python.exe' -m uvicorn copilot.api:app --host 127.0.0.1 --port 8000
 ```
 
-窗口 B
-
 ```powershell
-Set-Location -LiteralPath 'D:\Document\ChatGPT\SAP-ApplicationEngineer'
+# 窗口B
 $env:COPILOT_API_BASE_URL = 'http://127.0.0.1:8000'
 & '.\.venv\Scripts\python.exe' -m streamlit run streamlit_app.py --server.address=127.0.0.1 --server.port=8501 --server.headless=true --browser.gatherUsageStats=false
 ```
 
-`data/workbench-demo.sqlite3` 第一次启动时自动生成。它包含 1,382 名虚构学生、40 个班级、96 门课程，以及合成的专业、课程类型。后续启动复用数据库。原来的 `data/agent-demo.sqlite3` 保留。
+首次启动只建立空库结构；没有数据是正常状态。已存在的数据库不会被启动操作清空。关闭浏览器不会停止服务；停止时在两个终端分别按Ctrl+C。
 
-## 在页面中验证三种业务视图
+## 1. 上传
 
-1. 在左侧选 `Grade 1`，或在 `Course` 选择 `G1-C01 · Mathematics`，点击 `Load analysis`。
-2. `Course analysis` 显示课程分段表，可下载 CSV。
-3. `Rates and samples` 显示及格率和不及格率横向柱状图。悬停可查看人数与有效样本量。
-4. `Course mean bands` 按课程精确均分分层。它与学生成绩分段是两种不同统计。
-5. `Report preview` 显示统一报告结构、统计范围和规则，目前不导出 Word/PDF。
+首页选择学院原始XLSX。仅支持一个成绩工作表，含学号、班级及带名称、类别、性质、学分、学时、学年的课程表头。上传后自动进入核对，尚未替换数据库。
 
-单独选择 G1-C01、其余条件选 All、学期选 2026-T1 时，应看到以下结果。
+没有文件时可点击次要入口“使用示例数据体验”。示例仅6名虚构学生，同样先解析核对、再由你确认，不自动导入。
 
-| 指标 | 结果 |
-|---|---:|
-| 有效成绩记录 | 469 |
-| 平均分 | 69.73 |
-| 及格率 / 不及格率 | 67.80% / 32.20% |
-| 优良率，分数 ≥80 | 29.00% |
-| 分段人数，低到高 | 151 / 79 / 103 / 85 / 51 |
-| 课程均分所属区间 | 60–<70 |
+## 2. 核对
 
-表格、图表、CSV 来自同一个后端报告与数据版本。专业、年级等条件同时生效，互相矛盾的选择可能没有数据。
+先看课程列、班级、成绩记录、全空课程列摘要。必须解决的问题以红色显示；需人工核对的异常、未知状态与排除项另列，结构提醒单独折叠。
 
-## 验证 AI Copilot
+重复学号冲突默认阻止提交。请对照原表核实；只有确认取舍后，才选择保留第一行或最后一行。策略取舍整行，不拼接成绩，也不判断哪一行具有教务效力。
 
-先保留合成演示数据验证AI；导入学院成绩后，AI按钮将禁用，三种统计视图继续可用。
+空白不生成选课记录，0分保留；明确缺考/免修使用既有状态，未知状态不猜成分数。可以展开课程清单、脱敏样例和清洗假设。原件、清洗摘要及确认详情在单独的本地详情区，可下载当前原件与摘要。
 
-页面底部保留默认英文问题，点击 `Ask Copilot`。
+核对完毕，勾选“我已核对清洗结果、异常项及重复行处理，确认使用这些数据”，再点“确认数据并进入分析”。只勾选不会提交。确认会替换当前学生与成绩，保留已有课程目录。
 
-```text
-What is the average score and pass rate for G1-C01?
-```
+预览凭据有效15分钟。文件、清洗策略、后端进程或数据库版本改变后需重新解析。若提示版本冲突，先重新核对，不要反复提交旧预览。
 
-Mock 模式应显示 69.73、67.80% 和 Evidence r1。展开证据与 Trace 可查看实际工具参数、数据版本和调用信息。Mock 没有真实 Token Usage。
+## 3. 分析
 
-AI 不自动继承左侧筛选。现有四个工具只支持学期、年级、课程、班级等既有能力，不支持专业或课程类型筛选。请核对回答自己的 Evidence 范围。中文、个人名单和敏感群体查询目前不支持。
+确认后自动进入默认范围的统计预览。按需要选择学期、入学年级、专业、班级、课程类型和课程。学期表示学年，例如2025–2026学年第一学期；2024级表示入学年，二者不同。
 
-## 可选，切换到真实 DeepSeek
+**任一范围条件改变，旧图表立即失效并隐藏。** 点击“更新统计预览”后查看新结果，避免新筛选配旧数字。
 
-先在窗口 A 按 `Ctrl+C` 停止旧后端，然后执行。
+三种视图均来自同一份后端报告：课程成绩分布表、及格与不及格率图、课程均分分层表。在“纳入报告的内容”和“报告章节”选择后续报告的组成；未选内容不显示。清空选择时不能继续撰写。
 
-```powershell
-Set-Location -LiteralPath 'D:\Document\ChatGPT\SAP-ApplicationEngineer'
-.\scripts\start_backend.ps1 -Provider deepseek
-```
+均分、比率只用有效成绩。缺考/缺失与免修单列，空白不补零。课程均分按未舍入值分层。完整版本、证据范围与统计定义收在详情区。
 
-脚本在当前窗口没有 Key 时显示隐藏输入提示。此时粘贴 Key 并回车，Key 不会显示，也不写入项目文件。环境变量不会因电脑重启而自动保留，下次会再次提示。Streamlit 窗口不需要 Key。
+可以返回核对或上传页，已确认的数据不会被返回操作删除。选择新文件会使旧统计、上下文和草稿失效，但确认新文件前不会覆盖数据库。
 
-无法运行脚本时，窗口 A 使用以下命令。
+## 4–5. 撰写与导出
 
-```powershell
-Set-Location -LiteralPath 'D:\Document\ChatGPT\SAP-ApplicationEngineer'
-$env:ACADEMIC_DB_PATH = 'data/workbench-demo.sqlite3'
-$env:COPILOT_LLM_PROVIDER = 'deepseek'
-$env:COPILOT_LLM_BASE_URL = 'https://api.deepseek.com'
-$env:COPILOT_LLM_MODEL = 'deepseek-flash'
-$copilotSecret = Read-Host 'Paste the DeepSeek API key (hidden)' -AsSecureString
-$env:COPILOT_LLM_API_KEY = [System.Net.NetworkCredential]::new('', $copilotSecret).Password
-Remove-Variable copilotSecret
-& '.\.venv\Scripts\python.exe' -m uvicorn copilot.api:app --host 127.0.0.1 --port 8000
-```
+保存内容选择后可以查看这两个预留步骤，了解已选视图与章节。AI撰写和Word导出按钮均禁用。本轮没有生成最终报告，也没有新增LLM授权机制。
 
-刷新工作台，确认 Provider 显示 deepseek。提交问题前勾选外部 API 调用授权框，然后点击 `Ask Copilot`。这会发生真实付费调用。打开页面、筛选统计、查询状态均不会调用模型。
+真实上传数据继续禁止Agent访问。`ReportContext`只保存聚合报告、完整范围、版本、视图/章节、口径及证据来源，不包含原工作簿或学生记录，且外发授权固定为False。
 
-本轮没有代你执行付费调用。此前 Phase 2A 的真实测试，与本轮 Mock 页面联调是两份不同验收记录。
+## 原件与记录如何保留
 
-## 常见问题与停止方式
+核对期间原件留在当前会话。确认时先将原始字节和脱敏清洗摘要写入数据库目录旁的`.import-history`私有目录，再事务提交，最后写确认回执。例如默认位置是`data/.import-history/`。该目录不进入Git或可分享审查包；其中原件仍含敏感信息，仅供本地核对。
 
-- 页面显示 `Cannot reach FastAPI`，先检查窗口 A 是否仍在运行，浏览器访问 [健康接口](http://127.0.0.1:8000/health)。
-- 提示端口占用，找到之前启动服务的窗口，按 `Ctrl+C`。避免同时运行两个占用 8000 的后端。
-- 看到旧接口或响应结构错误，停止旧后端后重新启动本轮代码，再刷新页面。
-- 访问 8000 根路径出现 404 是正常的。用户页面在 8501，开发接口页面在 [Swagger UI](http://127.0.0.1:8000/docs)。
-- 旧数据库的专业或类型显示 `Not provided` 是保留原信息的结果。不要把猜测分类写回旧数据。使用上述新 workbench 数据库可体验合成分类筛选。
-- 修改筛选后需点 `Load analysis`。报告标题展示已实际计算的范围。
-- 停止系统时，在两个服务窗口分别按 `Ctrl+C`。关闭浏览器标签页不会停止服务。
+若留存准备失败，不会写库。若数据提交后档案整理失败，界面明确提示`pending`：原件仍在本地暂存、数据库已经提交，请检查档案，不要重复提交。
 
-## 复跑自动化验收
+浏览器整页刷新或重新打开会清空会话，因此返回上传首页；已确认数据库和私有档案仍存在。当前未实现跨会话自动恢复报告，需重新选择文件、核对后再使用，避免旧报告被默认为当前报告。
 
-另开一个 PowerShell 窗口，在项目根目录执行。测试使用自己的临时数据库、端口和 Mock Provider，不影响已经启动的演示服务。
+## 常见问题
 
-```powershell
-Set-Location -LiteralPath 'D:\Document\ChatGPT\SAP-ApplicationEngineer'
-& '.\.venv\Scripts\python.exe' -m pytest -q --basetemp=.test-tmp-manual
-& '.\.venv\Scripts\python.exe' scripts/smoke_dashboard.py
-```
+- 无法连接：检查窗口A，必要时展开“连接与运行详情”。
+- 初次没有统计：正常，先上传或显式选择示例。
+- 旧界面仍显示：停止旧后端、启动本轮代码并刷新浏览器。
+- 改范围后数字消失：这是防止旧结果误用，点击“更新统计预览”。
+- 本地数据被其他请求修改：旧统计与草稿会失效，请重新核对。
+- “撰写/导出”不能用：本轮仅实现前三步及后续导航。
 
-完整修改、口径、测试结果和剩余差距见 [Phase 2B 开发记录](docs/development/02b-workbench.md)。
-
-## 上传学院单工作表成绩单
-
-更新本轮代码后重启后端，再刷新工作台；没有新增依赖。仍按上面的两个窗口启动。
-
-1. 展开页面顶部“学院成绩 XLSX 导入 · 上传 → 自动预览 → 确认提交”。
-2. 选择原始 `.xlsx`。页面自动调用预览接口，此时当前数据库不变。
-3. 核对有效学生、课程列、将导入记录、全空排除列、学期、班级和专业。打开问题明细，按行列坐标检查异常；下方仅显示别名脱敏样例。
-4. 若有学号冲突，默认阻止提交。对照原表核实后，可明确选择保留第一行或最后一行。这个策略取舍整行，不自动拼接成绩，也不判断留级或重修。也可在原表更正后重新上传。
-5. 核对“全空”和“无可导入成绩或状态”等排除清单。勾选“我已核对预览、排除项与重复行策略，确认替换当前分析数据”，再点击“确认导入到当前数据库”。只勾选不会提交。
-6. 成功后页面显示新数据版本并重新加载统计；学期例如 `2025-T1` 表示2025–2026学年第一学期，年级显示 `2024级`，两者含义不同。查看原来的课程分析表、比率图和课程均分分层。
-
-预览有效期15分钟；文件、重复策略或当前数据库发生变化时，需要重新预览。提交将替换当前学生及选课成绩，同时保留已有课程目录，不累计追加历史成绩。空白不生成选课记录、0分保留、明确“缺考/免修”按既有状态处理。未知专业保留原班级标签并标为“Not provided”，不会按文件名强行归为软工。
-
-此格式适配了复合课程表头；任意多行表头、多个成绩工作表、五级制分数自动换算及重修规则均未实现。详细规则、实际参考表的聚合校验和验收结果见 [学院成绩导入记录](docs/development/02b-college-import.md)。
+实现、测试、截图、调用链和限制见[Phase 2B.1开发记录](docs/development/02b1-workflow.md)。

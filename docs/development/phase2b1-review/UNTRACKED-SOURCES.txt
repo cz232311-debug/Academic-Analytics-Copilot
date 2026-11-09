@@ -1,0 +1,12 @@
+本轮新增源码（创建时未跟踪，交付时均纳入功能提交）
+src/copilot/dashboard/example.py
+src/copilot/dashboard/workbench.py
+src/copilot/dashboard/workflow.py
+src/copilot/data/import_archive.py
+tests/test_import_archive.py
+tests/test_workflow_empty.py
+tests/test_workflow_state.py
+tests/test_workflow_ui.py
+
+最终Git状态与完整SHA见ZIP manifest；最终无未跟踪新增源码。仅用户原有docs/development/results/14-deepseek-offline-demo.json保留未提交。
+streamlit_app.py为未修改但必需的既有入口，base/current快照均包含。

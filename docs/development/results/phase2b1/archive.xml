@@ -1,0 +1,67 @@
+<?xml version='1.0' encoding='utf-8'?>
+<testsuites name="pytest tests">
+  <testsuite name="pytest" errors="0" failures="0" skipped="0" tests="62" time="17.476" timestamp="2026-11-09T21:37:11.101603+08:00">
+    <testcase classname="tests.test_import_archive" name="test_preview_creates_no_private_archive_or_original" time="0.088" />
+    <testcase classname="tests.test_import_archive" name="test_confirmed_import_retains_exact_original_cleaning_and_confirmation" time="0.107" />
+    <testcase classname="tests.test_import_archive" name="test_archive_receipts_never_contain_original_identity_sample_filename_or_token" time="0.077" />
+    <testcase classname="tests.test_import_archive" name="test_failed_database_version_guard_discards_only_its_staging_original" time="0.062" />
+    <testcase classname="tests.test_import_archive" name="test_archive_write_failure_prevents_database_commit" time="0.125" />
+    <testcase classname="tests.test_import_archive" name="test_finalize_failure_reports_pending_without_claiming_rollback" time="0.151" />
+    <testcase classname="tests.test_import_archive" name="test_discard_refuses_a_target_outside_the_exact_private_staging_directory" time="0.055" />
+    <testcase classname="tests.test_workflow_empty" name="test_production_entrypoint_does_not_activate_demo_by_default" time="0.123" />
+    <testcase classname="tests.test_workflow_empty" name="test_explicit_factory_demo_fixture_remains_available" time="2.021" />
+    <testcase classname="tests.test_workflow_empty" name="test_empty_dataset_preview_does_not_activate_or_write_business_rows" time="0.165" />
+    <testcase classname="tests.test_workflow_empty" name="test_first_confirmed_import_activates_local_dataset_and_rejects_replay" time="0.265" />
+    <testcase classname="tests.test_workflow_empty" name="test_preview_of_empty_database_cannot_overwrite_a_later_activation" time="0.234" />
+    <testcase classname="tests.test_workflow_empty" name="test_existing_dataset_preview_still_requires_same_version" time="0.217" />
+    <testcase classname="tests.test_workflow_empty" name="test_empty_guard_is_checked_before_any_replacement_or_directory_merge" time="0.072" />
+    <testcase classname="tests.test_college_api" name="test_preview_only_identifies_and_validates_without_changing_active_data" time="0.226" />
+    <testcase classname="tests.test_college_api" name="test_confirmation_must_be_explicit_and_rejections_preserve_dataset[false]" time="0.221" />
+    <testcase classname="tests.test_college_api" name="test_confirmation_must_be_explicit_and_rejections_preserve_dataset[0]" time="0.287" />
+    <testcase classname="tests.test_college_api" name="test_missing_confirmation_and_missing_token_never_commit" time="0.251" />
+    <testcase classname="tests.test_college_api" name="test_tampered_preview_token_is_rejected_without_writes" time="0.200" />
+    <testcase classname="tests.test_college_api" name="test_preview_token_is_bound_to_the_exact_uploaded_workbook" time="0.214" />
+    <testcase classname="tests.test_college_api" name="test_expired_preview_requires_repreview_instead_of_overwriting" time="0.195" />
+    <testcase classname="tests.test_college_api" name="test_preview_version_conflict_preserves_the_newer_dataset" time="0.224" />
+    <testcase classname="tests.test_college_api" name="test_confirmed_import_updates_version_catalog_and_existing_course_reports" time="0.252" />
+    <testcase classname="tests.test_college_api" name="test_all_blank_course_exclusion_does_not_delete_an_existing_directory_entry" time="0.248" />
+    <testcase classname="tests.test_college_api" name="test_uploaded_dataset_is_blocked_before_agent_provider_and_raw_data_never_logged" time="0.217" />
+    <testcase classname="tests.test_college_api" name="test_extra_multipart_fields_do_not_bypass_preview_or_confirmation" time="0.217" />
+    <testcase classname="tests.test_college_api" name="test_explicit_duplicate_resolution_is_bound_to_preview_and_commit[first-cohorts0]" time="0.272" />
+    <testcase classname="tests.test_college_api" name="test_explicit_duplicate_resolution_is_bound_to_preview_and_commit[last-cohorts1]" time="0.253" />
+    <testcase classname="tests.test_college_compatibility" name="test_extended_normalized_csv_and_xlsx_reuse_exact_credit_and_metadata_validation" time="0.027" />
+    <testcase classname="tests.test_college_compatibility" name="test_legacy_generator_fingerprint_and_integer_wire_values_are_preserved" time="0.762" />
+    <testcase classname="tests.test_college_compatibility" name="test_unicode_courses_aliases_cohorts_and_metadata_round_trip" time="0.068" />
+    <testcase classname="tests.test_college_compatibility" name="test_fractional_credit_aggregation_is_exact_and_does_not_change_score_policy" time="0.090" />
+    <testcase classname="tests.test_college_compatibility" name="test_nonbinary_decimal_credits_agree_with_independent_sql_counts" time="0.069" />
+    <testcase classname="tests.test_college_compatibility" name="test_invalid_credit_values_are_rejected[credits0]" time="0.002" />
+    <testcase classname="tests.test_college_compatibility" name="test_invalid_credit_values_are_rejected[credits1]" time="0.003" />
+    <testcase classname="tests.test_college_compatibility" name="test_invalid_credit_values_are_rejected[credits2]" time="0.002" />
+    <testcase classname="tests.test_college_compatibility" name="test_invalid_credit_values_are_rejected[credits3]" time="0.003" />
+    <testcase classname="tests.test_college_compatibility" name="test_invalid_credit_values_are_rejected[credits4]" time="0.002" />
+    <testcase classname="tests.test_college_compatibility" name="test_invalid_credit_values_are_rejected[True]" time="0.001" />
+    <testcase classname="tests.test_college_compatibility" name="test_labels_and_identifiers_still_reject_unsafe_or_unsupported_values" time="0.001" />
+    <testcase classname="tests.test_college_compatibility" name="test_old_check_constraints_migrate_atomically_and_idempotently" time="0.090" />
+    <testcase classname="tests.test_college_compatibility" name="test_migration_integrity_failure_rolls_back_layout_and_preserves_records" time="0.091" />
+    <testcase classname="tests.test_college_compatibility" name="test_confirmed_import_preserves_existing_catalog_and_optional_metadata" time="0.146" />
+    <testcase classname="tests.test_college_compatibility" name="test_stale_confirmation_and_conflicting_courses_do_not_change_database" time="0.078" />
+    <testcase classname="tests.test_college_compatibility" name="test_confirmed_import_rolls_back_catalog_and_data_on_insert_failure" time="0.115" />
+    <testcase classname="tests.test_api" name="test_health_openapi_dataset_and_catalog" time="0.451" />
+    <testcase classname="tests.test_api" name="test_filtered_statistics_and_decimal_wire_format" time="0.160" />
+    <testcase classname="tests.test_api" name="test_invalid_queries_are_rejected_and_not_echoed[params0]" time="0.136" />
+    <testcase classname="tests.test_api" name="test_invalid_queries_are_rejected_and_not_echoed[params1]" time="0.124" />
+    <testcase classname="tests.test_api" name="test_invalid_queries_are_rejected_and_not_echoed[params2]" time="0.129" />
+    <testcase classname="tests.test_api" name="test_invalid_queries_are_rejected_and_not_echoed[params3]" time="0.133" />
+    <testcase classname="tests.test_api" name="test_unknown_and_empty_scope" time="0.155" />
+    <testcase classname="tests.test_api" name="test_class_comparison_and_bad_class_lists" time="0.171" />
+    <testcase classname="tests.test_api" name="test_five_csv_uploads_activate_atomically" time="0.174" />
+    <testcase classname="tests.test_api" name="test_excel_upload_is_followed_by_actual_query" time="0.197" />
+    <testcase classname="tests.test_api" name="test_invalid_upload_preserves_previous_data_and_sanitizes_error" time="0.188" />
+    <testcase classname="tests.test_api" name="test_wrong_media_size_and_incomplete_uploads" time="0.257" />
+    <testcase classname="tests.test_api" name="test_request_byte_limit_checks_actual_bytes_without_trusting_length" time="0.127" />
+    <testcase classname="tests.test_api" name="test_empty_database_and_default_bootstrap_are_real" time="2.144" />
+    <testcase classname="tests.test_api" name="test_duplicate_multipart_fields_and_mixed_upload_modes_rejected" time="0.129" />
+    <testcase classname="tests.test_api" name="test_restart_preserves_uploaded_dataset" time="2.117" />
+    <testcase classname="tests.test_api" name="test_malformed_multipart_and_unknown_route_have_sanitized_errors" time="0.127" />
+  </testsuite>
+</testsuites>

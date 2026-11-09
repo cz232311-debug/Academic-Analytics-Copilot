@@ -1,5 +1,7 @@
 # Phase 2B — 学院成绩 XLSX Adapter
 
+后续更新（2026-11-10）：[Phase 2B.1 工作流重组](02b1-workflow.md)已替换旧页面入口，并在确认时新增本地私有原件与清洗/确认回执留存。本文关于旧界面、未保存原件及浏览器未验证的陈述只描述本次历史增量；当前操作以新版启动说明为准。
+
 本轮基线：`fb590744f70529ec2844de061b5525400a5563c2`。开始时只有用户原有的 `docs/development/results/14-deepseek-offline-demo.json` 未提交修改；该文件保持原样，未纳入本轮提交。没有推送GitHub、部署或付费模型调用。真实工作簿在仓库外读取，没有复制到仓库或测试夹具。
 
 实现提交依次为`8bcfac1`（核心兼容）、`a8cdc41`（Adapter/API/页面）、`ef65167`（规范化导入校验对齐）。文档和回执另作本地提交；最终导出manifest记录完整检查点及累计差异边界。[逐文件清单](college-import-review/FILES.md)与[新增源码跟踪记录](college-import-review/UNTRACKED-SOURCES.txt)保留本轮完整范围。

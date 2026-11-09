@@ -1,0 +1,28 @@
+<?xml version='1.0' encoding='utf-8'?>
+<testsuites name="pytest tests">
+  <testsuite name="pytest" errors="0" failures="0" skipped="0" tests="23" time="2.088" timestamp="2026-11-10T05:16:51.609698+08:00">
+    <testcase classname="tests.test_dashboard" name="test_table_chart_and_csv_share_backend_rates_and_version" time="0.004" />
+    <testcase classname="tests.test_dashboard" name="test_unavailable_rates_and_mean_bands_are_not_zero" time="0.002" />
+    <testcase classname="tests.test_dashboard" name="test_chart_contract_uses_fixed_percentage_axis_and_sample_tooltip" time="0.049" />
+    <testcase classname="tests.test_dashboard" name="test_client_validates_report_and_sends_typed_filters" time="0.001" />
+    <testcase classname="tests.test_dashboard" name="test_client_transport_failures_have_actionable_safe_messages[exception0-connection]" time="0.001" />
+    <testcase classname="tests.test_dashboard" name="test_client_transport_failures_have_actionable_safe_messages[exception1-timeout]" time="0.001" />
+    <testcase classname="tests.test_dashboard" name="test_client_safe_api_errors_preserve_trace_id[unknown_entity-404]" time="0.001" />
+    <testcase classname="tests.test_dashboard" name="test_client_safe_api_errors_preserve_trace_id[dataset_changed-409]" time="0.001" />
+    <testcase classname="tests.test_dashboard" name="test_client_safe_api_errors_preserve_trace_id[question_privacy_block-422]" time="0.001" />
+    <testcase classname="tests.test_dashboard" name="test_client_safe_api_errors_preserve_trace_id[agent_privacy_block-403]" time="0.001" />
+    <testcase classname="tests.test_dashboard" name="test_client_safe_api_errors_preserve_trace_id[invalid_model_response-502]" time="0.001" />
+    <testcase classname="tests.test_dashboard" name="test_client_rejects_success_with_invalid_response_contract[not JSON]" time="0.001" />
+    <testcase classname="tests.test_dashboard" name="test_client_rejects_success_with_invalid_response_contract[{}]" time="0.001" />
+    <testcase classname="tests.test_dashboard" name="test_client_rejects_success_with_invalid_response_contract[{&quot;dataset_version&quot;: 123}]" time="0.001" />
+    <testcase classname="tests.test_dashboard" name="test_client_query_only_sends_question_field" time="0.001" />
+    <testcase classname="tests.test_dashboard" name="test_export_sanitizes_spreadsheet_formula_text" time="0.002" />
+    <testcase classname="tests.test_dashboard" name="test_empty_csv_keeps_header_and_chart_data_has_contract" time="0.002" />
+    <testcase classname="tests.test_dashboard" name="test_client_disallows_credentials_and_invalid_service_urls[file:///private]" time="0.000" />
+    <testcase classname="tests.test_dashboard" name="test_client_disallows_credentials_and_invalid_service_urls[https://user:secret@example.com]" time="0.001" />
+    <testcase classname="tests.test_dashboard" name="test_client_disallows_credentials_and_invalid_service_urls[not-a-url]" time="0.000" />
+    <testcase classname="tests.test_dashboard" name="test_client_disallows_credentials_and_invalid_service_urls[http://localhost/?key=secret]" time="0.000" />
+    <testcase classname="tests.test_dashboard" name="test_streamlit_api_failure_is_actionable_and_does_not_crash" time="0.818" />
+    <testcase classname="tests.test_dashboard" name="test_streamlit_live_submit_requires_authorization_and_displays_evidence" time="0.166" />
+  </testsuite>
+</testsuites>

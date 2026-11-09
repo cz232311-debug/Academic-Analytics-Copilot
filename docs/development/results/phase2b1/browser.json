@@ -1,0 +1,47 @@
+{
+  "generated_at": "2026-11-09T21:22:53.160632+00:00",
+  "browser": "Microsoft Edge (headless, Windows)",
+  "transport": "real headless Edge/Chrome -> Streamlit browser session -> localhost FastAPI -> isolated SQLite",
+  "synthetic_workbook_only": true,
+  "paid_model_calls": 0,
+  "external_renderer_requests": 0,
+  "passed_checks": [
+    "fresh_home_has_no_statistics_or_default_dataset",
+    "actual_xlsx_upload_enters_review_without_activation",
+    "confirmation_button_disabled_until_checkbox",
+    "only_explicit_confirmation_activates_data_and_analysis",
+    "three_existing_views_render_in_actual_browser",
+    "changing_scope_removes_old_report_and_context_until_explicit_regeneration",
+    "returning_to_review_does_not_resubmit_or_change_confirmed_data",
+    "writing_and_docx_steps_are_explicit_nonexecuting_placeholders",
+    "browser_refresh_returns_to_unconfirmed_home_without_deleting_backend_data",
+    "conflicting_reupload_blocks_submission_and_preserves_confirmed_backend_data"
+  ],
+  "screenshots": [
+    "phase2b1-home.png",
+    "phase2b1-review.png",
+    "phase2b1-analysis-overview.png",
+    "phase2b1-analysis-table.png",
+    "phase2b1-analysis-rates.png",
+    "phase2b1-analysis-bands.png",
+    "phase2b1-scope-change.png",
+    "phase2b1-writing-placeholder.png",
+    "phase2b1-export-placeholder.png",
+    "phase2b1-conflict.png"
+  ],
+  "services_stopped": true,
+  "optional_notes": [],
+  "confirmed_counts": {
+    "students": 6,
+    "grade_records": 17
+  },
+  "source_sha256": {
+    "src/copilot/dashboard/app.py": "18a5d84af061626f1f42b9f969c611045ab7087f850f94b983b4d7d3ad6568c5",
+    "src/copilot/dashboard/workbench.py": "7567e8b9a7926aa68448fd9b3a92d2a9b878bce580ceb3e1d6417d18320d73f8",
+    "src/copilot/dashboard/import_panel.py": "5135f4ed576bfad6cf20ec3e87d948bd5a1ce6c3f52ef57fe78b3067b98826dd",
+    "src/copilot/dashboard/presentation.py": "96028777d2ac7b6c5104064e28f61efe426ad7c45a8193fcc83e28b1045243c4",
+    "src/copilot/dashboard/workflow.py": "1dcf02f7e06ccc3f8da7d78ddf860ee5484fa507f4e58bc23cb948e0c09e8b30"
+  },
+  "source_unchanged_during_run": true,
+  "evidence_copy_note": "Paths normalized and machine hostname removed from JUnit for sharing; assertions and source hashes retained."
+}
