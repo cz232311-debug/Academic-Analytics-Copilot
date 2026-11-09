@@ -22,6 +22,12 @@ class AgentStatus(Record):
     streaming: bool
 
 
+class HealthStatus(Record):
+    status: str
+    dataset_active: bool
+    version: str
+
+
 class DashboardError(Exception):
     def __init__(self, code: str, message: str, *, request_id: str | None = None):
         super().__init__(message)
@@ -32,7 +38,7 @@ ERROR_MESSAGES = {
     "unknown_entity": "A selected term or ID is unavailable. Refresh the page and select from the current catalog.",
     "invalid_request": "The selected filters or question are invalid. Review the values and try again.",
     "dataset_changed": "The dataset changed while loading. Refresh the page and load the analysis again.",
-    "no_dataset": "The API has no active dataset. Start it with the generated demonstration database.",
+    "no_dataset": "当前尚无已确认的数据，请先上传、核对并确认成绩单。",
     "agent_privacy_block": "AI queries are available only for generated synthetic data. Uploaded datasets stay local.",
     "question_privacy_block": "Use a supported English aggregate question with course or class IDs. Omit names and personal information.",
     "provider_timeout": "The model timed out. Your statistics remain available. Try the question again later.",
@@ -57,6 +63,8 @@ ERROR_MESSAGES = {
     "preview_expired": "预览已过期或后端已重启，请重新解析预览。",
     "college_not_ready": "成绩表仍有阻止提交的问题，请修正后重新预览。",
     "course_conflict": "同一课程标识与已有目录定义冲突，数据未覆盖。请核对课程元数据。",
+    "archive_unavailable": "本地原件留存暂不可写，本次没有提交。请检查本地存储空间和目录权限后重试。",
+    "archive_cleanup_failed": "提交失败，本地暂存需检查；请先重新预览，勿重复确认。",
 }
 
 
@@ -101,6 +109,9 @@ class DashboardClient:
 
     def dataset(self) -> DatasetInfo:
         return self._request("GET", "/api/dataset", DatasetInfo)
+
+    def health(self) -> HealthStatus:
+        return self._request("GET", "/health", HealthStatus)
 
     def catalog(self) -> ReportingCatalog:
         return self._request("GET", "/api/reports/catalog", ReportingCatalog)

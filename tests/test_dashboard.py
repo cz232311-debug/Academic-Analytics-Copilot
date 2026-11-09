@@ -14,7 +14,7 @@ from copilot.schemas import CourseReport, ReportScope
 @pytest.fixture
 def report():
     def statistics(course=None, *, graded=3, mean="73.33", passed=2):
-        return {"dataset_version": "a" * 64, "scope": {"term": "2026-T1", "course_id": course},
+        return {"dataset_version": "a" * 64, "scope": {"term": "2026-T1", "grade_level": 1, "course_id": course},
                 "enrollment_count": 4, "student_count": 4, "graded_count": graded,
                 "missing_count": 1 if graded else 2, "exempt_count": 0 if graded else 2,
                 "passed_count": passed, "failed_count": graded - passed, "failed_student_count": graded - passed,
@@ -151,7 +151,9 @@ def test_streamlit_api_failure_is_actionable_and_does_not_crash(monkeypatch):
     import copilot.dashboard.app as dashboard_app
 
     class OfflineClient:
-        def dataset(self):
+        base_url = "http://127.0.0.1:8000"
+
+        def health(self):
             raise DashboardError("connection", "Cannot reach FastAPI. Start the backend on port 8000 and keep its terminal open.")
 
     monkeypatch.setattr(dashboard_app, "DashboardClient", OfflineClient)
@@ -205,8 +207,11 @@ def test_streamlit_live_submit_requires_authorization_and_displays_evidence(monk
                 "usage": None, "answer_mode": "grounded_narrative", "fallback_reason": None}))
 
     fake = FakeClient()
-    monkeypatch.setattr(dashboard_app, "DashboardClient", lambda: fake)
-    page = AppTest.from_file(str(Path(__file__).resolve().parents[1] / "streamlit_app.py")).run()
+    def agent_component(client, dataset, report):
+        from copilot.dashboard.app import show_agent_panel
+        show_agent_panel(client, dataset, report)
+
+    page = AppTest.from_function(agent_component, args=(fake, fake.dataset(), report)).run()
     assert not page.exception and fake.calls == 0
     next(item for item in page.button if item.label == "Ask Copilot").click().run()
     assert not page.exception and fake.calls == 0
@@ -216,4 +221,4 @@ def test_streamlit_live_submit_requires_authorization_and_displays_evidence(monk
     assert not page.exception and fake.calls == 1
     assert any("73.33 points" in item.value for item in page.markdown)
     assert any("Statistical evidence" in item.label for item in page.expander)
-    assert len(page.dataframe) == 2
+    assert len(page.json) >= 2

@@ -20,7 +20,7 @@ import time
 import httpx
 
 ROOT = Path(__file__).resolve().parents[1]
-RESULT_PATH = ROOT / "docs/development/results/phase2b-http-smoke.json"
+RESULT_PATH = ROOT / "docs/development/results/phase2b1-workflow-smoke.json"
 
 
 def unused_port():
@@ -71,6 +71,13 @@ def local_services(*, dashboard=False):
                    COPILOT_LLM_PROVIDER="mock", OPENBLAS_NUM_THREADS="1",
                    STREAMLIT_BROWSER_GATHER_USAGE_STATS="false",
                    USERPROFILE=str(isolated_home), HOME=str(isolated_home))
+        # This helper is an explicitly seeded regression fixture. The actual
+        # production app now starts empty and never implicitly activates a demo.
+        from copilot.data.generate import DEFAULT_SEED, generate_dataset
+        from copilot.storage import Database
+        fixture = Database(env["ACADEMIC_DB_PATH"])
+        fixture.initialize()
+        fixture.replace(generate_dataset(reporting_metadata=True), source="generated", seed=DEFAULT_SEED)
         api_port = unused_port()
         api_url = f"http://127.0.0.1:{api_port}"
         env["COPILOT_API_BASE_URL"] = api_url
@@ -129,29 +136,29 @@ def assert_report_invariants(report):
 
 
 def check_rendered_dashboard(api_url):
-    """AppTest executes page Python against real TCP APIs, including form submits."""
+    """AppTest runs the explicit staff workflow through the actual TCP API."""
     from streamlit.testing.v1 import AppTest
 
     with dashboard_environment(api_url):
         page = AppTest.from_file(str(ROOT / "streamlit_app.py"), default_timeout=40).run()
         assert not page.exception, [error.message for error in page.exception]
-        assert len(page.dataframe) >= 2
-        assert len(page.metric) >= 3
-        grade = next(item for item in page.selectbox if item.label == "Grade")
-        grade.set_value(1)
-        next(button for button in page.button if button.label == "Load analysis").click()
-        page.run()
+        assert not page.dataframe and not page.metric
+        next(button for button in page.button if button.label == "使用示例数据体验").click().run()
+        assert page.session_state.workflow.step == "review"
+        assert page.session_state.workflow.preview.can_import
+        next(item for item in page.checkbox if item.label.startswith("我已核对清洗结果")).check().run()
+        next(button for button in page.button if button.label == "确认数据并进入分析").click().run()
         assert not page.exception, [error.message for error in page.exception]
-        next(button for button in page.button if button.label == "Ask Copilot").click()
-        page.run()
+        assert page.session_state.workflow.step == "analysis"
+        grade = next(item for item in page.selectbox if item.label == "入学年级")
+        grade.set_value(2024).run()
+        assert page.session_state.workflow.report is None
+        next(button for button in page.button if button.label == "更新统计预览").click().run()
         assert not page.exception, [error.message for error in page.exception]
-        markdown = "\n".join(item.value for item in page.markdown)
-        assert "69.73" in markdown and "67.80" in markdown
-        assert any("evidence" in expander.label.lower() for expander in page.expander)
-        assert page.session_state.course_report.scope.grade_level == 1
-        assert page.session_state.agent_response.evidence[0].evidence_id == "r1"
+        assert page.session_state.workflow.report.scope.grade_level == 2024
+        assert page.session_state.workflow.context.external_llm_allowed is False
         return {"rendered_tables": len(page.dataframe), "rendered_metrics": len(page.metric),
-                "agent_answer_contains": ["69.73", "67.80"], "filter_submitted": "Grade 1"}
+                "explicit_confirmation": True, "filter_submitted": "2024 cohort", "report_context_ready": True}
 
 
 def check_unavailable_dashboard():
@@ -238,7 +245,7 @@ def run_smoke():
             assert http.get(urls["dashboard_url"]).status_code == 200
         checks.append({"check": "streamlit_server_and_api_error_statuses", "passed": True})
         samples["rendered_page"] = check_rendered_dashboard(urls["api_url"])
-        checks.append({"check": "actual_streamlit_page_filters_and_agent_form_over_tcp", "passed": True})
+        checks.append({"check": "actual_streamlit_workflow_confirmation_and_filters_over_tcp", "passed": True})
         check_unavailable_dashboard()
         checks.append({"check": "unavailable_api_visible_error_without_page_exception", "passed": True})
     with httpx.Client(timeout=2, trust_env=False) as http:

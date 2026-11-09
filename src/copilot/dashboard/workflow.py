@@ -121,6 +121,13 @@ class WorkflowState:
         if self.step in {"writing", "export"}:
             self.step = "analysis" if self.confirmed_matches_upload else "review" if self.upload else "upload"
 
+    def invalidate_analysis(self, reason="分析范围已改变，请重新生成统计预览。"):
+        """Widget callbacks run before navigation, so stale context cannot escape."""
+        self._clear_analysis(reason)
+
+    def invalidate_content(self):
+        self.context = self.draft = None
+
     def select_upload(self, name: str, content: bytes, source="upload", *, force=False) -> bool:
         if source not in {"upload", "example"} or not isinstance(content, bytes) or not content:
             raise WorkflowError("请选择有效的工作簿来源。")
@@ -223,6 +230,7 @@ class WorkflowState:
         if (not views or len(set(views)) != len(views) or any(v not in VIEW_LABELS for v in views)
                 or not selected_sections or len(set(selected_sections)) != len(selected_sections)
                 or any(s not in SECTION_LABELS for s in selected_sections)):
+            self.context = self.draft = None
             raise WorkflowError("请至少选择一项有效图表和一个报告章节，且不要重复。")
         context = ReportContext(confirmed_dataset_version=self.confirmed.dataset_version, source=self.confirmed.source,
             scope=self.scope.model_copy(deep=True), report=self.report.model_copy(deep=True), selected_views=views,

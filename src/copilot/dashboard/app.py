@@ -1,66 +1,68 @@
-"""English Streamlit workbench. Every analytical value comes from FastAPI."""
+"""Report workspace entry and reusable view/legacy-Agent components."""
+from collections import Counter
+
 import streamlit as st
 
 from copilot.dashboard.client import DashboardClient, DashboardError
-from copilot.dashboard.import_panel import show_import_panel
-from copilot.dashboard.presentation import (BAND_LABELS, MAJOR_LABELS, TYPE_LABELS, course_table, decimal_text,
-                                           mean_bands_table, rates_chart, report_csv, scope_text)
-from copilot.schemas import ReportScope
+from copilot.dashboard.presentation import (TYPE_LABELS, STAFF_TYPE_LABELS, course_table, decimal_text,
+                                           mean_bands_table, rates_chart, report_csv, staff_scope_text)
+from copilot.dashboard.workflow import VIEW_LABELS
 
 
-def show_error(exc: DashboardError):
+def show_error(exc):
     st.error(str(exc))
     if exc.request_id:
-        st.caption(f"Request ID: {exc.request_id}")
+        with st.expander("请求详情"):
+            st.caption(f"Request ID: {exc.request_id}")
 
 
-def show_report(report):
-    st.subheader("Academic analysis")
-    st.caption(scope_text(report))
-    st.caption(f"Dataset version: {report.dataset_version} · Generated at (UTC): {report.generated_at}")
+def show_report(report, selected_views=tuple(VIEW_LABELS)):
+    st.caption("统计范围：" + staff_scope_text(report))
     summary = report.summary
-    columns = st.columns(4)
-    columns[0].metric("Average score", decimal_text(summary.average_score))
-    columns[1].metric("Pass rate", decimal_text(summary.pass_rate_percent, percent=True))
-    columns[2].metric("Graded records", f"{summary.graded_count:,}")
-    columns[3].metric("Students in scope", f"{summary.student_count:,}")
-    st.caption(f"Enrolled records: {summary.enrollment_count:,} · Missing: {summary.missing_count:,} · Exempt: {summary.exempt_count:,}. "
-               "Averages and percentages use graded records only. No grades are imputed. Overall averages are over enrollment records.")
-    st.caption("Score bands use continuous boundaries, for example 60–<70 includes 69.99. Excellent rate means graded scores ≥80.00. "
-               "Display rounds half up to two decimals. Course mean bands use exact, unrounded means.")
+    cells = st.columns(4)
+    for cell, label, value in zip(cells, ("平均分", "及格率", "有效成绩数", "范围内学生"),
+                                  (decimal_text(summary.average_score), decimal_text(summary.pass_rate_percent, percent=True),
+                                   str(summary.graded_count), str(summary.student_count))):
+        cell.metric(label, value)
+    st.caption(f"成绩记录 {summary.enrollment_count} · 缺考/缺失 {summary.missing_count} · 免修 {summary.exempt_count}。"
+               "均分和比率只使用有效成绩；空白不补零。")
+    names = Counter(row.course_name for row in report.rows)
+    labels = {row.course_id: row.course_name if names[row.course_name] == 1 else f"{row.course_name}（课程{i+1}）"
+              for i, row in enumerate(report.rows)}
     if not report.rows:
-        st.info("No enrollments match these filters. Choose another combination and load analysis again.")
-        return
-    tabs = st.tabs(["Course analysis", "Rates and samples", "Course mean bands", "Report preview"])
-    with tabs[0]:
-        st.markdown("**Table A · Course score distribution and outcomes**")
-        st.dataframe(course_table(report), hide_index=True, width="stretch")
-        st.download_button("Download course analysis CSV", data=report_csv(report), mime="text/csv",
-                           file_name=f"course-analysis-{report.scope.term}-{report.dataset_version[:8]}.csv")
-    with tabs[1]:
-        st.markdown("**Figure B · Course pass and fail rates**")
-        if summary.graded_count:
-            st.altair_chart(rates_chart(report), width="stretch")
-        else:
-            st.info("There are no graded records. Rates are unavailable rather than zero.")
-        st.caption("Green = passed · Orange = failed. Hover to see the numerator and graded sample size. "
-                   "Courses with no graded records have unavailable rates. Sample sizes differ; these descriptive rates do not establish teaching quality.")
-    with tabs[2]:
-        st.markdown("**Table C · Courses grouped by their average score**")
-        st.caption("Each item represents a course mean. This is different from the student-record score distribution in Table A. "
-                   "A mean displayed as 80.00 can belong to 70–<80 when its exact value is 79.995.")
-        st.dataframe(mean_bands_table(report), hide_index=True, width="stretch")
-    with tabs[3]:
-        st.markdown(f"**Academic performance report · {report.scope.term}**")
-        st.write(f"Scope: {scope_text(report)}")
-        st.write(f"Across {len(report.rows)} courses and {summary.graded_count:,} graded enrollment records, "
-                 f"the average score is {decimal_text(summary.average_score)} and the pass rate is {decimal_text(summary.pass_rate_percent, percent=True)}.")
-        st.write("Table A records grade distributions and outcomes. Figure B visualizes the same backend rates. "
-                 "Table C classifies exact course means. Missing and exempt records are listed separately.")
-        st.caption("Deterministic preview from this report response. AI commentary appears separately with its own evidence and query scope. "
-                   "Word/PDF export is planned for a later increment.")
-        st.json({"dataset_version": report.dataset_version, "generated_at": str(report.generated_at),
-                 "scope": report.scope.model_dump(exclude_none=True), "policy": report.policy.model_dump(mode="json")})
+        st.info("这个范围内没有选课成绩，请调整范围后更新预览。")
+    elif selected_views:
+        for tab, view in zip(st.tabs([VIEW_LABELS[v] for v in selected_views]), selected_views):
+            with tab:
+                if view == "course_table":
+                    table = course_table(report)
+                    table["Course type"] = table["Course type"].replace({label: STAFF_TYPE_LABELS[code] for code, label in TYPE_LABELS.items()})
+                    table["Course"] = table["Course ID"].map(labels)
+                    table = table.drop(columns=["Course ID"]).rename(columns={"Course": "课程", "Course type": "课程类别",
+                        "Average": "平均分", "Pass rate": "及格率", "Fail rate": "不及格率", "Excellent ≥80": "优良率（≥80）",
+                        "Graded n": "有效成绩数", "Passed n": "及格数", "Failed n": "不及格数",
+                        "Missing n": "缺考/缺失", "Exempt n": "免修数", "Enrolled n": "成绩记录数"})
+                    st.dataframe(table, hide_index=True, width="stretch")
+                    st.download_button("下载当前成绩分布（CSV）", report_csv(report), mime="text/csv",
+                                       file_name=f"course-analysis-{report.scope.term}.csv")
+                elif view == "rates_chart":
+                    if summary.graded_count:
+                        st.altair_chart(rates_chart(report, course_labels=labels, staff_labels=True), width="stretch")
+                    else:
+                        st.info("没有有效成绩，比率不可用，不显示为零。")
+                    st.caption("绿色为及格率，橙色为不及格率。悬停可查看人数和有效样本量。")
+                else:
+                    st.caption("每一项是一门课程的精确均分，不是学生成绩分段。显示四舍五入不会改变分层。")
+                    bands = mean_bands_table(report, include_ids=False, course_labels=labels)
+                    bands = bands.rename(columns={"Course mean band": "课程均分区间", **{label: STAFF_TYPE_LABELS[code] for code, label in TYPE_LABELS.items()}})
+                    bands = bands.map(lambda value: value.replace("mean ", "均分 ").replace(", n=", "，有效数=") if isinstance(value, str) else value)
+                    st.dataframe(bands, hide_index=True, width="stretch")
+    with st.expander("统计口径与证据来源"):
+        st.write("及格：≥60分；不及格：<60分；优良：≥80分。分母为有效成绩记录。缺考/缺失、免修单列。")
+        st.write("课程均分按未舍入值分层，分数和比率按半入方式保留两位小数。同名课程序号可在下方查证。")
+        st.json({"dataset_version": report.dataset_version, "generated_at": report.generated_at,
+                 "scope": report.scope.model_dump(exclude_none=True), "policy": report.policy.model_dump(mode="json"),
+                 "course_labels": labels, "source": "/api/reports/courses → AnalyticsEngine.course_report"})
 
 
 def show_agent_result(result, report, active_version):
@@ -93,60 +95,9 @@ def show_agent_result(result, report, active_version):
                  "model_trace": [trace.model_dump(mode="json") for trace in result.model_trace]})
 
 
-def main():
-    st.set_page_config(page_title="Academic Analytics Copilot", page_icon="🎓", layout="wide")
-    st.title("Academic Analytics Copilot")
-    st.caption("Academic analysis workbench · Local aggregate reports · Synthetic demo or confirmed local XLSX import")
-    st.info("本地统计支持已确认的学院成绩导入。AI仅对生成的合成数据可用；真实学生数据不会发送给外部模型。")
-    try:
-        client = DashboardClient()
-        dataset, catalog = client.dataset(), client.catalog()
-    except DashboardError as exc:
-        show_error(exc)
-        st.code("& '.\\.venv\\Scripts\\python.exe' -m uvicorn copilot.api:app --host 127.0.0.1 --port 8000", language="powershell")
-        return
-    if dataset.dataset_version != catalog.dataset_version:
-        st.warning("The dataset changed while the page loaded. Refresh to obtain a consistent catalog.")
-        return
-    show_import_panel(client)
-    with st.sidebar:
-        st.subheader("Dataset and filters")
-        st.caption(f"FastAPI: {client.base_url}")
-        source_label = "synthetic students" if dataset.source == "generated" else "imported student aliases"
-        st.write(f"{dataset.counts['students']:,} {source_label} · {dataset.counts['classes']} classes · {dataset.counts['courses']} catalog courses")
-        st.caption(f"Source: {dataset.source} · Version: {dataset.dataset_version[:12]}")
-        if st.button("Refresh data"):
-            st.session_state.pop("course_report", None)
-            st.rerun()
-        with st.form("report_filters"):
-            term = st.selectbox("Term", catalog.terms)
-            grades = sorted({row.grade_level for row in catalog.classes})
-            grade = st.selectbox("Grade", [None, *grades], format_func=lambda value: "All grades" if value is None else
-                                 f"{value}级" if value >= 1900 else f"Grade {value}")
-            major = st.selectbox("Major", [None, *catalog.majors], format_func=lambda value: "All majors" if value is None else MAJOR_LABELS.get(value, value))
-            classes = {row.class_id: row for row in catalog.classes}
-            class_id = st.selectbox("Class", [None, *classes], format_func=lambda value: "All classes" if value is None else f"{value} · {classes[value].class_label}")
-            course_type = st.selectbox("Course type", [None, *catalog.course_types], format_func=lambda value: "All course types" if value is None else TYPE_LABELS.get(value, value))
-            courses = {row.course_id: row for row in catalog.courses}
-            course_id = st.selectbox("Course", [None, *courses], format_func=lambda value: "All courses" if value is None else f"{value} · {courses[value].course_name}")
-            load = st.form_submit_button("Load analysis")
-        st.caption("Click Load analysis after changing filters. The report heading always shows the filters used to compute the displayed result.")
-        if "unspecified" in catalog.majors or "unspecified" in catalog.course_types:
-            st.caption("Not provided means the source has no major/course-type classification. Legacy data is not assigned invented categories.")
-    if load or "course_report" not in st.session_state:
-        try:
-            scope = ReportScope(term=term, grade_level=grade, class_id=class_id, course_id=course_id, major=major, course_type=course_type)
-            with st.spinner("Loading deterministic analysis from FastAPI…"):
-                st.session_state.course_report = client.report(scope, expected_version=catalog.dataset_version)
-        except DashboardError as exc:
-            st.session_state.pop("course_report", None)
-            show_error(exc)
-    report = st.session_state.get("course_report")
-    if report:
-        if report.dataset_version != dataset.dataset_version:
-            st.warning("The displayed report is from an earlier dataset version. Click Load analysis to refresh it.")
-        show_report(report)
-    st.divider()
+
+
+def show_agent_panel(client, dataset, report=None):
     st.subheader("AI Copilot")
     st.caption("AI uses the existing four controlled tools. It does not inherit the dashboard filters. Include term, grade, course or class IDs in your English question. "
                "Major and course-type filters are supported by the report API only. Chinese questions and personal-list queries are currently unsupported.")
@@ -178,3 +129,8 @@ def main():
     result = st.session_state.get("agent_response")
     if result:
         show_agent_result(result, report, dataset.dataset_version)
+
+
+def main():
+    from copilot.dashboard.workbench import main as run_workbench
+    run_workbench(DashboardClient, show_report)

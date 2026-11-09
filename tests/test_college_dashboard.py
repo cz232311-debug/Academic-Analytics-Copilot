@@ -19,10 +19,13 @@ def page_backend(tmp_path, tiny_dataset, monkeypatch):
     store.replace(tiny_dataset, source="generated", seed=1)
     monkeypatch.setenv("COPILOT_LLM_PROVIDER", "mock")
     with TestClient(create_app(store.path, bootstrap_demo=False)) as api:
+        paths = []
         def transport(request):
+            paths.append(request.url.path)
             response = api.request(request.method, str(request.url), content=request.content, headers=request.headers)
             return httpx.Response(response.status_code, content=response.content, headers=response.headers)
         client = DashboardClient("http://testserver", transport=httpx.MockTransport(transport))
+        client.request_paths = paths
         monkeypatch.setattr("copilot.dashboard.app.DashboardClient", lambda: client)
         yield store, client
 
@@ -44,7 +47,7 @@ def button(page, label):
 
 
 def confirmation(page):
-    return next(item for item in page.checkbox if item.label.startswith("我已核对预览"))
+    return next(item for item in page.checkbox if item.label.startswith("我已核对清洗结果"))
 
 
 def test_upload_and_checking_confirmation_do_not_commit_until_button(page_backend, monkeypatch):
@@ -52,11 +55,11 @@ def test_upload_and_checking_confirmation_do_not_commit_until_button(page_backen
     before = store.overview()
     page = uploaded_page(monkeypatch, college_workbook())
     assert not page.exception
-    assert page.session_state.college_preview.can_import
+    assert page.session_state.workflow.preview.can_import
     assert store.overview() == before
-    assert button(page, "确认导入到当前数据库").disabled
+    assert button(page, "确认数据并进入分析").disabled
     confirmation(page).check().run()
-    assert not page.exception and not button(page, "确认导入到当前数据库").disabled
+    assert not page.exception and not button(page, "确认数据并进入分析").disabled
     assert store.overview() == before
 
 
@@ -65,25 +68,27 @@ def test_confirmed_upload_refreshes_report_filters_charts_and_disables_agent(pag
     before = store.overview()
     page = uploaded_page(monkeypatch, college_workbook())
     confirmation(page).check().run()
-    button(page, "确认导入到当前数据库").click().run()
+    button(page, "确认数据并进入分析").click().run()
     assert not page.exception, [item.message for item in page.exception]
     after = store.overview()
     assert after.dataset_version != before.dataset_version
     assert after.source == "uploaded_local_only"
-    report = page.session_state.course_report
+    report = page.session_state.workflow.report
     assert report.dataset_version == after.dataset_version and report.scope.term == "2025-T1"
     assert report.summary.graded_count == 3 and report.summary.enrollment_count == 5
-    assert len(report.rows) == 2 and len(page.dataframe) == 2
-    grade = next(item for item in page.selectbox if item.label == "Grade")
+    assert len(report.rows) == 2 and len(page.dataframe) >= 2
+    grade = next(item for item in page.selectbox if item.label == "入学年级")
     assert "2024级" in grade.options
     grade.set_value(2024)
-    button(page, "Load analysis").click().run()
-    assert not page.exception and page.session_state.course_report.scope.grade_level == 2024
+    page.run()
+    assert page.session_state.workflow.report is None
+    button(page, "更新统计预览").click().run()
+    assert not page.exception and page.session_state.workflow.report.scope.grade_level == 2024
     assert any("2024级" in item.value for item in page.caption)
-    assert button(page, "Ask Copilot").disabled
-    assert any("导入已提交" in item.value for item in page.success)
-    with pytest.raises(KeyError):
-        page.session_state["college_preview"]
+    assert all(item.label != "Ask Copilot" for item in page.button)
+    assert page.session_state.workflow.context.external_llm_allowed is False
+    assert page.session_state.workflow.preview is not None
+    assert any(item["event"] == "confirmed" for item in page.session_state.workflow.history)
 
 
 def test_duplicate_policy_requires_new_preview_and_new_confirmation(page_backend, monkeypatch):
@@ -93,17 +98,17 @@ def test_duplicate_policy_requires_new_preview_and_new_confirmation(page_backend
     content = college_workbook(rows=[*ROWS, conflicting])
     before = store.overview()
     page = uploaded_page(monkeypatch, content)
-    assert not page.exception and not page.session_state.college_preview.can_import
-    assert all(item.label != "确认导入到当前数据库" for item in page.button)
+    assert not page.exception and not page.session_state.workflow.preview.can_import
+    assert button(page, "确认数据并进入分析").disabled
     policy = next(item for item in page.selectbox if item.label.startswith("重复学号"))
     policy.set_value("first").run()
-    assert not page.exception and page.session_state.college_preview.can_import
-    assert page.session_state.college_preview.duplicate_policy == "first"
+    assert not page.exception and page.session_state.workflow.preview.can_import
+    assert page.session_state.workflow.preview.duplicate_policy == "first"
     confirmation(page).check().run()
     policy = next(item for item in page.selectbox if item.label.startswith("重复学号"))
     policy.set_value("last").run()
-    assert not page.exception and page.session_state.college_preview.duplicate_policy == "last"
-    assert not confirmation(page).value and button(page, "确认导入到当前数据库").disabled
+    assert not page.exception and page.session_state.workflow.preview.duplicate_policy == "last"
+    assert not confirmation(page).value and button(page, "确认数据并进入分析").disabled
     assert store.overview() == before
 
 
