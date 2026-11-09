@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Annotated
 from uuid import uuid4
 
-from fastapi import FastAPI, File, Query, Request, UploadFile
+from fastapi import FastAPI, File, Form, Query, Request, UploadFile
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.concurrency import run_in_threadpool
@@ -18,6 +18,8 @@ from copilot.agent.service import AgentService, MAX_MODEL_TURNS, MAX_TOOL_CALLS,
 from copilot.agent.tools import TOOLS
 from copilot.data.generate import DEFAULT_SEED, generate_dataset
 from copilot.data.importing import MAX_FILE_BYTES, import_csv_tables, import_workbook
+from copilot.data.college import CollegeCommitResult, CollegePreview, DuplicatePolicy
+from copilot.data.college_service import CollegeImportService
 from copilot.models import ClassId, CourseId, DataError, TABLE_NAMES, Term
 from copilot.schemas import (Catalog, ClassComparison, CourseReport, CourseReportQuery, DatasetInfo, ErrorDetail, ErrorResponse,
                              ImportResult, ReportingCatalog, ReportScope, Scope, Statistics)
@@ -83,6 +85,7 @@ def create_app(database_path: str | Path | None = None, *, bootstrap_demo=True, 
                agent_provider=None, agent_timeout_seconds=None):
     store = Database(database_path or os.environ.get("ACADEMIC_DB_PATH", "data/academic.sqlite3"))
     engine = AnalyticsEngine(store)
+    college_import = CollegeImportService(store)
 
     @asynccontextmanager
     async def lifespan(app):
@@ -98,6 +101,8 @@ def create_app(database_path: str | Path | None = None, *, bootstrap_demo=True, 
     application.state.database = store
     application.add_middleware(UploadBodyLimit, limit=max_request_bytes)
     application.add_middleware(UploadBodyLimit, limit=8192, path="/api/agent/query")
+    for path in ("/api/datasets/college/preview", "/api/datasets/college/commit"):
+        application.add_middleware(UploadBodyLimit, limit=MAX_FILE_BYTES + 65536, path=path)
 
     @application.exception_handler(AgentError)
     async def agent_error(request: Request, exc: AgentError):
@@ -172,6 +177,29 @@ def create_app(database_path: str | Path | None = None, *, bootstrap_demo=True, 
     def compare_classes(course_id: CourseId, class_ids: Annotated[list[ClassId], Query(min_length=2, max_length=40)],
                         term: Term = "2026-T1"):
         return engine.compare_classes(course_id, class_ids, term)
+
+    async def college_upload(request, workbook, allowed):
+        form = await request.form()
+        if set(form) - allowed or any(len(form.getlist(k)) != 1 for k in form):
+            raise DataError("Unexpected or duplicate multipart fields")
+        return await read_upload(workbook)
+
+    @application.post("/api/datasets/college/preview", response_model=CollegePreview)
+    async def preview_college(request: Request, workbook: UploadFile = File(), duplicate_policy: DuplicatePolicy = Form("block")):
+        try:
+            upload = await college_upload(request, workbook, {"workbook", "duplicate_policy"})
+            return await run_in_threadpool(college_import.preview, *upload, duplicate_policy=duplicate_policy)
+        finally:
+            await workbook.close()
+
+    @application.post("/api/datasets/college/commit", response_model=CollegeCommitResult)
+    async def commit_college(request: Request, workbook: UploadFile = File(), preview_token: str = Form(),
+                             confirmed: bool = Form(False)):
+        try:
+            upload = await college_upload(request, workbook, {"workbook", "preview_token", "confirmed"})
+            return await run_in_threadpool(college_import.commit, *upload, preview_token=preview_token, confirmed=confirmed)
+        finally:
+            await workbook.close()
 
     @application.post("/api/datasets/import", response_model=ImportResult)
     async def import_dataset(request: Request,

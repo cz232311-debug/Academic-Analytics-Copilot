@@ -8,9 +8,11 @@ import pandas as pd
 from copilot.schemas import CourseReport
 
 TYPE_LABELS = {"general_required": "General required", "professional_required": "Professional required",
+               "general_elective": "General elective",
                "professional_elective": "Professional elective", "practical": "Practical teaching",
                "unspecified": "Not provided"}
 MAJOR_LABELS = {"computer_science": "Computer Science", "business_administration": "Business Administration",
+                "software_engineering": "软件工程", "network_engineering": "网络工程",
                 "information_systems": "Information Systems", "unspecified": "Not provided"}
 BAND_LABELS = {"[0,60)": "0–<60", "[60,70)": "60–<70", "[70,80)": "70–<80",
                "[80,90)": "80–<90", "[90,100]": "90–100"}
@@ -23,7 +25,8 @@ def decimal_text(value, *, percent=False):
 
 def scope_text(report: CourseReport):
     scope = report.scope
-    return " · ".join([scope.term, f"Grade {scope.grade_level}" if scope.grade_level else "All grades",
+    grade_label = f"{scope.grade_level}级" if scope.grade_level and scope.grade_level >= 1900 else f"Grade {scope.grade_level}" if scope.grade_level else "All grades"
+    return " · ".join([scope.term, grade_label,
                        MAJOR_LABELS.get(scope.major, "All majors") if scope.major else "All majors",
                        scope.class_id or "All classes", TYPE_LABELS.get(scope.course_type, scope.course_type) if scope.course_type else "All course types",
                        scope.course_id or "All courses"])

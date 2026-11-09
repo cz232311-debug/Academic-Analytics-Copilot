@@ -12,3 +12,5 @@ data/demo/
 *.egg-info/
 build/
 dist/
+*.xlsx
+*.xls

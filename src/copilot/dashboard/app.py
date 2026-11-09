@@ -2,6 +2,7 @@
 import streamlit as st
 
 from copilot.dashboard.client import DashboardClient, DashboardError
+from copilot.dashboard.import_panel import show_import_panel
 from copilot.dashboard.presentation import (BAND_LABELS, MAJOR_LABELS, TYPE_LABELS, course_table, decimal_text,
                                            mean_bands_table, rates_chart, report_csv, scope_text)
 from copilot.schemas import ReportScope
@@ -95,8 +96,8 @@ def show_agent_result(result, report, active_version):
 def main():
     st.set_page_config(page_title="Academic Analytics Copilot", page_icon="🎓", layout="wide")
     st.title("Academic Analytics Copilot")
-    st.caption("Academic analysis workbench · Synthetic demonstration · Inspired by academic reporting work; not deployed at a college")
-    st.info("Use synthetic data only. This workbench provides aggregate academic analysis, with deterministic statistics and evidence-linked AI explanations.")
+    st.caption("Academic analysis workbench · Local aggregate reports · Synthetic demo or confirmed local XLSX import")
+    st.info("本地统计支持已确认的学院成绩导入。AI仅对生成的合成数据可用；真实学生数据不会发送给外部模型。")
     try:
         client = DashboardClient()
         dataset, catalog = client.dataset(), client.catalog()
@@ -107,17 +108,21 @@ def main():
     if dataset.dataset_version != catalog.dataset_version:
         st.warning("The dataset changed while the page loaded. Refresh to obtain a consistent catalog.")
         return
+    show_import_panel(client)
     with st.sidebar:
         st.subheader("Dataset and filters")
         st.caption(f"FastAPI: {client.base_url}")
-        st.write(f"{dataset.counts['students']:,} synthetic students · {dataset.counts['classes']} classes · {dataset.counts['courses']} catalog courses")
+        source_label = "synthetic students" if dataset.source == "generated" else "imported student aliases"
+        st.write(f"{dataset.counts['students']:,} {source_label} · {dataset.counts['classes']} classes · {dataset.counts['courses']} catalog courses")
         st.caption(f"Source: {dataset.source} · Version: {dataset.dataset_version[:12]}")
         if st.button("Refresh data"):
             st.session_state.pop("course_report", None)
             st.rerun()
         with st.form("report_filters"):
             term = st.selectbox("Term", catalog.terms)
-            grade = st.selectbox("Grade", [None, 1, 2, 3], format_func=lambda value: "All grades" if value is None else f"Grade {value}")
+            grades = sorted({row.grade_level for row in catalog.classes})
+            grade = st.selectbox("Grade", [None, *grades], format_func=lambda value: "All grades" if value is None else
+                                 f"{value}级" if value >= 1900 else f"Grade {value}")
             major = st.selectbox("Major", [None, *catalog.majors], format_func=lambda value: "All majors" if value is None else MAJOR_LABELS.get(value, value))
             classes = {row.class_id: row for row in catalog.classes}
             class_id = st.selectbox("Class", [None, *classes], format_func=lambda value: "All classes" if value is None else f"{value} · {classes[value].class_label}")
