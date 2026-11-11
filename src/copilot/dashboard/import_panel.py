@@ -6,6 +6,7 @@ import streamlit as st
 from copilot.dashboard.client import DashboardError
 from copilot.dashboard.example import example_workbook
 from copilot.dashboard.presentation import term_text
+from copilot.dashboard.synthetic_panel import show_synthetic_panel
 from copilot.dashboard.workflow import WorkflowError
 
 POLICY_LABELS = {"block": "先核对原表，暂不处理冲突（默认）", "first": "已核实：保留第一行，排除后续重复行",
@@ -56,6 +57,7 @@ def show_upload(client, state):
         st.session_state.college_upload_epoch = epoch + 1
         parse_selected(client, state)
         st.rerun()
+    show_synthetic_panel(client, state, parse_selected)
     with st.expander("开始前需要了解什么？"):
         st.write("成绩单应只有一个成绩工作表，包含学号、班级，以及带学分、学时、学期的课程表头。")
         st.write("空白不会算作零分或缺考。重复学号、无法识别的成绩等问题，会在下一步提示你核对。")
