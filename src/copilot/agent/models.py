@@ -68,7 +68,7 @@ class QueryRequest(Record):
     question: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=1000)]
     scope: SessionScope | None = None
     expected_version: Annotated[str | None, Field(pattern=r"^[0-9a-f]{64}$")] = None
-    execution_mode: Literal["configured", "local"] = "configured"
+    execution_mode: Literal["configured", "grounded", "local"] = "configured"
 
 
 class FinalSelection(Record):

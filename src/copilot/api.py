@@ -168,7 +168,7 @@ def create_app(database_path: str | Path | None = None, *, bootstrap_demo=True, 
     @application.post("/api/agent/resolve", response_model=ResolvedIntent)
     async def resolve_agent(payload: QueryRequest):
         intent, _ = await run_in_threadpool(resolve_payload, payload,
-                                          generated_only=payload.execution_mode == "configured")
+                                          generated_only=payload.execution_mode != "local")
         return intent
 
     @application.post("/api/agent/query", response_model=AgentResponse)
@@ -179,15 +179,25 @@ def create_app(database_path: str | Path | None = None, *, bootstrap_demo=True, 
             return await AgentService(store, None, timeout_seconds=agent_timeout_seconds or 45.0).query(
                 payload.question, scope=payload.scope, expected_version=payload.expected_version,
                 execution_mode="local")
-        # Reject uploaded provenance before provider settings are read. A
-        # missing key must never mask the privacy decision or send data. For
-        # now the semantic resolver is a catalog/version guard only; driving
-        # the model with a resolved plan belongs to the next increment.
-        _, expected_version = await run_in_threadpool(resolve_payload, payload, generated_only=True)
-        provider, settings = agent_runtime()
-        timeout = agent_timeout_seconds or settings.request_timeout_seconds
+        # generated_only=True rejects uploaded provenance before any provider
+        # setting is read: a missing key must never mask the privacy decision.
+        intent, expected_version = await run_in_threadpool(resolve_payload, payload, generated_only=True)
+        # Chinese (or any non-ASCII) prose is compiled locally into a verified
+        # ACADEMIC_INTENT before it can reach an external model. It is never
+        # rejected merely for containing Chinese characters. `grounded` is the
+        # same constrained path, selected explicitly by a caller.
+        grounded = payload.execution_mode == "grounded" or not payload.question.isascii()
+        needs_model = not grounded or intent.status == "ready"
+        if needs_model:
+            provider, settings = agent_runtime()
+            timeout = agent_timeout_seconds or settings.request_timeout_seconds
+        else:
+            # Clarification / unsupported notices need no model and no API key.
+            provider, timeout = None, agent_timeout_seconds or 45.0
         return await AgentService(store, provider, timeout_seconds=timeout).query(payload.question,
-            scope=payload.scope, expected_version=expected_version, execution_mode="configured")
+            scope=payload.scope, expected_version=expected_version,
+            execution_mode="grounded" if grounded else "configured",
+            intent=intent if grounded else None)
 
     @application.get("/api/dataset", response_model=DatasetInfo)
     def dataset():
