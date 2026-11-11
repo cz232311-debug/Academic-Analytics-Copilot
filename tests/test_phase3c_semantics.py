@@ -49,7 +49,11 @@ def test_capability_consultation_explains_scope_without_executing(college_db, qu
     assert intent.tool is None and intent.arguments == {} and intent.canonical_question == ""
 
 
-@pytest.mark.parametrize("question", ["分析体育 III 的成绩分布", "分析体育III的平均分", "分析体育  III的及格率"])
+@pytest.mark.parametrize("question", [
+    "分析体育 III 的成绩分布", "分析体育III的平均分", "分析体育  III的及格率",
+    "体育 III这门课的成绩分布", "分析体育 III 这门课的平均分",
+    "我想了解体育 III 的成绩分布", "请问体育 III 的成绩怎么样",
+])
 def test_explicit_sports_course_keeps_exact_catalog_scope(college_db, question):
     catalog = college_db.reporting_catalog()
     intent = resolve_question(question, catalog)
@@ -62,7 +66,10 @@ def test_explicit_sports_course_keeps_exact_catalog_scope(college_db, question):
         "tool": "get_score_summary", "arguments": expected}
 
 
-@pytest.mark.parametrize("question", ["分析体育课的成绩", "分析体育成绩", "体育课的成绩分布"])
+@pytest.mark.parametrize("question", [
+    "分析体育课的成绩", "分析体育成绩", "体育课的成绩分布",
+    "2024级软工中体育课的成绩", "请问体育课成绩怎么样",
+])
 def test_generic_course_requires_confirmation_even_with_one_candidate(college_db, question):
     catalog = college_db.reporting_catalog()
     intent = resolve_question(question, catalog)
@@ -117,11 +124,38 @@ def test_unscoped_chinese_metric_question_does_not_expand_to_dataset(college_db,
     assert intent.status == "needs_clarification" and intent.tool is None
 
 
-@pytest.mark.parametrize("question", ["分析整个数据集的成绩分布", "分析全部成绩", "2024级软工的成绩总体情况怎么样？"])
+@pytest.mark.parametrize("question", [
+    "分析整个数据集的成绩分布", "分析全部成绩", "2024级软工的成绩总体情况怎么样？",
+    "分析所有课程的成绩分布", "分析全体学生的成绩",
+])
 def test_explicit_overall_or_cohort_scope_can_request_dataset_summary(college_db, question):
     intent = resolve_question(question, college_db.reporting_catalog())
     assert intent.status == "ready", intent.message
     assert intent.tool == "get_score_summary" and intent.arguments["course_id"] is None
+
+
+@pytest.mark.parametrize("question", ["分析整个数据集的成绩", "分析全数据集的成绩分布"])
+@pytest.mark.parametrize("selection", [
+    {"course_id": "sports"}, {"class_id": "C001"},
+    {"grade_level": 2024}, {"major": "software_engineering"},
+])
+def test_explicit_entire_dataset_conflicts_with_confirmed_filter_and_requires_confirmation(college_db, question, selection):
+    catalog = college_db.reporting_catalog()
+    selection = {key: _sports(catalog).course_id if value == "sports" else value
+                 for key, value in selection.items()}
+    scope = SessionScope(term="2025-T1", **selection)
+    intent = resolve_question(question, catalog, scope)
+    assert intent.status == "needs_clarification" and intent.tool is None
+    assert "清除" in intent.message and intent.scope == scope
+
+
+@pytest.mark.parametrize("question", [
+    "所有课程中量子力学的成绩", "分析全体学生的量子力学成绩", "全体量子力学成绩",
+])
+def test_whole_scope_words_do_not_hide_explicit_unknown_course(college_db, question):
+    intent = resolve_question(question, college_db.reporting_catalog())
+    assert intent.status == "needs_clarification" and intent.tool is None
+    assert intent.scope.course_id is None
 
 
 def test_compact_chinese_class_ids_are_bound_to_directory(college_db):

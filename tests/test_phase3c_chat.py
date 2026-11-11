@@ -98,3 +98,40 @@ def test_major_filtered_summary_reuses_report_engine_and_privacy_guard(chat_env)
     with pytest.raises(DataError) as error:
         registry.execute("get_score_summary", arguments, evidence_id="r1", version=version, generated_only=True)
     assert error.value.code == "agent_privacy_block"
+
+
+@pytest.mark.parametrize("invalid", [False, True])
+def test_page_displays_verified_analysis_or_explicit_fallback(chat_env, monkeypatch, invalid):
+    """Real service validation through FastAPI; only the model reply is scripted."""
+    from copilot.agent.models import ModelMessage, ModelTurn
+    from copilot.agent.provider import MockDemoProvider
+    from tests.test_phase3c_analysis import valid_analysis
+
+    original = MockDemoProvider.complete
+
+    async def scripted(self, messages, tools):
+        if messages[-1]["role"] == "tool":
+            analysis = valid_analysis()
+            if invalid:
+                analysis["sections"][1]["text"] = "教学质量导致及格率提升至99.99%"
+            return ModelTurn(message=ModelMessage(role="assistant", content=json.dumps(
+                {"status": "completed", "evidence_ids": ["r1"], "analysis": analysis})))
+        return await original(self, messages, tools)
+
+    monkeypatch.setattr(MockDemoProvider, "complete", scripted)
+    page = activate_synthetic(chat_env.page())
+    submit(page, "分析体育 III 的成绩分布")
+    assert not page.exception
+    result = page.session_state.chat["messages"][-1]["response"]
+    body = "\n".join(item.value for item in page.markdown)
+    if invalid:
+        assert result.analysis_status == "fallback"
+        assert any("未通过证据校验" in item.value for item in page.warning)
+        assert "99.99%" not in body and "教学质量" not in body
+    else:
+        assert result.analysis_status == "verified"
+        assert result.answer in body  # _evidence_cn must not overwrite it.
+        assert "41.67%" in body and "58.33%" in body and "样本较小" in body
+        assert "AI 综合分析（证据校验通过）" in body
+        assert result.evidence[0].arguments["course_id"] not in body
+    assert any("离线 Mock" in item.value for item in page.caption)

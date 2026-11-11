@@ -175,7 +175,7 @@ def _bins_cn(distribution):
 
 
 def _statistics_cn(data, labels=None):
-    context = _scope_cn(data.get("scope", {}), labels)
+    context = _scope_cn(data.get("report_scope") or data.get("scope", {}), labels)
     counts = (f"共 {data.get('enrollment_count', 0)} 条成绩记录，其中缺考/缺失 {data.get('missing_count', 0)} 条、"
               f"免修 {data.get('exempt_count', 0)} 条。")
     if not data.get("graded_count"):
@@ -247,6 +247,8 @@ def _answer_mode_label(result):
         return "本地规则分析（上传数据）"
     if result.simulated:
         return "离线 Mock 演示（合成数据，未调用 DeepSeek）"
+    if result.analysis_status == "fallback" or result.answer_mode == "deterministic_fallback":
+        return "DeepSeek 已调用 · 本次显示确定性统计回退"
     return "DeepSeek AI 分析（合成数据）"
 
 
@@ -268,9 +270,18 @@ def _render_message(message, state):
         return
     if state["dataset"] is not None and result.dataset_version != state["dataset"].dataset_version:
         st.warning("这条回答来自不同的数据版本，数值不能与当前数据集直接比较。请重新提问。")
-    st.markdown("**统计结论**")
-    st.write(_evidence_cn(result, state["catalog"]))
-    st.caption("以上中文结论由页面依据后端计算证据中的数值生成，不包含模型措辞，也不推断成绩差异的原因。")
+    if result.analysis_status == "verified" and result.analysis is not None:
+        st.markdown("**AI 综合分析（证据校验通过）**")
+        st.write(result.answer)
+        st.caption("模型选择解释重点并组织段落；数值、分布观察和比较关系均由后端证据提供。建议不代表因果结论。")
+    else:
+        st.markdown("**统计结论**")
+        if result.analysis_status == "fallback":
+            reason = ("模型没有返回可验证的综合分析" if result.analysis_fallback_reason == "missing_analysis"
+                      else "模型的综合分析未通过证据校验")
+            st.warning(reason + "，本次已回退为确定性统计；这不是 AI 综合分析成功。")
+        st.write(_evidence_cn(result, state["catalog"]))
+        st.caption("以下图表及以上统计来自同一后端证据；确定性结论不推断成绩差异的原因。")
     _render_charts(result, state["catalog"])
     with st.expander("计算证据与技术详情"):
         st.caption(f"数据版本：{result.dataset_version[:12]}…（回答与证据版本一致）")
@@ -283,6 +294,10 @@ def _render_message(message, state):
         with st.expander("执行记录（供排查）"):
             st.json({"request_id": result.request_id, "provider": result.provider, "model": result.model,
                      "simulated": result.simulated, "answer_mode": result.answer_mode,
+                     "analysis_status": result.analysis_status,
+                     "analysis_fallback_reason": result.analysis_fallback_reason,
+                     "fallback_reason": result.fallback_reason,
+                     "analysis": result.analysis.model_dump(mode="json") if result.analysis else None,
                      "model_turns": result.model_turns, "dataset_version": result.dataset_version,
                      "tool_calls": [trace.model_dump(mode="json") for trace in result.tool_calls],
                      "server_answer": result.answer})
@@ -484,7 +499,8 @@ def _data_source(client, state, info):
                                    key="chat_synthetic_export", on_click="ignore", width="stretch")
                 st.caption("导出当前已确认的全部合成记录；数据切换后请刷新页面再下载。")
             st.caption("这份数据集会一直使用，直到你点击「重新选择数据」或更换上传文件；"
-                       "重开页面后也会自动沿用，不需要重新确认。")
+                       + ("重开页面会自动沿用上传数据。" if dataset.source == "uploaded_local_only"
+                          else "重开页面后需重新确认合成数据。"))
             if st.button("重新选择数据", key="chat_reset_data"):
                 _reset(state)
                 state["dataset"] = None
@@ -514,7 +530,7 @@ def _candidate_questions(catalog):
         first = courses[0]
         questions.append(f"分析{first.course_name}的平均分和及格率")
         if len(classes) >= 2:
-            questions.append(f"比较 {classes[0].class_id} 和 {classes[1].class_id} 的{first.course_name}成绩")
+            questions.append(f"比较 {classes[0].class_label} 和 {classes[1].class_label} 的{first.course_name}成绩")
         if len(courses) > 1:
             questions.append(f"分析{courses[-1].course_name}的成绩分布")
     if catalog.majors:

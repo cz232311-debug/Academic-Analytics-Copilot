@@ -8,6 +8,8 @@ from uuid import uuid4
 from pydantic import ValidationError
 from starlette.concurrency import run_in_threadpool
 
+from copilot.agent.analysis import (PROMPT as ANALYSIS_PROMPT, InvalidAnalysis,
+                                    analysis_context, analysis_goal, analysis_requirements, render_analysis)
 from copilot.agent.models import AgentError, AgentResponse, Evidence, FinalSelection, ModelTrace, ToolTrace, Usage, strict_json
 from copilot.agent.narrative import PROMPT, InvalidNarrative, available_tokens, render_narrative
 from copilot.agent.privacy import canonical_question
@@ -41,7 +43,7 @@ Never request student records, Python, SQL, shell, file paths, URLs or secrets.
 Select evidence IDs issued by successful tool messages in this request. Do not infer causation.
 For ambiguity return JSON {"status":"needs_clarification","evidence_ids":[]}.
 For unsupported requests return JSON {"status":"unsupported","evidence_ids":[]}.
-""" + PROMPT
+""" + ANALYSIS_PROMPT
 
 
 def configure_logging():
@@ -76,7 +78,7 @@ def render_statistics(data: dict) -> str:
 
 def selected_evidence(selection: FinalSelection, evidence: list[Evidence]) -> list[Evidence]:
     if selection.status != "completed":
-        if selection.evidence_ids or selection.narrative or selection.guidance:
+        if selection.evidence_ids or selection.narrative or selection.guidance or selection.analysis is not None:
             raise AgentError("invalid_final_selection", "Clarification/refusal must not assert evidence claims")
         return []
     by_id = {r.evidence_id: r for r in evidence}
@@ -110,6 +112,17 @@ def render_fallback(selection: FinalSelection, selected: list[Evidence]) -> str:
             text = f"Available courses: {courses or 'none'}. Classes: {classes or 'none'}."
         sections.append(f"[{identifier}] {text}")
     return "\n\n".join(sections)
+
+
+def render_intent_notice(intent: ResolvedIntent) -> str:
+    """Offer catalog labels for clarification without executing a candidate."""
+    labels = list(dict.fromkeys(choice["label"] for choice in intent.choices if choice.get("label")))
+    if not labels:
+        return intent.message
+    text = intent.message + "\n\n可选范围：" + "；".join(labels[:8]) + "。"
+    if len(labels) > 8:
+        text += "还有其他选项，请打开课程或班级目录查看。"
+    return text
 
 
 class AgentService:
@@ -173,7 +186,7 @@ class AgentService:
                       resolved_scope=intent.scope)
         if intent.status != "ready":
             event("query_completed", request_id, status=intent.status, answer_mode="notice")
-            return AgentResponse(status=intent.status, answer=intent.message,
+            return AgentResponse(status=intent.status, answer=render_intent_notice(intent),
                                  answer_mode="notice", evidence=[], **common)
         started = time.monotonic()
         args = self.registry.validate(intent.tool, json.dumps(intent.arguments))
@@ -203,7 +216,7 @@ class AgentService:
         event("query_completed", request_id, status=intent.status, answer_mode="notice", model_turns=0)
         return AgentResponse(request_id=request_id, provider="semantic", model="catalog-bound-v1",
                              simulated=False, dataset_version=info.dataset_version,
-                             status=intent.status, answer=intent.message, model_turns=0,
+                             status=intent.status, answer=render_intent_notice(intent), model_turns=0,
                              tool_calls=[], evidence=[], usage=None, model_trace=[],
                              answer_mode="notice", resolved_scope=intent.scope or scope)
 
@@ -212,13 +225,19 @@ class AgentService:
         info = await run_in_threadpool(self.database.overview, generated_only=True,
                                        expected_version=expected_version)
         guard = {"expected_version": info.dataset_version, "generated_only": True}
+        catalog, goal, required_metrics = None, None, ()
         if intent is not None:
             if intent.dataset_version != info.dataset_version:
                 raise DataError("数据在解析问题后发生变化，请重新确认范围。", code="dataset_changed", status=409)
             # Only the server-validated intent is forwarded. Chinese prose and
             # any personal data stay inside this process; the model sees an
             # ASCII ACADEMIC_INTENT object containing catalog-bound IDs only.
-            canonical, system = intent.canonical_question, GROUNDED_SYSTEM
+            catalog = await run_in_threadpool(self.database.reporting_catalog)
+            if catalog.dataset_version != info.dataset_version:
+                raise DataError("数据在解析问题后发生变化，请重新确认范围。", code="dataset_changed", status=409)
+            goal = analysis_goal(question, intent.tool)
+            required_metrics = analysis_requirements(question) if intent.tool in {"get_score_summary", "compare_classes"} else ()
+            canonical, system = intent.canonical_question, GROUNDED_SYSTEM + "\nConfirmed analysis goal: " + goal + "."
         else:
             catalog = await run_in_threadpool(self.database.catalog, **guard)
             canonical, system = canonical_question(question, catalog), SYSTEM
@@ -272,6 +291,8 @@ class AgentService:
                     evidence.append(result)
                     payload = result.model_dump(mode="json")
                     payload["narrative_slots"] = available_tokens(result)
+                    if intent is not None:
+                        payload["analysis_context"] = analysis_context([result], catalog, goal, required_metrics)
                     messages.append({"role": "tool", "tool_call_id": call.id, "content": json.dumps(payload)})
                 continue
             try:
@@ -280,11 +301,30 @@ class AgentService:
                 raise AgentError("invalid_final_selection", "Final model output failed evidence-selection validation") from None
             await run_in_threadpool(self.database.overview, **guard)
             selected = selected_evidence(selection, evidence)
+            if intent is None and selection.analysis is not None:
+                raise AgentError("invalid_final_selection", "The legacy protocol does not accept analysis selections")
             guidance = []
             fallback_reason = None
+            analysis_status, analysis_fallback_reason, analysis = "not_requested", None, None
             if selection.status != "completed":
                 answer_mode = "notice"
                 answer = render_fallback(selection, selected)
+            elif intent is not None:
+                try:
+                    if selection.analysis is None:
+                        analysis_fallback_reason = "missing_analysis"
+                        raise InvalidAnalysis("missing_analysis")
+                    if selection.narrative or selection.guidance:
+                        raise InvalidAnalysis("mixed_protocol")
+                    answer, analysis = render_analysis(selection.analysis, selected, catalog, goal, required_metrics)
+                    answer_mode, analysis_status = "evidence_analysis", "verified"
+                except InvalidAnalysis:
+                    answer_mode, analysis_status = "deterministic_fallback", "fallback"
+                    analysis_fallback_reason = analysis_fallback_reason or "invalid_analysis"
+                    # The older field remains compatible with existing clients;
+                    # analysis_fallback_reason identifies the new protocol.
+                    fallback_reason = "missing_narrative" if analysis_fallback_reason == "missing_analysis" else "invalid_narrative"
+                    answer = render_fallback(selection, selected)
             else:
                 answer_mode = "grounded_narrative"
                 try:
@@ -299,10 +339,13 @@ class AgentService:
             usage = (Usage(prompt_tokens=sum(u.prompt_tokens for u in usages), completion_tokens=sum(u.completion_tokens for u in usages),
                            total_tokens=sum(u.total_tokens for u in usages)) if all(u is not None for u in usages) else None)
             event("query_completed", request_id, status=selection.status, model_turns=turn_index, tool_count=len(traces),
-                  answer_mode=answer_mode, fallback_reason=fallback_reason, usage=usage.model_dump() if usage else None)
+                  answer_mode=answer_mode, fallback_reason=fallback_reason, analysis_status=analysis_status,
+                  analysis_fallback_reason=analysis_fallback_reason, usage=usage.model_dump() if usage else None)
             return AgentResponse(request_id=request_id, provider=self.provider.name, model=self.provider.model, simulated=self.provider.simulated,
                                  dataset_version=info.dataset_version, status=selection.status, answer=answer, model_turns=turn_index,
                                  tool_calls=traces, evidence=evidence, usage=usage, model_trace=model_trace,
                                  answer_mode=answer_mode, fallback_reason=fallback_reason, guidance=guidance,
+                                 analysis_status=analysis_status, analysis_fallback_reason=analysis_fallback_reason,
+                                 analysis=analysis,
                                  resolved_scope=intent.scope if intent is not None else scope)
         raise AgentError("agent_budget_exceeded", "Agent model-turn budget exceeded")

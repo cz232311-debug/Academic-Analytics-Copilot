@@ -76,6 +76,38 @@ class FinalSelection(Record):
     evidence_ids: Annotated[list[Annotated[str, StringConstraints(pattern=r"^r[1-6]$")]], Field(max_length=6)]
     narrative: Annotated[list[Annotated[str, StringConstraints(min_length=1, max_length=360)]], Field(max_length=8)] = Field(default_factory=list)
     guidance: Annotated[list[Literal["review_score_bands", "check_sample_sizes", "review_missing_records"]], Field(max_length=3)] = Field(default_factory=list)
+    # The grounded protocol validates this separately. Invalid analysis can
+    # safely fall back after the outer evidence references have been verified.
+    analysis: object | None = None
+
+
+AnalysisGoal = Literal["distribution", "comparison", "mean", "pass", "missing", "summary", "overview", "catalog"]
+AnalysisKind = Literal["findings", "observations", "limitations", "suggestions"]
+ClaimId = Annotated[str, StringConstraints(pattern=r"^r[1-6](?:\.C[0-9]{3})?\.[a-z_]{1,40}$")]
+
+
+class AnalysisSectionSelection(Record):
+    kind: AnalysisKind
+    claim_ids: Annotated[list[ClaimId], Field(min_length=1, max_length=8)]
+    style: Literal["plain", "connected", "focus"] = "plain"
+
+
+class AnalysisSelection(Record):
+    version: Literal["evidence_analysis_v1"]
+    sections: Annotated[list[AnalysisSectionSelection], Field(min_length=4, max_length=4)]
+
+
+class VerifiedAnalysisSection(Record):
+    kind: AnalysisKind
+    claim_ids: list[ClaimId]
+    text: str
+    evidence_ids: list[str]
+
+
+class VerifiedAnalysis(Record):
+    version: Literal["evidence_analysis_v1"] = "evidence_analysis_v1"
+    goal: AnalysisGoal
+    sections: list[VerifiedAnalysisSection]
 
 
 class FunctionProposal(Record):
@@ -161,11 +193,14 @@ class AgentResponse(Record):
     evidence: list[Evidence]
     usage: Usage | None
     model_trace: list[ModelTrace] = Field(default_factory=list)
-    answer_mode: Literal["grounded_narrative", "deterministic_fallback", "verified_localized", "notice"] = "notice"
+    answer_mode: Literal["grounded_narrative", "evidence_analysis", "deterministic_fallback", "verified_localized", "notice"] = "notice"
     fallback_reason: Literal["missing_narrative", "invalid_narrative"] | None = None
     guidance: list[str] = Field(default_factory=list)
     stages: list[ExecutionStage] = Field(default_factory=list)
     resolved_scope: SessionScope | None = None
+    analysis_status: Literal["verified", "fallback", "not_requested"] = "not_requested"
+    analysis_fallback_reason: Literal["missing_analysis", "invalid_analysis"] | None = None
+    analysis: VerifiedAnalysis | None = None
 
 
 class AgentError(DataError):

@@ -29,6 +29,7 @@ _CATALOG = re.compile(r"目录|课程列表|班级列表|有哪些(?:课|班)|�
 _OVERVIEW = re.compile(r"概览|概况|多少(?:名|个|门|条)?(?:学生|班级|课程|成绩)|学生(?:总)?人数|总人数|\boverview\b|\bhow\s+many\b|\bcounts?\b|\btotal\b", re.I)
 _CAPABILITY = re.compile(r"你(?:知道|了解)|能否|能不能|可不可以|是否(?:能|可以|支持)|(?:你|系统)?(?:能|会|可以|支持).{0,40}(?:吗|嘛|么|[?？])\s*$|支持(?:哪些|什么)(?:分析|功能)")
 _WHOLE_SCOPE = re.compile(r"全体|全部|整体|总体|所有|全数据|当前数据集|整个数据集|所选范围|当前范围")
+_ENTIRE_DATASET = re.compile(r"整个数据集|全数据集|全部数据集|所有数据集|全数据范围")
 
 
 class ResolvedIntent(Record):
@@ -83,12 +84,13 @@ def _unresolved_course_reference(question, matching_names):
         for alias in sorted(aliases, key=len, reverse=True):
             text = text.replace(alias, "")
     text = _WHOLE_SCOPE.sub("", text)
-    text = re.sub(r"(?:请|帮我|给我|查看|看看|查询|分析|统计|比较|对比|针对|关于|一下|本学期|这学期|同一学期|学期|数据集|数据|成绩单|范围|班级|班|年级|专业)", "", text)
+    text = re.sub(r"^(?:(?:请问|请|麻烦|帮我|给我|我想|想要|希望|看看|了解|知道)\s*)+", "", text)
+    text = re.sub(r"(?:这门课|该门课|这门|该课|请|帮我|给我|查看|看看|查询|分析|统计|比较|对比|针对|关于|一下|本学期|这学期|同一学期|学期|数据集|数据|成绩单|范围|班级|班|年级|专业|学生)", "", text)
     match = re.search(r"平均|均分|成绩|分数|及格|不及格|分布", text)
     if not match:
         return ""
     subject = re.split(r"[，。?？:：]", text[:match.start()])[-1][-40:]
-    subject = re.sub(r"^[\s的与和及、]+|[\s的与和及、]+$", "", subject)
+    subject = re.sub(r"^[\s的与和及、在中]+|[\s的与和及、]+$", "", subject)
     subject = re.sub(r"(?:课程|课)$", "", subject).strip()
     return subject if len(_norm(subject)) >= 2 else ""
 
@@ -177,6 +179,11 @@ def resolve_question(question: str, catalog: ReportingCatalog, session_scope: Se
     overview_request = bool(_OVERVIEW.search(q)) and not compare and not metric_request and not catalog_request
     if not any((compare, catalog_request, metric_request, overview_request)):
         return _result(catalog, "unsupported", "目前支持数据概览、课程成绩统计、同课程班级比较、课程和班级目录查询。")
+    if (metric_request or compare) and _ENTIRE_DATASET.search(q) and any(
+            getattr(inherited, key) is not None for key in ("course_id", "class_id", "grade_level", "major")):
+        return _result(catalog, "needs_clarification",
+            "你要求分析整个数据集，但当前会话已限定课程、班级、年级或专业。请先清除这些筛选并确认全数据范围，再重新分析。",
+            scope=inherited)
 
     # Longest known course names win over contained shorter catalog names.
     normalized = _norm(q)
@@ -321,7 +328,7 @@ def resolve_question(question: str, catalog: ReportingCatalog, session_scope: Se
         return _result(catalog, "ready", "将比较所选班级同一课程、同一学期的成绩。", tool="compare_classes", arguments=arguments, scope=scope, explicit=explicit)
 
     scope_filter = any(values[key] is not None for key in ("class_id", "grade_level", "major"))
-    if not values["course_id"] and (re.search(r"课程|这门|该课|\bfor\b", q, re.I)
+    if not values["course_id"] and ((re.search(r"课程|这门|该课|\bfor\b", q, re.I) and not _WHOLE_SCOPE.search(q))
             or (not q.isascii() and not scope_filter and not _WHOLE_SCOPE.search(q))):
         return _result(catalog, "needs_clarification", "当前目录找不到唯一匹配课程，请选择课程或补充课程全名与入学年级。", scope=scope,
                        choices=[_choice("course_id", row.course_id, f"{row.course_name} · {row.grade_level}级") for row in catalog.courses])
