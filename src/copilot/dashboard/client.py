@@ -5,7 +5,9 @@ import httpx
 from pydantic import ValidationError
 
 from copilot.agent.models import AgentResponse
+from copilot.agent.semantics import ResolvedIntent
 from copilot.data.college import CollegeCommitResult, CollegePreview
+from copilot.data.synthetic_college import SyntheticOptions
 from copilot.models import Record
 from copilot.schemas import CourseReport, DatasetInfo, ReportScope, ReportingCatalog
 
@@ -35,27 +37,37 @@ class DashboardError(Exception):
 
 
 ERROR_MESSAGES = {
+    # Chat-first user-facing text. All messages are safe to show in the UI:
+    # no exception text, no server internals, no request payload is echoed.
     "unknown_entity": "所选学期、班级或课程已经不可用。请重新选择分析范围，再更新统计。",
     "invalid_request": "所选条件无法使用。请检查分析范围后重试；仍有问题时，请联系负责系统的同事。",
-    "dataset_changed": "数据已经更新，本页结果已暂停。请返回核对页，重新解析并确认成绩单，再查看统计。",
-    "no_dataset": "当前尚无已确认的数据，请先上传、核对并确认成绩单。",
-    "agent_privacy_block": "AI queries are available only for generated synthetic data. Uploaded datasets stay local.",
-    "question_privacy_block": "Use a supported English aggregate question with course or class IDs. Omit names and personal information.",
-    "provider_timeout": "The model timed out. Your statistics remain available. Try the question again later.",
-    "agent_timeout": "The AI query exceeded its time limit. Try a simpler aggregate question.",
-    "invalid_model_response": "The model response failed validation. No unverified answer was displayed.",
-    "llm_not_configured": "The backend LLM configuration is incomplete. Check its service terminal or use Mock mode.",
-    "provider_authentication": "The backend could not authenticate with its model provider. Check its environment configuration.",
-    "provider_rate_limited": "The model provider is busy or rate limited. Try again later.",
-    "llm_configuration_error": "The backend LLM configuration is incomplete. Check its service terminal or use Mock mode.",
-    "llm_authentication_error": "The backend could not authenticate with DeepSeek. Check the API key in the backend terminal.",
-    "llm_insufficient_balance": "The model provider reports insufficient account balance. Local statistics remain available.",
-    "llm_rate_limited": "The model provider is busy or rate limited. Try again later.",
-    "llm_timeout": "The model timed out. Your statistics remain available. Try the question again later.",
-    "llm_connection_error": "The backend could not reach its model provider. Local statistics remain available.",
-    "model_refused": "The model declined this query. Try a supported English aggregate academic question.",
-    "invalid_final_selection": "The model selected unsupported evidence. No unverified answer was displayed.",
-    "agent_budget_exceeded": "The AI query reached its tool or model-call limit. Try a simpler aggregate question.",
+    "dataset_changed": "数据已经更新，本次结果已暂停。请在“数据来源”中重新确认数据集，再重新提问。",
+    "no_dataset": "当前还没有已确认的数据集。请先选择合成示例数据，或上传并确认一份成绩单。",
+    "agent_privacy_block": "上传的成绩单只允许本地规则分析，不能发送给外部 AI。若要体验 DeepSeek 分析，请切换到合成示例数据。",
+    "question_privacy_block": "请使用当前数据集范围内的学业统计问题，不要包含姓名、学号或个人成绩。",
+    "intent_mismatch": "系统检测到模型选择的课程、班级或学期与你的问题不一致，已阻止这次统计。请把课程或班级写得更明确后重试。",
+    "unknown_tool": "AI 选择了系统不允许的统计工具，本次已阻止，没有返回分析结果。",
+    "invalid_tool_arguments": "AI 提供的统计参数不符合要求，本次已阻止，没有返回分析结果。",
+    "tool_execution_error": "统计工具暂时无法完成，请稍后重试；这不是你的问题。",
+    "provider_timeout": "AI 服务响应超时，请稍后重试；已确认的数据和统计结果仍然保留。",
+    "agent_timeout": "本次分析超过了时间限制，请把问题缩小到一个课程或一个班后再试。",
+    "invalid_model_response": "AI 返回的结果未通过校验，系统没有展示未经验证的回答。",
+    "llm_not_configured": "后端 AI 服务尚未配置完成。请联系负责启动系统的同事检查服务窗口，或改用本地规则分析。",
+    "provider_authentication": "后端无法通过 AI 服务的身份验证，请联系负责启动系统的同事检查配置。",
+    "provider_rate_limited": "AI 服务当前繁忙，请稍后再试；本地统计不受影响。",
+    "llm_configuration_error": "后端 AI 服务配置不完整。请联系负责启动系统的同事检查服务窗口，或改用本地规则分析。",
+    "llm_authentication_error": "后端无法通过 DeepSeek 的身份验证，请联系负责启动系统的同事检查服务配置。",
+    "llm_insufficient_balance": "AI 服务账户余额不足，请联系负责启动系统的同事；本地统计不受影响。",
+    "llm_rate_limited": "AI 服务当前繁忙，请稍后再试；本地统计不受影响。",
+    "llm_timeout": "AI 服务响应超时，请稍后重试；已确认的数据和统计结果仍然保留。",
+    "llm_connection_error": "暂时无法连接 AI 服务，请稍后重试；本地统计不受影响。",
+    "model_refused": "AI 没有处理这个问题。请换用课程成绩、班级比较、数据概览或目录查询类问题。",
+    "invalid_final_selection": "AI 引用了未被验证的证据，系统没有展示这次回答。",
+    "agent_budget_exceeded": "本次分析达到了工具或调用次数上限，请把问题缩小到一个课程或一个班后再试。",
+    "agent_internal_error": "分析服务暂时无法完成，请稍后重试；如持续出现，请联系负责系统的同事。",
+    "internal_error": "分析服务暂时无法完成，请稍后重试；如持续出现，请联系负责系统的同事。",
+    "api_error": "暂时无法完成这项操作，请稍后重试；仍然失败时，请联系负责系统的同事。",
+    "http_error": "暂时无法完成这项操作，请稍后重试；仍然失败时，请联系负责系统的同事。",
     "college_structure": "无法识别学院成绩表。请核对单工作表、学号/班级字段及含学分、学时、学期的课程表头。",
     "college_limits": "成绩表超过安全限制：5 MiB、256列、5000学生或50000条选课成绩。",
     "confirmation_required": "请先核对预览并明确确认导入。",
@@ -125,8 +137,38 @@ class DashboardClient:
     def agent_status(self) -> AgentStatus:
         return self._request("GET", "/api/agent/status", AgentStatus)
 
-    def query(self, question: str) -> AgentResponse:
-        return self._request("POST", "/api/agent/query", AgentResponse, payload={"question": question})
+    @staticmethod
+    def _query_payload(question, *, execution_mode=None, scope=None, expected_version=None):
+        """Keep the legacy one-field request intact unless a mode is explicit."""
+        payload = {"question": question}
+        if execution_mode is not None:
+            payload["execution_mode"] = execution_mode
+        if scope is not None:
+            payload["scope"] = scope.model_dump(exclude_none=True) if hasattr(scope, "model_dump") else dict(scope)
+        if expected_version is not None:
+            payload["expected_version"] = expected_version
+        return payload
+
+    def resolve(self, question, *, execution_mode="grounded", scope=None, expected_version=None) -> ResolvedIntent:
+        """Catalog-bound intent preview. The server resolves locally: no model call."""
+        return self._request("POST", "/api/agent/resolve", ResolvedIntent,
+                             payload=self._query_payload(question, execution_mode=execution_mode,
+                                                         scope=scope, expected_version=expected_version))
+
+    def query(self, question: str, *, execution_mode=None, scope=None, expected_version=None) -> AgentResponse:
+        return self._request("POST", "/api/agent/query", AgentResponse,
+                             payload=self._query_payload(question, execution_mode=execution_mode,
+                                                         scope=scope, expected_version=expected_version))
+
+    def synthetic_preview(self, options: SyntheticOptions) -> CollegePreview:
+        """Only options are sent: the server generates and parses the workbook."""
+        payload = options.model_dump(mode="json") if hasattr(options, "model_dump") else dict(options)
+        return self._request("POST", "/api/datasets/synthetic/preview", CollegePreview, payload=payload)
+
+    def synthetic_commit(self, options: SyntheticOptions, preview_token: str, *, confirmed=True) -> CollegeCommitResult:
+        payload = {"options": options.model_dump(mode="json") if hasattr(options, "model_dump") else dict(options),
+                   "preview_token": preview_token, "confirmed": confirmed}
+        return self._request("POST", "/api/datasets/synthetic/commit", CollegeCommitResult, payload=payload)
 
     def college_preview(self, filename: str, content: bytes, *, duplicate_policy="block") -> CollegePreview:
         return self._request("POST", "/api/datasets/college/preview", CollegePreview,

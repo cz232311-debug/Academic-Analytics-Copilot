@@ -12,6 +12,7 @@ if (-not (Test-Path -LiteralPath $projectPython)) {
     throw 'Python environment is missing. Follow START_HERE.zh-CN.md first-time setup.'
 }
 $env:COPILOT_API_BASE_URL = $ApiBaseUrl
-Write-Host "Dashboard: http://127.0.0.1:$Port"
+Write-Host "Chat-first UI: http://127.0.0.1:$Port"
 Write-Host "FastAPI: $ApiBaseUrl. Keep both service windows open."
-& $projectPython -m streamlit run streamlit_app.py --server.address=127.0.0.1 --server.port=$Port --server.headless=true --browser.gatherUsageStats=false
+Write-Host "Legacy report workspace is still available: streamlit run streamlit_app.py"
+& $projectPython -m streamlit run chat_app.py --server.address=127.0.0.1 --server.port=$Port --server.headless=true --browser.gatherUsageStats=false

@@ -276,18 +276,19 @@ def resolve_question(question: str, catalog: ReportingCatalog, session_scope: Se
 
 
 def validate_intent_call(intent: ResolvedIntent, name: str, args) -> None:
-    """Reject a model's structurally valid but semantically different call."""
+    """Reject any model call that is not exactly the server-resolved plan.
+
+    Structural validity is not intent correctness: a well-formed G1-C02 call
+    for a G1-C01 question must be blocked before any statistic runs. An extra
+    get_catalog call is rejected too — the catalog was already resolved on the
+    server, so a model-initiated side query would execute a tool the user did
+    not request and attach unrequested evidence to the answer.
+    """
     if intent.status != "ready":
         raise AgentError("intent_mismatch", "问题尚未明确，不能执行模型提出的统计。", 422)
     values = args.model_dump() if hasattr(args, "model_dump") else dict(args)
     values = {key: value for key, value in values.items() if key != "major" or value is not None}
-    if name == "get_catalog" and intent.tool != "get_catalog":
-        expected = {"grade_level": intent.scope.grade_level}
-        if intent.scope.major is not None:
-            expected["major"] = intent.scope.major
-        if values == expected:
-            return
-    elif name == intent.tool:
+    if name == intent.tool:
         expected = dict(intent.arguments)
         actual = dict(values)
         if name == "compare_classes":

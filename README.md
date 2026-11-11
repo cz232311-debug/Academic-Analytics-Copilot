@@ -2,7 +2,9 @@
 
 An independent engineering portfolio project for SAP STAR Application Engineer (2028 Graduates).
 
-**Current interface: a staff report workspace with a usability update.** Follow **Upload → Review → Analysis**. Writing/review and Word export are clearly marked as under development without unusable action buttons. Native light/dark themes use larger text; filters and future report settings stay secondary to results. A new session shows no default statistics and production startup does not seed demo data. “使用示例数据体验” is an explicit secondary action requiring confirmation. [Operator guide](START_HERE.zh-CN.md) · [UX findings, screenshots and verification](docs/development/02b-ux-usability.md) · [Original workflow design](docs/development/02b1-workflow.md)
+**Current interface: Chat-first academic analytics (Phase 3B).** `.\scripts\start_dashboard.ps1` now runs `chat_app.py`. The first screen states the four supported analytics areas, keeps data-source/upload controls in the sidebar, and shows a conversation with catalog-verified example questions, Chinese statistical conclusions, charts and expandable calculation evidence. Two provenance modes are explicit and never mixed: **server-generated synthetic data** uses `execution_mode="grounded"` (DeepSeek Function Calling with catalog-bound semantic validation), while an **uploaded college XLSX** uses `execution_mode="local"` (deterministic tools, no external request). Chinese answers are rendered locally from backend Evidence numbers, so the model cannot invent a statistic. No dataset is activated by default. [Phase 3B review](docs/development/phase3b-review/FILES.md)
+
+**Legacy report workspace:** `streamlit_app.py` is retained unchanged as the five-step Upload → Review → Analysis workbench, because the existing AppTest regression suite starts that file directly. It is no longer the default first screen. [Operator guide](START_HERE.zh-CN.md) · [UX findings, screenshots and verification](docs/development/02b-ux-usability.md) · [Original workflow design](docs/development/02b1-workflow.md)
 
 **Generate your own synthetic workbook:** select **生成测试成绩单** on Upload to configure classes, students, majors, courses, term, score profile and validation scenarios. It produces fictional Chinese names, unique SIM IDs and a reproducible XLSX. Generation/download do not activate data; explicitly choose the workbook and complete review/confirmation first. [Generator rules and verification](docs/development/02b-synthetic-generator.md)
 
@@ -17,16 +19,16 @@ The owner's prior experience includes academic analysis and reporting covering 1
 For the complete first-install and post-reboot PowerShell workflow, read [本机启动说明](START_HERE.zh-CN.md). After installing dependencies, keep two PowerShell windows open from the repository root:
 
 ```powershell
-# Window A — FastAPI, offline Mock provider by default
-.\scripts\start_backend.ps1
+# Window A — FastAPI. DeepSeek is the formal provider; -Provider mock runs fully offline.
+.\scripts\start_backend.ps1 -Provider mock
 ```
 
 ```powershell
-# Window B — Streamlit, reads only the FastAPI service
+# Window B — Chat-first Streamlit UI (chat_app.py), reads only the FastAPI service
 .\scripts\start_dashboard.ps1
 ```
 
-Open [the workbench](http://127.0.0.1:8501), upload an XLSX, review the summary and explicitly confirm. Results appear first; expand **更改分析范围** to adjust the scope, then click **更新统计预览**. Changing scope invalidates old statistics/context and the old download. Tables and charts share one versioned backend report. The secondary **下载完整分析与数据明细** action produces an in-memory ZIP containing aggregate CSV/JSON, metric definitions, version/scope, and sanitized cleaning categories/coordinates. It excludes originals, student rows, credentials and internal traces. The workflow does not generate prose or DOCX. Existing Agent protections and regression remain intact.
+Open [the Chat-first UI](http://127.0.0.1:8501). In the sidebar choose **合成示例数据** (generated on the server, enables grounded DeepSeek queries) or **上传 Excel 成绩单** (local deterministic analysis only), review the detected data and explicitly confirm it. Then type a Chinese question or click one of the catalog-verified examples. Each answer labels its actual analysis mode, shows a Chinese conclusion rendered from backend Evidence numbers, a chart where applicable, and expandable calculation evidence. Switching datasets clears the chat history so results from different versions are never mixed. The legacy five-step report workspace remains available with `.venv/Scripts/python.exe -m streamlit run streamlit_app.py`.
 
 ## Run locally
 
