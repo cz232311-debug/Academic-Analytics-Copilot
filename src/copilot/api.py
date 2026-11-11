@@ -174,19 +174,20 @@ def create_app(database_path: str | Path | None = None, *, bootstrap_demo=True, 
     @application.post("/api/agent/query", response_model=AgentResponse)
     async def agent_query(payload: QueryRequest):
         if payload.execution_mode == "local":
-            provider, timeout = None, agent_timeout_seconds or 45.0
-            expected_version = payload.expected_version
-        else:
-            # Reject uploaded provenance before provider settings are read. A
-            # missing key must never mask the privacy decision or send data.
-            intent, expected_version = await run_in_threadpool(resolve_payload, payload, generated_only=True)
-            if intent.status != "ready":
-                provider, timeout = None, agent_timeout_seconds or 45.0
-            else:
-                provider, settings = agent_runtime()
-                timeout = agent_timeout_seconds or settings.request_timeout_seconds
+            # Local deterministic path: no provider is constructed, so an
+            # uploaded dataset can be answered without any external request.
+            return await AgentService(store, None, timeout_seconds=agent_timeout_seconds or 45.0).query(
+                payload.question, scope=payload.scope, expected_version=payload.expected_version,
+                execution_mode="local")
+        # Reject uploaded provenance before provider settings are read. A
+        # missing key must never mask the privacy decision or send data. For
+        # now the semantic resolver is a catalog/version guard only; driving
+        # the model with a resolved plan belongs to the next increment.
+        _, expected_version = await run_in_threadpool(resolve_payload, payload, generated_only=True)
+        provider, settings = agent_runtime()
+        timeout = agent_timeout_seconds or settings.request_timeout_seconds
         return await AgentService(store, provider, timeout_seconds=timeout).query(payload.question,
-            scope=payload.scope, expected_version=expected_version, execution_mode=payload.execution_mode)
+            scope=payload.scope, expected_version=expected_version, execution_mode="configured")
 
     @application.get("/api/dataset", response_model=DatasetInfo)
     def dataset():

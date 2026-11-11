@@ -1,5 +1,7 @@
 # Phase 2B — academic analysis workbench, first increment
 
+Takeover and baseline repair (2026-11-11, branch `feature/chat-first-agent`): [Chinese learning packet](takeover-baseline/LEARNING.zh-CN.md) · [file inventory](takeover-baseline/FILES.md). Starting commit `d7c010a`; 10 pre-existing uncommitted files preserved in WIP checkpoint `31834ad`, with the regenerated offline receipt deliberately left out of Git. `api.py` called `AgentService.query()` with four arguments while `service.py` accepted one, causing 8 failures. The repair restores that contract without weakening any assertion and opens a provider-free local path: **398 tests pass**. Chat-first UI, semantic-layer wiring and `validate_intent_call` integration remain the next increments; no paid LLM call was made.
+
 Synthetic validation module (2026-11-11): [configurable fictional college XLSX generation and verification](02b-synthetic-generator.md). Generate normal, edge-case or conflicting records locally, then reuse explicit review/confirmation; old fixed fixtures and analytics remain unchanged.
 
 Current UX update (2026-11-11): [readability, workflow guidance, aggregate detail downloads and actual visual checks](02b-ux-usability.md). This update corrects the dark-theme contrast defect, removes unusable future-step actions, and keeps technical evidence in a secondary local ZIP.

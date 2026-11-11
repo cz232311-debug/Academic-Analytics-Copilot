@@ -12,6 +12,7 @@ from copilot.agent.models import AgentError, AgentResponse, Evidence, FinalSelec
 from copilot.agent.narrative import PROMPT, InvalidNarrative, available_tokens, render_narrative
 from copilot.agent.privacy import canonical_question
 from copilot.agent.provider import ChatProvider
+from copilot.agent.semantics import resolve_question
 from copilot.agent.tools import TOOLS, ToolRegistry, digest
 from copilot.models import DataError
 from copilot.storage import Database
@@ -98,17 +99,26 @@ def render_fallback(selection: FinalSelection, selected: list[Evidence]) -> str:
 
 
 class AgentService:
-    def __init__(self, database: Database, provider: ChatProvider, *, timeout_seconds=45.0):
+    def __init__(self, database: Database, provider: ChatProvider | None, *, timeout_seconds=45.0):
         self.database, self.provider = database, provider
         self.registry = ToolRegistry(database)
         self.timeout_seconds = timeout_seconds
 
-    async def query(self, question: str) -> AgentResponse:
+    async def query(self, question: str, *, scope=None, expected_version=None,
+                    execution_mode="configured") -> AgentResponse:
+        """API-layer contract. The default configured path keeps the original
+        English function-calling loop unchanged; `local` or a missing provider
+        uses a deterministic path that never calls a model or invents numbers.
+        """
         request_id, traces = uuid4().hex, []
         model_trace = []
         try:
             async with asyncio.timeout(self.timeout_seconds):
-                return await self._run(question, request_id, traces, model_trace)
+                if self.provider is None or execution_mode == "local":
+                    return await self._run_local(question, request_id, traces, model_trace,
+                                                 scope=scope, expected_version=expected_version)
+                return await self._run(question, request_id, traces, model_trace,
+                                       scope=scope, expected_version=expected_version)
         except TimeoutError:
             error = AgentError("agent_timeout", "Overall agent request timed out", 504)
         except AgentError as exc:
@@ -125,8 +135,41 @@ class AgentService:
         event("query_failed", request_id, error_code=error.code, tool_count=len(traces))
         raise error from None
 
-    async def _run(self, question, request_id, traces, model_trace):
-        info = await run_in_threadpool(self.database.overview, generated_only=True)
+    async def _run_local(self, question, request_id, traces, model_trace, *, scope=None, expected_version=None):
+        """Resolve and execute one trusted tool locally; no model request.
+
+        `generated_only=False` is intentional here: an uploaded dataset can be
+        analysed because nothing leaves this process. A failed tool propagates
+        to query() so an internal error is never reported as a user mistake.
+        """
+        info = await run_in_threadpool(self.database.overview, expected_version=expected_version,
+                                       generated_only=False)
+        catalog = await run_in_threadpool(self.database.reporting_catalog)
+        intent = resolve_question(question, catalog, scope)
+        common = dict(request_id=request_id, provider="local", model="deterministic-tools-v1",
+                      simulated=False, dataset_version=info.dataset_version, model_turns=0,
+                      tool_calls=traces, usage=None, model_trace=model_trace,
+                      resolved_scope=intent.scope)
+        if intent.status != "ready":
+            event("query_completed", request_id, status=intent.status, answer_mode="notice")
+            return AgentResponse(status=intent.status, answer=intent.message,
+                                 answer_mode="notice", evidence=[], **common)
+        started = time.monotonic()
+        args = self.registry.validate(intent.tool, json.dumps(intent.arguments))
+        result = await run_in_threadpool(self.registry.execute, intent.tool, args,
+                                         version=info.dataset_version, evidence_id="r1", generated_only=False)
+        traces.append(ToolTrace(call_id="local-1", tool=intent.tool, arguments=args.model_dump(),
+                                status="ok", elapsed_ms=int((time.monotonic() - started) * 1000),
+                                evidence_id=result.evidence_id, result_digest=digest(result)))
+        event("tool_call", request_id, **traces[-1].model_dump())
+        answer = render_fallback(FinalSelection(status="completed", evidence_ids=["r1"]), [result])
+        event("query_completed", request_id, status="completed", answer_mode="verified_localized")
+        return AgentResponse(status="completed", answer=answer, answer_mode="verified_localized",
+                             evidence=[result], **common)
+
+    async def _run(self, question, request_id, traces, model_trace, *, scope=None, expected_version=None):
+        info = await run_in_threadpool(self.database.overview, generated_only=True,
+                                       expected_version=expected_version)
         guard = {"expected_version": info.dataset_version, "generated_only": True}
         catalog = await run_in_threadpool(self.database.catalog, **guard)
         canonical = canonical_question(question, catalog)
@@ -205,5 +248,6 @@ class AgentService:
             return AgentResponse(request_id=request_id, provider=self.provider.name, model=self.provider.model, simulated=self.provider.simulated,
                                  dataset_version=info.dataset_version, status=selection.status, answer=answer, model_turns=turn_index,
                                  tool_calls=traces, evidence=evidence, usage=usage, model_trace=model_trace,
-                                 answer_mode=answer_mode, fallback_reason=fallback_reason, guidance=guidance)
+                                 answer_mode=answer_mode, fallback_reason=fallback_reason, guidance=guidance,
+                                 resolved_scope=scope)
         raise AgentError("agent_budget_exceeded", "Agent model-turn budget exceeded")
