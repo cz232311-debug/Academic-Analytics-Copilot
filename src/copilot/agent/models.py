@@ -4,7 +4,7 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator
 
-from copilot.models import ClassId, CourseId, DataError, GradeLevel, Record, Term
+from copilot.models import ClassId, CourseId, DataError, GradeLevel, Major, Record, Term
 
 ToolName = Literal["get_dataset_overview", "get_score_summary", "compare_classes", "get_catalog"]
 CallId = Annotated[str, StringConstraints(pattern=r"^[A-Za-z0-9_-]{1,100}$")]
@@ -29,11 +29,21 @@ class OverviewArgs(Record):
     pass
 
 
+class SessionScope(Record):
+    """Confirmed UI scope; every entity is rechecked against the active catalog."""
+    term: Term | None = None
+    grade_level: GradeLevel | None = None
+    major: Major | None = None
+    class_id: ClassId | None = None
+    course_id: CourseId | None = None
+
+
 class SummaryArgs(Record):
     term: Term
     course_id: CourseId | None
     class_id: ClassId | None
     grade_level: GradeLevel | None
+    major: Major | None = None
 
 
 class ComparisonArgs(Record):
@@ -51,10 +61,14 @@ class ComparisonArgs(Record):
 
 class CatalogArgs(Record):
     grade_level: GradeLevel | None
+    major: Major | None = None
 
 
 class QueryRequest(Record):
     question: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=1000)]
+    scope: SessionScope | None = None
+    expected_version: Annotated[str | None, Field(pattern=r"^[0-9a-f]{64}$")] = None
+    execution_mode: Literal["configured", "local"] = "configured"
 
 
 class FinalSelection(Record):
@@ -127,6 +141,13 @@ class Evidence(Record):
     data: dict
 
 
+class ExecutionStage(Record):
+    """A completed server operation returned after the synchronous request."""
+    code: Literal["recognize_question", "confirm_scope", "execute_tools", "validate_results", "generate_answer"]
+    status: Literal["completed", "failed"] = "completed"
+    elapsed_ms: Annotated[int, Field(ge=0)]
+
+
 class AgentResponse(Record):
     request_id: str
     provider: str
@@ -140,9 +161,11 @@ class AgentResponse(Record):
     evidence: list[Evidence]
     usage: Usage | None
     model_trace: list[ModelTrace] = Field(default_factory=list)
-    answer_mode: Literal["grounded_narrative", "deterministic_fallback", "notice"] = "notice"
+    answer_mode: Literal["grounded_narrative", "deterministic_fallback", "verified_localized", "notice"] = "notice"
     fallback_reason: Literal["missing_narrative", "invalid_narrative"] | None = None
     guidance: list[str] = Field(default_factory=list)
+    stages: list[ExecutionStage] = Field(default_factory=list)
+    resolved_scope: SessionScope | None = None
 
 
 class AgentError(DataError):
@@ -151,3 +174,4 @@ class AgentError(DataError):
         self.request_id: str | None = None
         self.tool_calls: list[ToolTrace] = []
         self.model_trace: list[ModelTrace] = []
+        self.stages: list[ExecutionStage] = []

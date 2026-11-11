@@ -15,11 +15,13 @@ from copilot.analytics import AnalyticsEngine
 from copilot.agent.models import AgentError, AgentResponse, QueryRequest
 from copilot.agent.provider import LLMSettings, build_provider
 from copilot.agent.service import AgentService, MAX_MODEL_TURNS, MAX_TOOL_CALLS, configure_logging
+from copilot.agent.semantics import ResolvedIntent, resolve_question
 from copilot.agent.tools import TOOLS
 from copilot.data.generate import DEFAULT_SEED, generate_dataset
 from copilot.data.importing import MAX_FILE_BYTES, import_csv_tables, import_workbook
 from copilot.data.college import CollegeCommitResult, CollegePreview, DuplicatePolicy
 from copilot.data.college_service import CollegeImportService
+from copilot.data.synthetic_activation import SyntheticActivationService, SyntheticCommitRequest, SyntheticJSONOptions
 from copilot.models import ClassId, CourseId, DataError, TABLE_NAMES, Term
 from copilot.schemas import (Catalog, ClassComparison, CourseReport, CourseReportQuery, DatasetInfo, ErrorDetail, ErrorResponse,
                              ImportResult, ReportingCatalog, ReportScope, Scope, Statistics)
@@ -86,6 +88,7 @@ def create_app(database_path: str | Path | None = None, *, bootstrap_demo=True, 
     store = Database(database_path or os.environ.get("ACADEMIC_DB_PATH", "data/academic.sqlite3"))
     engine = AnalyticsEngine(store)
     college_import = CollegeImportService(store)
+    synthetic_import = SyntheticActivationService(store)
 
     @asynccontextmanager
     async def lifespan(app):
@@ -96,11 +99,14 @@ def create_app(database_path: str | Path | None = None, *, bootstrap_demo=True, 
         yield
 
     application = FastAPI(title="Academic Analytics Copilot", version="0.2.0",
-                          description="Synthetic academic analytics with controlled function calling. Default provider is an explicitly simulated local demo.",
+                          description="Catalog-grounded academic analytics. DeepSeek is the formal LLM; uploaded data uses local deterministic queries only.",
                           lifespan=lifespan)
     application.state.database = store
     application.add_middleware(UploadBodyLimit, limit=max_request_bytes)
     application.add_middleware(UploadBodyLimit, limit=8192, path="/api/agent/query")
+    application.add_middleware(UploadBodyLimit, limit=8192, path="/api/agent/resolve")
+    for path in ("/api/datasets/synthetic/preview", "/api/datasets/synthetic/commit"):
+        application.add_middleware(UploadBodyLimit, limit=8192, path=path)
     for path in ("/api/datasets/college/preview", "/api/datasets/college/commit"):
         application.add_middleware(UploadBodyLimit, limit=MAX_FILE_BYTES + 65536, path=path)
 
@@ -136,6 +142,8 @@ def create_app(database_path: str | Path | None = None, *, bootstrap_demo=True, 
 
     def agent_runtime():
         settings = LLMSettings() if agent_provider is not None else LLMSettings.from_env()
+        if agent_provider is None and settings.provider not in {"deepseek", "mock"}:
+            raise AgentError("llm_configuration_error", "正式模型仅支持DeepSeek；Mock只供明确配置的离线测试。", 503)
         return agent_provider or build_provider(settings), settings
 
     @application.get("/api/agent/status")
@@ -144,12 +152,41 @@ def create_app(database_path: str | Path | None = None, *, bootstrap_demo=True, 
         return {"provider": provider.name, "model": provider.model, "simulated": provider.simulated,
                 "tools": list(TOOLS), "max_model_turns": MAX_MODEL_TURNS, "max_tool_calls": MAX_TOOL_CALLS,
                 "request_timeout_seconds": agent_timeout_seconds or settings.request_timeout_seconds,
-                "question_policy": "restricted_english_aggregate_queries", "streaming": False}
+                "question_policy": "catalog_grounded_academic_cn_en", "streaming": False}
+
+    def resolve_payload(payload, *, generated_only=False):
+        info = store.overview(expected_version=payload.expected_version, generated_only=generated_only)
+        catalog = store.reporting_catalog()
+        if catalog.dataset_version != info.dataset_version:
+            raise DataError("数据在解析问题时发生变化，请重新确认范围。", code="dataset_changed", status=409)
+        intent = resolve_question(payload.question, catalog, payload.scope)
+        after = store.overview(expected_version=info.dataset_version, generated_only=generated_only)
+        if after.source != info.source:
+            raise DataError("数据来源已改变，请重新确认范围。", code="dataset_changed", status=409)
+        return intent, info.dataset_version
+
+    @application.post("/api/agent/resolve", response_model=ResolvedIntent)
+    async def resolve_agent(payload: QueryRequest):
+        intent, _ = await run_in_threadpool(resolve_payload, payload,
+                                          generated_only=payload.execution_mode == "configured")
+        return intent
 
     @application.post("/api/agent/query", response_model=AgentResponse)
     async def agent_query(payload: QueryRequest):
-        provider, settings = agent_runtime()
-        return await AgentService(store, provider, timeout_seconds=agent_timeout_seconds or settings.request_timeout_seconds).query(payload.question)
+        if payload.execution_mode == "local":
+            provider, timeout = None, agent_timeout_seconds or 45.0
+            expected_version = payload.expected_version
+        else:
+            # Reject uploaded provenance before provider settings are read. A
+            # missing key must never mask the privacy decision or send data.
+            intent, expected_version = await run_in_threadpool(resolve_payload, payload, generated_only=True)
+            if intent.status != "ready":
+                provider, timeout = None, agent_timeout_seconds or 45.0
+            else:
+                provider, settings = agent_runtime()
+                timeout = agent_timeout_seconds or settings.request_timeout_seconds
+        return await AgentService(store, provider, timeout_seconds=timeout).query(payload.question,
+            scope=payload.scope, expected_version=expected_version, execution_mode=payload.execution_mode)
 
     @application.get("/api/dataset", response_model=DatasetInfo)
     def dataset():
@@ -200,6 +237,14 @@ def create_app(database_path: str | Path | None = None, *, bootstrap_demo=True, 
             return await run_in_threadpool(college_import.commit, *upload, preview_token=preview_token, confirmed=confirmed)
         finally:
             await workbook.close()
+
+    @application.post("/api/datasets/synthetic/preview", response_model=CollegePreview)
+    async def preview_synthetic(options: SyntheticJSONOptions):
+        return await run_in_threadpool(synthetic_import.preview, options)
+
+    @application.post("/api/datasets/synthetic/commit", response_model=CollegeCommitResult)
+    async def commit_synthetic(payload: SyntheticCommitRequest):
+        return await run_in_threadpool(synthetic_import.commit, payload.options, payload.preview_token, payload.confirmed)
 
     @application.post("/api/datasets/import", response_model=ImportResult)
     async def import_dataset(request: Request,

@@ -1,6 +1,6 @@
 param(
     [ValidateSet('mock', 'deepseek')]
-    [string]$Provider = 'mock',
+    [string]$Provider = 'deepseek',
     [ValidateRange(1024, 65535)]
     [int]$Port = 8000,
     [string]$Database = 'data/workbench-demo.sqlite3'

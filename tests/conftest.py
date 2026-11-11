@@ -3,6 +3,13 @@ import pytest
 from copilot.models import (ClassRecord, CourseRecord, Dataset, EnrollmentRecord, GradeRecord, StudentRecord)
 
 
+@pytest.fixture(autouse=True)
+def explicit_offline_provider(monkeypatch):
+    """Tests opt into Mock and never inherit a paid production configuration."""
+    monkeypatch.setenv("COPILOT_LLM_PROVIDER", "mock")
+    monkeypatch.delenv("COPILOT_LLM_API_KEY", raising=False)
+
+
 @pytest.fixture
 def tiny_dataset():
     """Independent hand-calculation fixture; deliberately unequal course loads."""

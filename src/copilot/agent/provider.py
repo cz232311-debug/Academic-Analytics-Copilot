@@ -42,7 +42,9 @@ class LLMSettings(Record):
     @classmethod
     def from_env(cls):
         try:
-            provider = os.environ.get("COPILOT_LLM_PROVIDER", "mock")
+            # Production selects DeepSeek explicitly; Mock requires an offline
+            # setting and is never an automatic fallback for a missing key.
+            provider = os.environ.get("COPILOT_LLM_PROVIDER", "deepseek")
             deepseek = provider == "deepseek"
             strict = os.environ.get("COPILOT_LLM_STRICT_TOOLS", "true").lower()
             if strict not in {"true", "false"}:
@@ -182,6 +184,13 @@ class MockDemoProvider:
             content = json.dumps(reply)
             return ModelTurn(message=ModelMessage(role="assistant", content=content))
         question = next(m["content"] for m in messages if m["role"] == "user")
+        if question.startswith("ACADEMIC_INTENT "):
+            # Offline fixture: replay a locally validated plan. This is not an
+            # LLM and does not infer entities or consume the original question.
+            plan = strict_json(question.removeprefix("ACADEMIC_INTENT "))
+            return ModelTurn(message=ModelMessage.model_validate({"role": "assistant", "tool_calls": [
+                {"id": "call_1", "type": "function", "function": {"name": plan["tool"],
+                    "arguments": json.dumps(plan["arguments"])}}]}))
         courses = re.findall(r"\bg[1-3]-c[0-9]{2}\b", question)
         classes = re.findall(r"\bc[0-9]{3}\b", question)
         term = re.search(r"\b20[0-9]{2}-t[1-3]\b", question)
