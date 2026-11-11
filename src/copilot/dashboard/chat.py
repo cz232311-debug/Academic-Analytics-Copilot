@@ -36,7 +36,7 @@ NEXT_STEPS = {
     "intent_mismatch": "系统拦截了一次与问题不一致的统计。请把课程名或课程编号写完整后重试。",
     "unknown_entity": "所选课程、班级或学期不在当前数据集中，请从上方示例问题或目录查询开始。",
     "llm_configuration_error": "这是后端 AI 服务配置问题，不是你的问题。请检查服务窗口；上传数据仍可本地分析。",
-    "llm_authentication_error": "这是后端 AI 服务配置问题，不是你的问题。请联系负责启动系统的同事。",
+    "llm_authentication_error": "DeepSeek 拒绝了后端当前使用的 key。请在后端窗口运行 .\\scripts\\check_deepseek_key.ps1 验证，必要时换新 key 并用 -ForcePrompt 重启；上传数据仍可本地分析。",
     "llm_insufficient_balance": "AI 服务账户暂时不可用。请改用上传数据的本地分析，或稍后再试。",
     "llm_timeout": "AI 服务响应超时，请稍后重试；已确认的数据不会丢失。",
     "llm_connection_error": "暂时连不上 AI 服务，请稍后重试；上传数据仍可本地分析。",

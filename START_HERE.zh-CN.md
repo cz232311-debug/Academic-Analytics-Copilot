@@ -113,7 +113,7 @@ Set-Location -LiteralPath 'D:\Document\ChatGPT\SAP-ApplicationEngineer'
 | 系统拦截了一次与问题不一致的统计 | 把课程名/编号写完整后重试 |
 | 所选课程、班级或学期不在当前数据集中 | 先用「查询当前数据集有哪些课程」核对 |
 | AI 服务响应超时/繁忙/连不上 | 稍后重试；已确认的数据不会丢失 |
-| 后端无法通过 DeepSeek 的身份验证 | key 无效或过期：停掉后端，用 `-ForcePrompt` 重新粘贴有效 key（见下方常见问题） |
+| DeepSeek 拒绝了后端当前使用的 API key | 在后端窗口运行 `.\scripts\check_deepseek_key.ps1` 验证 key 与余额；无效则到 platform.deepseek.com 重建 key，再 `-ForcePrompt` 重启（见下方 502 章节） |
 | 请确认后端分析服务已经启动 | 检查窗口 A，然后在页面点「重试连接」 |
 | 本次分析超时 | 把问题缩小到一门课程或一个班级 |
 
@@ -137,7 +137,7 @@ INFO:     127.0.0.1:13543 - "POST /api/agent/query HTTP/1.1" 502 Bad Gateway
 
 | `error_code` | 含义 | 处理 |
 |---|---|---|
-| `llm_authentication_error` | DeepSeek 返回 401，key 无效/过期/复制不全 | 按下方常见问题用 `-ForcePrompt` 重输有效 key |
+| `llm_authentication_error` | DeepSeek 返回 401：请求**已到达** DeepSeek，被拒的是凭证本身，不是网络 | 先跑 `.\scripts\check_deepseek_key.ps1`；若仍 401，按下方「重新粘贴的 key 依然 401」逐项排查 |
 | `llm_connection_error` | 后端连不上 `api.deepseek.com` | 检查网络；注意后端用 `trust_env=False`，**不读系统代理**，需要代理的网络会直接失败 |
 | `llm_http_error` | DeepSeek 返回其它非 2xx | 记下 `request_id`，到平台查状态 |
 | `invalid_model_response` | 模型返回内容未通过本地校验 | 重试；系统不会展示未经验证的回答，属预期保护 |
@@ -145,22 +145,27 @@ INFO:     127.0.0.1:13543 - "POST /api/agent/query HTTP/1.1" 502 Bad Gateway
 
 （另外几类**不是** 502：余额不足 402→503、限流 429→503、超时→504、配置缺失→503。看到这些状态码可直接对号入座。）
 
-**零付费确认 key 是否有效**：在窗口 A 的**同一个终端**执行下面的命令。它只调 DeepSeek 官方的余额查询接口（`GET /user/balance`，不消耗 token、不产生费用），不打印 key 值，也不打印余额金额：
+**零付费确认 key 是否有效**：在窗口 A 的**同一个终端**运行。脚本只调 DeepSeek 官方余额接口（`GET /user/balance`，不消耗 token、不产生费用），不打印 key 值、长度或余额金额，也不启停服务：
 
 ```powershell
-try {
-  $r = Invoke-RestMethod -Uri 'https://api.deepseek.com/user/balance' `
-    -Headers @{ Authorization = "Bearer $env:COPILOT_LLM_API_KEY" } -TimeoutSec 20
-  "key 有效；账户是否可用：$($r.is_available)"
-} catch {
-  $code = if ($_.Exception.Response) { [int]$_.Exception.Response.StatusCode } else { '网络不可达' }
-  "DeepSeek 返回：$code"
-}
+.\scripts\check_deepseek_key.ps1          # 用当前窗口已有的 key
+.\scripts\check_deepseek_key.ps1 -Prompt  # 隐藏式重新粘贴一个 key 来测
 ```
 
-- 返回 **401** → key 无效，用 `-ForcePrompt` 重输；
-- 返回 **200 但 `False`** → key 有效但账户无余额，需要充值；
-- **网络不可达** → 代理或 DNS 问题，或临时改用 `-Provider mock` 完全离线体验。
+- **凭证被接受** → key 有效、账户可计费；若页面仍报错，用 `-ForcePrompt` 重启后端，确保它用的就是这把 key。
+- **凭证被接受但账户无余额** → 充值；此时查询报的是 402→503，不是 502。
+- **HTTP 401** → key 本身被 DeepSeek 拒绝，见下节。
+- **网络不可达** → 代理或 DNS 问题；后端 `trust_env=False` 不读系统代理，或临时改用 `-Provider mock` 完全离线体验。
+
+### 重新粘贴的 key 依然 401
+
+截图里已经清过环境变量、也用了 `-ForcePrompt` 重新粘贴，日志仍为 `llm_authentication_error`——这说明**不是脚本复用了旧 key，而是新粘贴的这把 key 被 DeepSeek 拒了**。按顺序核对：
+
+1. 运行 `.\scripts\check_deepseek_key.ps1 -Prompt`，把**同一把** key 直接贴进去测。它绕过整个后端，能区分「key 无效」与「后端用错了 key」。
+2. key 必须来自 **platform.deepseek.com → API Keys**，不是网页版账号密码、不是 OpenAI/其它平台的 key；**新建时只显示一次**，复制不完整会 401。
+3. 确认该 key 没有被删除或轮换、账户没有被停用；粘贴时不要带引号、前后空格或换行（脚本和后端现在都会自动去掉首尾空白，但**中间的空格去不掉**，会给出警告）。
+4. 仍失败就在平台**重新创建一把 key**，然后：窗口 A 按 Ctrl+C → `Remove-Item Env:COPILOT_LLM_API_KEY -ErrorAction SilentlyContinue` → `.\scripts\start_backend.ps1 -ForcePrompt`，粘贴新 key。
+5. 暂时不想用真实 key：`-Provider mock` 全程离线，回答会如实标注「离线 Mock 演示」。
 
 请勿把 key 写进命令行、文件、截图或聊天记录。
 

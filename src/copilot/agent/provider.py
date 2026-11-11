@@ -51,7 +51,7 @@ class LLMSettings(Record):
                 raise ValueError
             return cls(provider=provider,
                        model=os.environ.get("COPILOT_LLM_MODEL") or (DEEPSEEK_MODEL if deepseek else ""),
-                       api_key=SecretStr(os.environ.get("COPILOT_LLM_API_KEY", "")),
+                       api_key=SecretStr(os.environ.get("COPILOT_LLM_API_KEY", "").strip()),
                        base_url=(os.environ.get("COPILOT_LLM_BASE_URL") or (DEEPSEEK_BASE_URL if deepseek else "https://api.openai.com/v1")).rstrip("/"),
                        timeout_seconds=float(os.environ.get("COPILOT_LLM_TIMEOUT_SECONDS", "15")),
                        request_timeout_seconds=float(os.environ.get("COPILOT_AGENT_TIMEOUT_SECONDS", "45")),

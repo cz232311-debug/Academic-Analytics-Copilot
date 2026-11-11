@@ -56,7 +56,7 @@ ERROR_MESSAGES = {
     "provider_authentication": "后端无法通过 AI 服务的身份验证，请联系负责启动系统的同事检查配置。",
     "provider_rate_limited": "AI 服务当前繁忙，请稍后再试；本地统计不受影响。",
     "llm_configuration_error": "后端 AI 服务配置不完整。请联系负责启动系统的同事检查服务窗口，或改用本地规则分析。",
-    "llm_authentication_error": "后端无法通过 DeepSeek 的身份验证，请联系负责启动系统的同事检查服务配置。",
+    "llm_authentication_error": "DeepSeek 拒绝了后端当前使用的 API key。请在后端窗口运行 .\\scripts\\check_deepseek_key.ps1 检查 key 与账户余额，必要时重新创建 key 并用 -ForcePrompt 重启；上传数据仍可本地分析。",
     "llm_insufficient_balance": "AI 服务账户余额不足，请联系负责启动系统的同事；本地统计不受影响。",
     "llm_rate_limited": "AI 服务当前繁忙，请稍后再试；本地统计不受影响。",
     "llm_timeout": "AI 服务响应超时，请稍后重试；已确认的数据和统计结果仍然保留。",

@@ -39,6 +39,27 @@ def test_http_protocol_authentication_and_usage_details():
     assert "fake-test-key" not in request.content.decode()
 
 
+def test_from_env_trims_pasted_key_before_it_reaches_the_provider(monkeypatch):
+    # A hidden prompt paste often carries leading/trailing spaces or a newline. The
+    # emptiness check already stripped, but the Authorization header used the
+    # raw value, so DeepSeek answered 401 for an otherwise valid credential.
+    monkeypatch.setenv("COPILOT_LLM_PROVIDER", "deepseek")
+    monkeypatch.setenv("COPILOT_LLM_API_KEY", "  sk-pasted-with-edges \n")
+    for name in ("COPILOT_LLM_BASE_URL", "COPILOT_LLM_MODEL", "COPILOT_LLM_STRICT_TOOLS",
+                 "COPILOT_LLM_TIMEOUT_SECONDS", "COPILOT_AGENT_TIMEOUT_SECONDS"):
+        monkeypatch.delenv(name, raising=False)
+    configured = LLMSettings.from_env()
+    assert configured.api_key.get_secret_value() == "sk-pasted-with-edges"
+    seen = []
+
+    def handler(request):
+        seen.append(request)
+        return httpx.Response(200, json=completion())
+
+    asyncio.run(OpenAICompatibleProvider(configured, transport=httpx.MockTransport(handler)).complete([], []))
+    assert seen[0].headers["Authorization"] == "Bearer sk-pasted-with-edges"
+
+
 @pytest.mark.parametrize("status,code", [(401, "llm_http_error"), (429, "llm_rate_limited"), (500, "llm_http_error"), (302, "llm_http_error")])
 def test_http_errors_are_sanitized_without_redirects(status, code):
     def handler(request):
