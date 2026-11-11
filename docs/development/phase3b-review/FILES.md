@@ -27,7 +27,7 @@ Three decisions shaped the increment:
 | `tests/test_chat_app.py` | new | 12 Streamlit AppTest cases over a real FastAPI app via MockTransport: first open, preview/confirm, grounded mode, Chinese course/class questions, upload → local only, clarification/unsupported, LLM configuration error, connection error, version switch, existing Dashboard API contract. |
 | `docs/development/phase3b-review/LEARNING.zh-CN.md` | new | Chinese learning packet (call chain, three core functions, demo questions, limits). |
 | `docs/development/phase3b-review/FILES.md` | new | This inventory. |
-| `docs/development/phase3b-review/*.png` | new (4) | Browser acceptance screenshots described in section 5. |
+| `docs/development/phase3b-review/*.png` | new (8) | Browser acceptance screenshots described in section 5; the last three record the follow-up revision in section 8. |
 
 **Deliberately unchanged:** `streamlit_app.py`, `src/copilot/dashboard/{app,workbench,import_panel,synthetic_panel,presentation,workflow}.py`, `src/copilot/api.py`, `src/copilot/agent/{service,models,tools,narrative,privacy,provider}.py`, `analytics.py`, `storage.py`, `schemas.py`, `college*.py`, `synthetic_activation.py`, all pre-existing tests, and `conftest.py` (which still forces `COPILOT_LLM_PROVIDER=mock`).
 
@@ -74,6 +74,14 @@ pytest -q --tb=short --basetemp=.test-tmp-p3b-full
     → 456 passed, 1 warning in 163.06s, 0 failures        (complete suite)
 pytest -q ... tests/test_chat_app.py tests/test_phase3b_backend.py
     → 29 passed, 1 warning in 7.69s                       (after final UI polish)
+pytest -q --tb=short --basetemp=.test-tmp-review-full
+    → 461 passed, 1 warning in 88.00s                     (follow-up revision, section 8)
+pytest -q ... tests/test_college_adapter.py tests/test_chat_app.py
+    → 42 passed, 1 warning in 9.73s                       (follow-up, after preview caption polish)
+pytest -q --tb=short --basetemp=.test-tmp-final-handoff
+    → 461 passed, 1 warning in 77.77s                     (final full re-run before commit)
+pytest -q ... 4 college/chat/import modules
+    → 63 passed, 1 warning in 13.41s                      (after removing dead preview constants)
 ```
 
 The only warning is the pre-existing Starlette `TestClient` deprecation. No test was deleted, skipped or weakened. UI test failures were all in the test harness (multipart body parsed as JSON; AppTest `clear()` clears attachments, not text; a compact Chinese question that the semantic layer's `\b` class-ID regex cannot match) — each was fixed without changing product assertions.
@@ -99,7 +107,10 @@ Browser: headless Chrome 157 driven over CDP (`websockets`), waiting for actual 
 | `synthetic-activated.png` | Server preview → checkbox → confirm produced `source=generated`; mode label and six catalog-verified examples visible. |
 | `answer-with-evidence.png` | Chinese conclusion, honest "离线 Mock 演示（合成数据，未调用 DeepSeek）" label, collapsible calculation evidence. |
 | `answer-with-chart.png` | Course analysis with human-readable course name, exact mean/pass rate, distribution bar chart, evidence expander. |
-| `preview-details.png` | Follow-up fix: the preview now renders the detected course catalog and eight de-identified grade rows in the wide main area (the sidebar was too narrow to show tables). The caption states that full grade rows are never returned. |
+| `preview-details.png` | Follow-up fix: the preview was moved into the wide main area (the sidebar was too narrow for tables), showing the detected course catalog and eight de-identified grade rows. **Historical screenshot** — that eight-row `学生0001` sample was replaced in the later revision (section 8). |
+| `review-issues-with-coordinates.png` | Section 8: full issue list plus coordinate-located review cells. Problem cells such as row 6 / column E and row 7 / column F are visible with their original Excel coordinates; no re-numbered student alias. |
+| `review-auto-restored.png` | Section 8: after confirming an upload and reloading the page, the sidebar still shows `上传的 Excel 成绩单 / 本地规则分析` and the main area shows the blue "已自动沿用" notice; the chat input is enabled. |
+| `review-user-bubble-right.png` | Section 8: a real submitted question. The user message (red avatar) is flush right, the assistant answer (orange avatar) is left; no overlap. Measured `flex-direction: row-reverse`, `margin-left: 162.8px` (auto), 0 px gap to the parent's right edge and 163 px on the left. |
 
 Observed conclusion (synthetic, reproducible): `课程 工程实践2`: 12 grade records, 12 graded, mean 74.00, pass rate 83.33% (10/12), distribution 2/3/3/3/1. These are outputs of `AnalyticsEngine`, not model prose.
 
@@ -109,7 +120,7 @@ Browser interaction was done with real CDP mouse events; a synthetic `input.clic
 
 **Implemented:** Chat-first first screen; two explicit provenance modes; server-side synthetic activation (no client-faked source); uploaded XLSX preview/review/confirm; `grounded` for synthetic and `local` for uploads, always explicit; honest per-answer mode labels; deterministic Chinese conclusions from Evidence; charts and expandable evidence; catalog-verified example questions; dataset-version invalidation; Chinese actionable errors; `get_catalog` side-query removal; 29 new Mock tests; real service + browser acceptance.
 
-**Partial / boundaries:** Chat history is display-only; the model never receives previous turns. Scope reuse is opt-in (`后续问题沿用上一题的范围`) and explicit conditions always win. `AgentResponse.stages` and SSE streaming are unimplemented, so the page uses a plain spinner and does not fabricate stage logs. Chinese answers are a display projection, not a backend narrative feature.
+**Partial / boundaries:** Chat history is display-only; the model never receives previous turns. At this checkpoint scope reuse was opt-in (`后续问题沿用上一题的范围`) and explicit conditions always won — that control was **removed in the follow-up revision (section 8)** because it was redundant. `AgentResponse.stages` and SSE streaming are unimplemented, so the page uses a plain spinner and does not fabricate stage logs. Chinese answers are a display projection, not a backend narrative feature.
 
 **Pending / next-round bugfix and evaluation suggestions:**
 1. The legacy `configured` English path still uses the old vocabulary gate and bypasses semantic constraints. The new UI always sends `grounded`; that legacy path exists only to keep historical `test_agent_service.py` / `test_agent_api.py` assertions intact. Retire it after those contracts are deliberately migrated.
@@ -121,4 +132,23 @@ Browser interaction was done with real CDP mouse events; a synthetic `input.clic
 
 Cumulative diff from `d7c010a` through this checkpoint covers the WIP checkpoint `31834ad`, baseline repair `63315a0`, Phase 3A `ad52867` and this Phase 3B commit. Per-commit patches are available with `git show <hash>`. This packet is authored before its own commit and therefore cannot recursively include that commit's diff.
 
-Working-tree changes after the commit (intentionally left uncommitted): the owner-owned offline demo receipt and the local `.workbuddy/memory/2026-11-11.md`. Ignored local artifacts: `.test-tmp-*`, `.test-tmp-probe/` (throwaway CDP/probe scripts), `data/phase3b-uat.sqlite3`. Screenshots contain only an empty or fully synthetic dataset; no student record, key, `.env`, database or private log is included in the review packet.
+Working-tree changes after the commit (intentionally left uncommitted): the owner-owned offline demo receipt and the local `.workbuddy/memory/*.md`. Ignored local artifacts: `.test-tmp-*`, `.test-tmp-probe/` (throwaway CDP/probe scripts), `data/phase3b-uat.sqlite3`, `data/review-uat*.sqlite3`. Screenshots contain only an empty, synthetic or deliberately fabricated dataset; no student record, key, `.env`, database or private log is included in the review packet.
+
+## 8. Follow-up revision: review usability and cross-session continuity
+
+Triggered by four operator observations after the MVP was validated in a real browser: (1) the "会话范围" scope control felt redundant — once a file is uploaded it should stay in use until the operator actively changes it; (2) `学生0001` did not match the original workbook, the de-identification was useless, and eight sample rows hid most of the cells needing correction; (3) user chat bubbles should be on the right; (4) progress made in one AI conversation should be reproducible in a fresh one.
+
+| Concern | Change | Files |
+|---|---|---|
+| Redundant scope | Removed `_scope_panel()` and the `chat_reuse_scope` / `chat_clear_scope` keys. `_ask()` no longer sends a hidden `scope`; every question is resolved on its own. | `src/copilot/dashboard/chat.py`, `tests/test_chat_app.py` |
+| Dataset persistence | `_observe_dataset()` now restores an already-confirmed `uploaded_local_only` dataset once per page session and shows a blue "已自动沿用" notice. Synthetic data is deliberately **not** restored: it is the only path that can reach a paid model and therefore still needs an explicit confirmation each session. Version changes still reset the chat. | `src/copilot/dashboard/chat.py`, `tests/test_chat_app.py` |
+| Real coordinates | The old `sample` was built from `students` sorted by student ID and re-numbered as `学生0001`, so it could not be matched to the source sheet. `college.py` now builds `review_cells` keyed by the **original Excel row number and column letter** (`get_column_letter`), puts problem cells first, and exposes `sample_total` / `issue_cell_total`. Bounded by `MAX_REVIEW_CELLS = 200` with an explicit omitted-count warning. Names, student IDs and unrecognized cell text are never echoed (`shown = "—"`). | `src/copilot/data/college.py`, `tests/test_college_adapter.py` |
+| Full issue list | The main area now renders every `preview.issues` entry with severity, original row/column, a Chinese label and message, alongside the course catalog (with column letters) and the coordinate-located cell table. No `学生` column remains. | `src/copilot/dashboard/chat.py`, `tests/test_chat_app.py` |
+| Right-aligned bubbles | CSS targets `[data-testid=stChatMessage]:has([data-testid=stChatMessageAvatarUser])` with `flex-direction:row-reverse` and `margin-left:auto`. | `src/copilot/dashboard/chat.py`, `tests/test_chat_app.py` |
+| Continuity | New `HANDOFF.zh-CN.md` carries a paste-ready prompt for a fresh conversation, the source-of-truth hierarchy, current state, hard constraints and open items. `README.md` and `START_HERE.zh-CN.md` were synced. | `HANDOFF.zh-CN.md`, `README.md`, `START_HERE.zh-CN.md`, this file |
+
+**Verification.** Targeted suites: 49 passed, then 42 passed after the preview caption polish, then 63 passed across four modules after dead-code cleanup. Exclusive full suite: **461 passed, 1 warning in 88.00s**, re-confirmed at **461 passed in 77.77s** immediately before the commit; zero failures/skips. Browser acceptance used an isolated backend on 8010 with `COPILOT_LLM_PROVIDER=mock`, an isolated Streamlit on 8511, an isolated SQLite database, and headless Chrome on 9222; the user's 8000/8501 services were untouched and no paid model call was made. Real-browser checks: no scope control on first open; right-alignment CSS present; uploading a workbook with deliberately bad cells shows the complete issue table and coordinate-located cells; `学生0001` absent; the literal strings `NOT_A_GRADE` / `BAD_STATUS` absent from the DOM; after confirm + reload the dataset is auto-restored and the chat input is enabled; a submitted question produces a user bubble with `flex-direction: row-reverse`, `margin-left: 162.8px` (auto), 0 px to the parent's right edge and 163 px of left inset.
+
+Two CDP harness issues were diagnosed and fixed rather than papered over: a synthetic `Input.dispatchKeyEvent` Enter does not submit Streamlit's `chat_input`, so the check clicks a catalog-verified example button with real CDP mouse events (which also produces a genuine user message); and a coarse `body.innerText` substring check reported `has 第6行/E: False` even though the screenshot clearly showed those coordinates, because the dataframe renders them in separate elements.
+
+**Unchanged hard boundaries:** `import_archive.py` still persists only `original.xlsx`, `cleaning.json` and `confirmation.json` — never `sample` or raw cell text; uploaded data stays `external_llm_allowed=false`; Chinese conclusions still come only from backend Evidence numbers. Open items in section 6 remain open (ASCII-aware class-ID boundary, authorized live DeepSeek evaluation, `stages`/SSE, multi-turn context, mobile/accessibility/cross-browser).

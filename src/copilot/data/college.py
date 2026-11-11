@@ -28,6 +28,12 @@ from copilot.models import (ClassRecord, CourseRecord, DataError, Dataset, Enrol
 from copilot.schemas import DatasetInfo
 
 MAX_COLUMNS, HEADER_SEARCH_ROWS, MAX_ISSUES = 256, 25, 200
+# Preview cell review rows are bounded so a large workbook cannot flood the UI.
+# The archive never persists these rows (see import_archive.stage).
+MAX_REVIEW_CELLS = 200
+# Hard ceiling on cells inspected while building the preview, so a workbook
+# with thousands of rows and hundreds of course columns cannot exhaust memory.
+MAX_REVIEW_COLLECT = 20000
 DuplicatePolicy = Literal["block", "first", "last"]
 # Aliases are data rather than a sequence of filename-dependent branches.
 MAJOR_ALIASES = {
@@ -50,6 +56,7 @@ SUMMARY_HEADERS = {"课程门数", "不及格门数", "平均分", "总分", "�
                    "平均学分绩", "平均学分绩点", "平均绩点", "绩点", "排名", "班级排名", "专业排名", "学分绩点"}
 NATURES = {"必修", "选修", "限选", "公选", "任选"}
 EXPLICIT_STATES = {"缺考": "missing", "免修": "exempt", "missing": "missing", "exempt": "exempt"}
+EXPLICIT_STATE_LABELS = {"missing": "缺考", "exempt": "免修"}
 ASSUMPTIONS = [
     "全空课程列仅在本次导入中排除，不删除已有课程目录。",
     "空白单元格不生成选课记录，不推断缺考、免修、不及格或未选课；0分保留。",
@@ -90,7 +97,13 @@ class CollegePreview(Record):
     courses: list[CourseColumn]
     issues: list[ImportIssue]
     issue_counts: dict[str, int]
+    # Every entry is located by its ORIGINAL workbook coordinates (row + column
+    # letter), never by a re-numbered alias. Raw cell values are shown only in
+    # this in-memory preview response so an operator can compare with the XLSX;
+    # the archive receipt deliberately omits both samples and row previews.
     sample: list[dict[str, str]]
+    sample_total: int = 0
+    issue_cell_total: int = 0
     duplicate_policy: DuplicatePolicy = "block"
     assumptions: list[str] = Field(default_factory=lambda: list(ASSUMPTIONS))
     preview_token: str | None = None
@@ -327,6 +340,9 @@ def parse_college_workbook(filename: str, content_type: str, content: bytes, *, 
         populated, parsed_columns, blanks = Counter(), Counter(), 0
         counts = Counter(student_rows=0, invalid_student_rows=0, duplicate_student_rows=0, unknown_status_cells=0,
                          summary_columns=ignored, course_columns=len(columns), header_row=header_row)
+        # Coordinate-located review rows. Identity columns (学号/姓名/班级) are
+        # never included, and unrecognized cell contents are never echoed.
+        review_cells = []
         for number, cells in enumerate(rows, header_row + 1):
             if number > MAX_ROWS["students"] + HEADER_SEARCH_ROWS:
                 raise DataError("学生记录超过5000行限制", code="college_limits", status=413)
@@ -377,16 +393,27 @@ def parse_college_workbook(filename: str, content_type: str, content: bytes, *, 
                     populated[index] += 1
                 else:
                     blanks += 1
+                status, score, cell_issue, shown = "", None, "", ""
                 try:
                     if index < len(cells) and cells[index].data_type == "f":
                         raise ValueError
                     parsed = parse_score(value)
                     if parsed is not None:
+                        status, score = parsed
                         parsed_cells.append((index, *parsed))
                         parsed_columns[index] += 1
+                        shown = str(Decimal(score) / 100) if score is not None else EXPLICIT_STATE_LABELS.get(status, status)
                 except (ValueError, InvalidOperation):
+                    status, cell_issue = "unrecognized", "unknown_status"
+                    # Never echo unrecognized cell text: it may contain private
+                    # annotations. The coordinate is enough to find it in the XLSX.
+                    shown = "—"  # coordinate + status already explain what to fix
                     counts["unknown_status_cells"] += 1
-                    issue("unknown_status", "成绩或状态无法识别；保留坐标供本地核对，不回显原值，本次不生成记录。", row=number, col=index)
+                    issue("unknown_status", "成绩或状态无法识别；请按下方坐标回原表核对，本次不生成记录。", row=number, col=index)
+                if value and len(review_cells) < MAX_REVIEW_COLLECT:
+                    review_cells.append({"row": str(number), "column": get_column_letter(index + 1),
+                                         "course": data["course_name"], "value": shown,
+                                         "status": status or "blank", "issue": cell_issue})
             records.append((sid, class_key, parsed_cells))
         if len(records) > MAX_ROWS["students"] or len(class_info) > MAX_ROWS["classes"]:
             raise DataError("学生或班级数超过导入限制", code="college_limits", status=413)
@@ -403,7 +430,7 @@ def parse_college_workbook(filename: str, content_type: str, content: bytes, *, 
         classes = tuple(ClassRecord(class_id=f"C{n:03}", grade_level=key[0], class_label=class_info[key][1], major=class_info[key][0])
                         for n, key in enumerate(sorted(class_info), 1))
         class_ids = {key: row.class_id for key, row in zip(sorted(class_info), classes)}
-        courses, students, enrollments, grades, samples = {}, [], [], [], []
+        courses, students, enrollments, grades = {}, [], [], []
         for n, (sid, key, cells) in enumerate(sorted(records, key=lambda r: r[0]), 1):
             student_id = f"S{n:04}"
             students.append(StudentRecord(student_id=student_id, class_id=class_ids[key], display_name=f"Imported Student {n:04}"))
@@ -417,9 +444,13 @@ def parse_college_workbook(filename: str, content_type: str, content: bytes, *, 
                 enrollment_id = f"E{number:05}"
                 enrollments.append(EnrollmentRecord(enrollment_id=enrollment_id, student_id=student_id, course_id=course_id, term=data["source_term"]))
                 grades.append(GradeRecord(grade_record_id=f"R{number:05}", enrollment_id=enrollment_id, status=status, score_cents=score))
-                if len(samples) < 8:
-                    samples.append({"student": f"学生{n:04}", "course": data["course_name"], "term": data["source_term"],
-                                    "status": status, "score": str(Decimal(score) / 100) if score is not None else "—"})
+        # Problem cells come first, then ordinary rows in ORIGINAL workbook order.
+        # Every entry carries its real Excel coordinates so the operator can go
+        # straight to that cell in the source file. Identities are never echoed.
+        problem_cells = [cell for cell in review_cells if cell["issue"]]
+        normal_cells = [cell for cell in review_cells if not cell["issue"]]
+        samples = (problem_cells + normal_cells)[:MAX_REVIEW_CELLS]
+        sample_total, issue_cell_total = len(review_cells), len(problem_cells)
         dataset = None
         if students and courses and enrollments and not fatal:
             dataset = Dataset(classes, tuple(students), tuple(courses[k] for k in sorted(courses)), tuple(enrollments), tuple(grades)).validate()
@@ -432,7 +463,8 @@ def parse_college_workbook(filename: str, content_type: str, content: bytes, *, 
                       exempt=sum(g.status == "exempt" for g in grades), issues_omitted=max(0, sum(issue_counts.values()) - len(issues)))
         preview = CollegePreview(can_import=dataset is not None, duplicate_policy=duplicate_policy, counts=dict(counts), terms=sorted({e.term for e in enrollments}),
                                 majors=dict(Counter(class_info[key][0] for _, key, _ in records)),
-                                classes=[row.class_label for row in classes], issues=issues, issue_counts=dict(issue_counts), sample=samples,
+                                classes=[row.class_label for row in classes], issues=issues, issue_counts=dict(issue_counts),
+                                sample=samples, sample_total=sample_total, issue_cell_total=issue_cell_total,
                                 courses=[CourseColumn(column=get_column_letter(i+1), name=data["course_name"], term=data["source_term"],
                                            credits=str(data["credits"]), hours=data["hours"], category=data["course_category"], nature=data["study_nature"],
                                            excluded=i in excluded or i in duplicate_columns or i in unparsed,

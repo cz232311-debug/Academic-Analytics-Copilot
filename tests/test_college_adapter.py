@@ -161,6 +161,33 @@ def test_unknown_major_is_kept_as_unknown_without_dropping_the_student():
     assert "major" in issue_text(result)
 
 
+def test_preview_rows_use_original_coordinates_and_put_problem_cells_first():
+    rows = [list(row) for row in ROWS]
+    # An unrecognised grade in a later physical row must be locatable.
+    rows[2][4] = "NOT_A_GRADE"
+    result = parse(rows=rows)
+    sample = result.preview.sample
+    assert sample and all({"row", "column", "course", "value", "status", "issue"} <= set(row) for row in sample)
+    assert all("student" not in row for row in sample), "re-numbered aliases must not come back"
+    assert sample[0]["issue"] == "unknown_status"
+    assert sample[0]["row"] == "6" and sample[0]["column"] == "E"  # 2 title rows, header at row 3
+    assert "NOT_A_GRADE" not in sample[0]["value"], "unrecognized text is never echoed"
+    assert all(not row["issue"] for row in sample[1:]), "all problem cells are listed before normal cells"
+    assert result.preview.issue_cell_total == 1
+    assert result.preview.sample_total >= result.preview.issue_cell_total + 1
+
+
+def test_preview_rows_keep_canonical_scores_and_never_leak_identity():
+    result = parse()
+    visible = json.dumps(result.preview.sample, ensure_ascii=False)
+    for original in [row[index] for row in ROWS for index in (0, 1)]:
+        assert original not in visible
+    # The operator can compare a parsed score with a concrete Excel coordinate.
+    assert any(row["row"] == "5" and row["column"] == "E" and row["value"] == "72.5"
+               for row in result.preview.sample)
+    assert result.preview.sample_total == len(result.preview.sample)
+
+
 def test_preview_and_normalized_records_do_not_contain_raw_student_identifiers():
     result = parse()
     visible = json.dumps(result.preview.model_dump(mode="json"), ensure_ascii=False)

@@ -90,6 +90,28 @@ def test_first_open_explains_scope_and_disables_input(chat_env):
     assert not any(path.startswith("/api/datasets/") for path in chat_env.paths())
 
 
+# --- 1b. A confirmed upload stays active until the operator changes it ---
+
+def test_confirmed_upload_is_restored_on_a_fresh_page(chat_env, tiny_dataset):
+    chat_env.store.replace(tiny_dataset, source="uploaded_local_only")
+    page = chat_env.page()
+    assert not page.exception, [item.message for item in page.exception]
+    assert page.session_state.chat["dataset"] is not None
+    assert page.chat_input[0].proto.disabled is False
+    assert any("已自动沿用" in item.value for item in page.info)
+    assert any("本地规则分析（上传数据）" in item.value for item in page.markdown)
+    # It must still be an explicit, visible provenance decision, not a silent one.
+    assert any("重新选择数据" in item.label for item in page.button)
+    assert set(chat_env.paths()) == {"/health", "/api/dataset", "/api/reports/catalog", "/api/agent/resolve"}
+
+
+def test_no_session_scope_controls_and_user_messages_align_right(chat_env):
+    page = chat_env.page()
+    assert not any("会话范围" in item.value for item in list(page.markdown) + list(page.caption))
+    assert not any(item.key in {"chat_reuse_scope", "chat_clear_scope"} for item in page.checkbox)
+    assert any("row-reverse" in item.value for item in page.markdown), "user bubbles must be right-aligned"
+
+
 # --- 2. Synthetic activation goes through server preview + explicit confirm ---
 
 def test_synthetic_activation_requires_preview_and_checkbox(chat_env):
@@ -98,14 +120,17 @@ def test_synthetic_activation_requires_preview_and_checkbox(chat_env):
     assert not page.exception
     assert any("预览：" in item.value and "名学生" in item.value for item in page.markdown)
     assert "/api/datasets/synthetic/preview" in chat_env.paths()
-    # The preview already returns a catalog and de-identified rows; the page must
-    # render them instead of showing only three aggregate numbers.
+    # The preview must show the full, coordinate-located review instead of a
+    # handful of re-numbered aliases that cannot be checked against the XLSX.
     assert any("课程清单" in item.value for item in page.markdown)
-    assert any("成绩记录样本" in item.value for item in page.markdown)
+    assert any("需要核对的问题" in item.value for item in page.markdown)
+    assert any("原表单元格核对" in item.value for item in page.markdown)
     tables = [table.value for table in page.dataframe]
-    assert any({"课程", "学分"} <= set(table.columns) for table in tables)
-    samples = next(table for table in tables if "分数" in table.columns)
-    assert not samples.empty and all(str(value).startswith("学生") for value in samples["学生"])
+    assert any({"课程", "学分", "列"} <= set(table.columns) for table in tables)
+    samples = next(table for table in tables if "解析值" in table.columns)
+    assert not samples.empty and {"原表行", "列", "状态", "需修正"} <= set(samples.columns)
+    assert all(str(value).isdigit() for value in samples["原表行"])
+    assert "学生" not in samples.columns
     assert not chat_env.store.has_dataset()
     assert control(page, page.button, "chat_syn_confirm").disabled
     control(page, page.checkbox, "chat_syn_check").check().run()
@@ -192,8 +217,9 @@ def test_upload_review_confirm_then_local_only_queries(chat_env, monkeypatch):
     page.run()
     assert not page.exception, [item.message for item in page.exception]
     assert any("预览：" in item.value for item in page.markdown)
-    assert any("成绩记录样本" in item.value for item in page.markdown)
-    assert any("课程" in table.value.columns for table in page.dataframe)
+    assert any("需要核对的问题" in item.value for item in page.markdown)
+    assert any("原表单元格核对" in item.value for item in page.markdown)
+    assert any("解析值" in table.value.columns for table in page.dataframe)
     assert "/api/datasets/college/preview" in chat_env.paths()
     assert any("不会发送给 DeepSeek" in item.value for item in list(page.markdown) + list(page.caption))
     assert control(page, page.button, "chat_upload_confirm").disabled

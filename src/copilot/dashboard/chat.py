@@ -17,14 +17,26 @@ import pandas as pd
 import streamlit as st
 
 from copilot.dashboard.client import DashboardClient, DashboardError
-from copilot.dashboard.import_panel import IMPORTANT_CODES, issue_table
 from copilot.dashboard.presentation import BAND_LABELS, STAFF_MAJOR_LABELS, term_text
 from copilot.data.synthetic_college import SyntheticOptions
 
 TOOL_LABELS = {"get_dataset_overview": "数据集概览", "get_score_summary": "课程成绩统计",
                "compare_classes": "班级成绩比较", "get_catalog": "课程与班级目录"}
 
-PREVIEW_STATUS_LABELS = {"graded": "有成绩", "missing": "缺考/缺失", "exempt": "免修"}
+PREVIEW_STATUS_LABELS = {"graded": "有成绩", "missing": "缺考/缺失", "exempt": "免修",
+                         "unrecognized": "未识别", "blank": "空白"}
+
+ISSUE_LABELS = {
+    "unknown_status": "成绩/状态无法识别", "invalid_student": "学生标识无效（整行排除）",
+    "unrecognized_class": "班级无法识别（整行排除）", "conflicting_student": "学号冲突且成绩不一致",
+    "duplicate_student": "学号重复（已去重）", "duplicate_course": "课程签名重复（整列排除）",
+    "same_name_distinct_courses": "同名课程属性不同", "empty_course": "整列为空（排除）",
+    "unparsed_course": "整列无可导入成绩（排除）", "unrecognized_header": "表头无法识别（排除列）",
+    "unknown_major": "专业未识别（保留原班级）", "unknown_course_category": "课程类别未映射",
+    "merged_title": "标题区存在合并单元格", "merged_data": "数据区存在合并单元格（需拆分）",
+    "duplicate_information_column": "学生信息字段重复", "mixed_classes": "包含多个班级",
+    "mixed_cohorts": "包含多个入学年", "no_records": "没有可导入成绩", "mismatched_header": "字段表头不符",
+}
 
 DEFAULT_NEXT = "请换一个更明确的问题，或在左侧“数据来源”重新确认数据集后重试。"
 
@@ -61,7 +73,8 @@ SUPPORTED = (
 def _state():
     if "chat" not in st.session_state:
         st.session_state.chat = {"messages": [], "dataset": None, "scope": None,
-                                 "catalog": None, "examples": None, "notice": None}
+                                 "catalog": None, "examples": None, "notice": None,
+                                 "restored": False, "restored_notice": None}
     return st.session_state.chat
 
 
@@ -79,6 +92,7 @@ def _activate(state, dataset):
     _reset(state)
     state["dataset"] = dataset
     state["notice"] = None
+    state["restored_notice"] = None
 
 
 def _mode(state):
@@ -91,7 +105,14 @@ def _mode_label(state):
 
 
 def _observe_dataset(client, state):
-    """Invalidate chat history when the server's active version changes."""
+    """Invalidate chat on version changes; restore an already-confirmed upload once.
+
+    A dataset stays active until the operator actively clicks "重新选择数据" or
+    uploads another file. Reopening the page must not force a re-upload. Only
+    uploaded (local-only) datasets are restored automatically: synthetic data is
+    the only path that can reach a paid model, so it always needs an explicit
+    confirmation in the current session.
+    """
     try:
         info = client.dataset()
     except DashboardError as exc:
@@ -101,7 +122,15 @@ def _observe_dataset(client, state):
     if state["dataset"] is not None and (info is None or info.dataset_version != state["dataset"].dataset_version):
         _reset(state)
         state["dataset"] = None
+        state["restored"] = True
         state["notice"] = "服务端的数据版本已经变化，之前的对话和范围已清空。请重新确认数据集后再提问。"
+        return info
+    if (state["dataset"] is None and not state["restored"] and info is not None
+            and info.source == "uploaded_local_only"):
+        state["dataset"] = info
+        state["restored_notice"] = ("已自动沿用上次确认的上传成绩单，当前为「本地规则分析（上传数据）」。"
+                                    "在左侧点击「重新选择数据」之前，所有提问都会使用这份数据。")
+    state["restored"] = True
     return info
 
 
@@ -252,12 +281,28 @@ def _show_error(exc):
     st.info("下一步：" + NEXT_STEPS.get(exc.code, DEFAULT_NEXT))
 
 
-def _preview_overview(state):
-    """Render the preview catalog and de-identified rows in the wide main area.
+def _issue_rows(preview):
+    return [{"级别": "阻断" if item.severity == "error" else "提示",
+             "原表行": str(item.row) if item.row is not None else "整表/整列",
+             "列": item.column or "—",
+             "问题": ISSUE_LABELS.get(item.code, item.code),
+             "说明": item.message} for item in preview.issues]
 
-    The sidebar is too narrow for tables. The preview API returns only
-    aggregates, a detected course catalog and at most eight de-identified rows,
-    so no student identity or full grade matrix can ever appear here.
+
+def _sample_rows(preview):
+    return [{"原表行": row.get("row", "—"), "列": row.get("column", "—"),
+             "课程": row.get("course", "—"), "状态": PREVIEW_STATUS_LABELS.get(row.get("status"), row.get("status", "—")),
+             "解析值": row.get("value", "—"),
+             "需修正": "是" if row.get("issue") else ""} for row in preview.sample]
+
+
+def _preview_overview(state):
+    """Full, coordinate-located review in the wide main area.
+
+    The sidebar is too narrow for tables. The preview API returns aggregate
+    counts, the course catalog, every issue with its ORIGINAL Excel row/column,
+    and a bounded set of coordinate-located cells. It never returns names,
+    student IDs or unrecognized cell text, so nothing here can leak identity.
     """
     choice = st.session_state.get("chat_source_choice", "")
     key = "chat_upload_preview" if choice.startswith("上传") else "chat_syn_preview"
@@ -275,22 +320,37 @@ def _preview_overview(state):
         summary.append("班级：" + "、".join(str(label) for label in preview.classes[:12]))
     if summary:
         st.caption(" · ".join(summary))
+
+    st.markdown("**需要核对的问题（按原表坐标定位）**")
+    if preview.issues:
+        st.caption(f"共 {sum(preview.issue_counts.values())} 项，已列出 {len(preview.issues)} 项。"
+                   "「原表行 / 列」是 Excel 里的实际位置，可直接回原文件找到该单元格。")
+        st.dataframe(_issue_rows(preview), hide_index=True, width="stretch")
+        omitted = counts.get("issues_omitted", 0)
+        if omitted:
+            st.warning(f"还有 {omitted} 项问题未列出（预览最多保留 200 项）。请先修正上表可定位的问题，再重新上传核对。")
+    else:
+        st.success("没有发现需要修正的问题。")
+
     left, right = st.columns(2)
     with left:
         st.markdown("**课程清单（%d 门）**" % len(preview.courses))
         if preview.courses:
-            st.dataframe([{"课程": c.name, "学期": c.term or "—", "学分": c.credits or "—",
+            st.dataframe([{"列": c.column, "课程": c.name, "学期": c.term or "—", "学分": c.credits or "—",
                            "处理": c.reason if c.excluded else "保留"} for c in preview.courses],
                          hide_index=True, width="stretch")
     with right:
-        st.markdown("**成绩记录样本（前 %d 条，已脱敏）**" % len(preview.sample))
+        total = preview.sample_total
+        st.markdown("**原表单元格核对（%d 条，问题优先）**" % len(preview.sample))
         if preview.sample:
-            st.dataframe([{"学生": row.get("student", "—"), "课程": row.get("course", "—"),
-                           "状态": PREVIEW_STATUS_LABELS.get(row.get("status"), row.get("status", "—")),
-                           "分数": row.get("score", "—")} for row in preview.sample],
-                         hide_index=True, width="stretch")
-    st.caption("预览按设计只返回汇总、课程目录和最多 8 条脱敏样本，不返回完整成绩明细，"
-               "避免把学生行显示在页面上。样本中的学生列是脱敏编号，不含姓名或学号；确认后可提问查看统计结果。")
+            st.dataframe(_sample_rows(preview), hide_index=True, width="stretch")
+            if total > len(preview.sample):
+                st.caption(f"共 {total} 个非空成绩单元格，此处显示前 {len(preview.sample)} 个"
+                           f"（其中需修正的 {preview.issue_cell_total} 个已全部排在前面）。")
+        else:
+            st.caption("没有非空成绩单元格。")
+    st.caption("为保护学生身份，页面不显示姓名与学号，也不回显无法识别的单元格原文；"
+               "请按「原表行 + 列」回到 Excel 核对。空白单元格按设计不生成成绩记录，不会被当成零分。")
     st.info("核对无误后，请在左侧「数据来源」勾选确认框并点击确认按钮；确认后即可提问。")
 
 
@@ -316,15 +376,10 @@ def _synthetic_panel(client, state):
     counts = preview.counts
     st.write(f"预览：{counts.get('students', 0)} 名学生 · {counts.get('classes', 0)} 个班级 · "
              f"{counts.get('enrollments', 0)} 条成绩记录。")
-    st.caption("课程清单与脱敏样本已在主区展示，请核对后在下方勾选确认。")
+    st.caption("完整的问题清单、课程目录与原表单元格坐标已在主区展示，请在那里核对后再确认。")
     errors = [item for item in preview.issues if item.severity == "error"]
-    important = [item for item in preview.issues if item.severity != "error" and item.code in IMPORTANT_CODES]
     if errors:
-        st.error("这份示例还有阻止导入的问题，请调整生成设置后重新预览。")
-        st.dataframe(issue_table(errors), hide_index=True)
-    if important:
-        with st.expander("需要核对的异常说明"):
-            st.dataframe(issue_table(important), hide_index=True)
+        st.error("这份示例还有 %d 项阻止导入的问题，请先修正或调整生成设置。" % len(errors))
     if not preview.can_import:
         st.warning("这份预览暂不能导入，请调整设置后重新预览。")
         return
@@ -363,17 +418,12 @@ def _upload_panel(client, state):
     counts = preview.counts
     st.write(f"预览：{counts.get('students', 0)} 名学生 · {counts.get('classes', 0)} 个班级 · "
              f"{counts.get('enrollments', 0)} 条成绩记录。")
-    st.caption("课程清单与脱敏样本已在主区展示，请核对后在下方勾选确认。")
+    st.caption("完整的问题清单、课程目录与原表单元格坐标已在主区展示，请在那里核对后再确认。")
     errors = [item for item in preview.issues if item.severity == "error"]
-    important = [item for item in preview.issues if item.severity != "error" and item.code in IMPORTANT_CODES]
     if errors:
-        st.error("这份成绩单还有需要修正的问题，暂时不能导入。")
-        st.dataframe(issue_table(errors), hide_index=True)
-    if important:
-        with st.expander("需要人工核对的异常与排除项", expanded=True):
-            st.dataframe(issue_table(important), hide_index=True)
+        st.error("这份成绩单还有 %d 项需要修正的阻断问题，暂时不能导入。" % len(errors))
     if not preview.can_import:
-        st.warning("请先处理上述阻止项，或修正原表后重新上传。")
+        st.warning("请先按主区坐标处理上述阻断项，或修正原表后重新上传。")
         return
     st.caption("原件只保留在本机。上传数据只会进行本地规则分析，不会发送给 DeepSeek。")
     checked = st.checkbox("我已核对清洗结果与异常项，确认导入", key="chat_upload_check")
@@ -387,34 +437,6 @@ def _upload_panel(client, state):
             st.rerun()
         except DashboardError as exc:
             _show_error(exc)
-
-
-def _scope_panel(state):
-    st.divider()
-    st.subheader("会话范围")
-    scope = state["scope"]
-    if scope is None:
-        st.caption("尚未设定范围。每次提问请在问题里写明课程、班级或学期。")
-    else:
-        values = scope.model_dump(exclude_none=True)
-        parts = []
-        if values.get("term"):
-            parts.append(term_text(values["term"]))
-        if values.get("grade_level") is not None:
-            parts.append(f"{values['grade_level']}级")
-        if values.get("major"):
-            parts.append(STAFF_MAJOR_LABELS.get(values["major"], values["major"]))
-        if values.get("class_id"):
-            parts.append(f"班级 {values['class_id']}")
-        if values.get("course_id"):
-            parts.append(f"课程 {values['course_id']}")
-        st.caption("上一题确认的范围：" + (" · ".join(parts) or "全部范围"))
-    reuse = st.checkbox("后续问题沿用上一题的范围", key="chat_reuse_scope",
-                        help="开启后，未明确写出的学期等条件会沿用上次结果；你在问题里明确写出的条件始终优先。")
-    if st.button("清除会话范围", key="chat_clear_scope"):
-        state["scope"] = None
-        st.rerun()
-    return reuse
 
 
 def _data_source(client, state, info):
@@ -432,10 +454,12 @@ def _data_source(client, state, info):
             with st.expander("版本与来源详情"):
                 st.json({"dataset_version": dataset.dataset_version, "source": dataset.source,
                          "external_llm_allowed": dataset.external_llm_allowed, "counts": dataset.counts})
-            st.caption("切换数据来源会清空当前对话，避免混用不同版本的结果。")
+            st.caption("这份数据集会一直使用，直到你点击「重新选择数据」或更换上传文件；"
+                       "重开页面后也会自动沿用，不需要重新确认。")
             if st.button("重新选择数据", key="chat_reset_data"):
                 _reset(state)
                 state["dataset"] = None
+                state["restored"] = True
                 st.rerun()
         else:
             st.info("还没有确认数据集。请先选择来源并确认，之后才能提问。")
@@ -447,7 +471,6 @@ def _data_source(client, state, info):
                 _synthetic_panel(client, state)
             else:
                 _upload_panel(client, state)
-        return _scope_panel(state)
 
 
 # --------------------------------------------------------------------------
@@ -500,13 +523,13 @@ def _pick_question(question):
     st.session_state.pending_question = question
 
 
-def _ask(client, state, question, reuse):
+def _ask(client, state, question):
+    """Each question is resolved on its own; no hidden multi-turn scope."""
     mode = _mode(state)
-    scope = state["scope"] if reuse else None
     version = state["dataset"].dataset_version
     try:
         with st.spinner("正在分析问题、执行统计并核验结果…"):
-            result = client.query(question, execution_mode=mode, scope=scope, expected_version=version)
+            result = client.query(question, execution_mode=mode, expected_version=version)
         state["messages"].append({"question": question, "response": result, "error": None, "mode": mode})
         if result.resolved_scope is not None:
             state["scope"] = result.resolved_scope
@@ -530,6 +553,11 @@ def _style():
                 ".block-container{max-width:1120px;padding-top:2rem;}"
                 "[data-testid=stCaptionContainer] p{font-size:0.95rem;color:inherit;}"
                 "[data-testid=stChatMessage] p{font-size:1.02rem;line-height:1.7;}"
+                # User messages sit on the right, like a normal chat client.
+                "[data-testid=stChatMessage]:has([data-testid=stChatMessageAvatarUser]){"
+                "  flex-direction:row-reverse;margin-left:auto;max-width:82%;"
+                "}"
+                "[data-testid=stChatMessage]:has([data-testid=stChatMessageAvatarUser]) p{text-align:right;}"
                 "</style>", unsafe_allow_html=True)
 
 
@@ -546,8 +574,8 @@ def _intro(state):
         st.info("还没有确认数据集。请在左侧「数据来源」选择合成示例数据或上传成绩单，确认后才能开始提问。")
     else:
         st.success("当前：" + _mode_label(state) + "。每条回答都会标注它实际使用的分析方式。")
-        st.caption("页面保留聊天记录展示；每次提问都会独立解析，不会自动引用上一轮对话内容。"
-                   "需要复用范围时，请在左侧勾选「后续问题沿用上一题的范围」。")
+        st.caption("这份数据集会一直使用到你主动更换；每次提问独立解析，不引用上一轮对话内容。"
+                   "请在问题里写明课程、班级或学期。")
 
 
 def main(client_factory=None):
@@ -570,13 +598,16 @@ def main(client_factory=None):
         _intro(state)
         return
 
-    reuse = _data_source(client, state, info)
+    _data_source(client, state, info)
     _intro(state)
     if state["dataset"] is None:
         _preview_overview(state)
     if state["notice"]:
         st.warning(state["notice"])
         state["notice"] = None
+    if state["restored_notice"]:
+        st.info(state["restored_notice"])
+        state["restored_notice"] = None
 
     if state["dataset"] is not None:
         examples = _examples(client, state)
@@ -594,7 +625,7 @@ def main(client_factory=None):
                               disabled=state["dataset"] is None)
     question = submitted or pending
     if question and question.strip() and state["dataset"] is not None:
-        _ask(client, state, question.strip(), reuse)
+        _ask(client, state, question.strip())
 
     for index, message in enumerate(state["messages"]):
         with st.chat_message("user"):
