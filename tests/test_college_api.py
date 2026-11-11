@@ -41,6 +41,12 @@ def upload(content=None):
 
 
 def preview(client, content=None):
+    content = college_workbook() if content is None else content
+    # openpyxl stamps the current time into docProps/core.xml and every ZIP
+    # entry, so two calls can differ by a byte across a second boundary. The
+    # API deliberately requires commit bytes to equal preview bytes; reuse the
+    # exact payload instead of making the assertion depend on the clock.
+    client._preview_content = content
     response = client.post(PREVIEW, files=upload(content))
     assert response.status_code == 200, response.text
     body = response.json()
@@ -49,6 +55,8 @@ def preview(client, content=None):
 
 
 def commit(client, token, content=None, **fields):
+    if content is None:
+        content = getattr(client, "_preview_content", None)
     return client.post(COMMIT, files=upload(content),
                        data={"preview_token": token, "confirmed": "true", **fields})
 
