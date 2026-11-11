@@ -152,7 +152,8 @@ class AgentService:
             error = AgentError("agent_internal_error", "Agent request could not be completed", 500)
         error.request_id, error.tool_calls = request_id, traces
         error.model_trace = model_trace
-        event("query_failed", request_id, error_code=error.code, tool_count=len(traces))
+        event("query_failed", request_id, error_code=error.code, status=error.status,
+              tool_count=len(traces))
         raise error from None
 
     async def _run_local(self, question, request_id, traces, model_trace, *, scope=None, expected_version=None):

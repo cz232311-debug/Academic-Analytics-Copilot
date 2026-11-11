@@ -117,6 +117,53 @@ Set-Location -LiteralPath 'D:\Document\ChatGPT\SAP-ApplicationEngineer'
 | 请确认后端分析服务已经启动 | 检查窗口 A，然后在页面点「重试连接」 |
 | 本次分析超时 | 把问题缩小到一门课程或一个班级 |
 
+## 后端窗口出现 `502 Bad Gateway`
+
+窗口 A 里类似这一行：
+
+```
+INFO:     127.0.0.1:13543 - "POST /api/agent/query HTTP/1.1" 502 Bad Gateway
+```
+
+**这不是 nginx 或反向代理故障**——本机是直连 uvicorn，中间没有网关。`502` 是本应用 `AgentError` 的**默认 HTTP 状态码**：凡是 AI 上游失败、模型返回未通过校验、或本地安全校验拦截了模型输出，都会回 502。DeepSeek 返回 401（key 无效）也被显式映射成 502，所以访问日志看不出真正原因。
+
+**真正的原因在同一窗口紧挨着的一行 JSON 日志里**：
+
+```
+{"event": "query_failed", "error_code": "llm_authentication_error", "request_id": "...", "status": 502, "tool_count": 0}
+```
+
+看 `error_code`（旧进程没有 `status` 字段，但 `error_code` 一直都有，不用重启也能看）：
+
+| `error_code` | 含义 | 处理 |
+|---|---|---|
+| `llm_authentication_error` | DeepSeek 返回 401，key 无效/过期/复制不全 | 按下方常见问题用 `-ForcePrompt` 重输有效 key |
+| `llm_connection_error` | 后端连不上 `api.deepseek.com` | 检查网络；注意后端用 `trust_env=False`，**不读系统代理**，需要代理的网络会直接失败 |
+| `llm_http_error` | DeepSeek 返回其它非 2xx | 记下 `request_id`，到平台查状态 |
+| `invalid_model_response` | 模型返回内容未通过本地校验 | 重试；系统不会展示未经验证的回答，属预期保护 |
+| `unknown_tool` / `invalid_final_selection` / `agent_budget_exceeded` | 模型选了不允许的工具或引用了未验证证据，被本地拦截 | 把课程/班级写得更明确后重试；属安全设计 |
+
+（另外几类**不是** 502：余额不足 402→503、限流 429→503、超时→504、配置缺失→503。看到这些状态码可直接对号入座。）
+
+**零付费确认 key 是否有效**：在窗口 A 的**同一个终端**执行下面的命令。它只调 DeepSeek 官方的余额查询接口（`GET /user/balance`，不消耗 token、不产生费用），不打印 key 值，也不打印余额金额：
+
+```powershell
+try {
+  $r = Invoke-RestMethod -Uri 'https://api.deepseek.com/user/balance' `
+    -Headers @{ Authorization = "Bearer $env:COPILOT_LLM_API_KEY" } -TimeoutSec 20
+  "key 有效；账户是否可用：$($r.is_available)"
+} catch {
+  $code = if ($_.Exception.Response) { [int]$_.Exception.Response.StatusCode } else { '网络不可达' }
+  "DeepSeek 返回：$code"
+}
+```
+
+- 返回 **401** → key 无效，用 `-ForcePrompt` 重输；
+- 返回 **200 但 `False`** → key 有效但账户无余额，需要充值；
+- **网络不可达** → 代理或 DNS 问题，或临时改用 `-Provider mock` 完全离线体验。
+
+请勿把 key 写进命令行、文件、截图或聊天记录。
+
 ## 数据隐私与保留
 
 - **上传的真实成绩单永远只做本地分析**，不发送给 DeepSeek，页面无绕过开关；合成数据外发的也只是解析后的结构化意图，不是原问题文本。

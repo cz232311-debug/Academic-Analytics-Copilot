@@ -100,6 +100,9 @@ def test_unknown_tool_is_sanitized_in_trace_and_logs(agent_db, caplog):
     assert error.value.code == "unknown_tool"
     assert error.value.tool_calls[0].tool == "[unrecognized]" and error.value.tool_calls[0].arguments is None
     assert "PRIVATE-QUERY" not in caplog.text and "execute_sql" not in caplog.text
+    # The uvicorn access log only shows "502 Bad Gateway"; the structured event
+    # must carry both the reason and that status so the two lines can be matched.
+    assert '"error_code": "unknown_tool"' in caplog.text and '"status": 502' in caplog.text
 
 
 def test_empty_scope_returns_no_data_instead_of_fabricated_zero(agent_db):
