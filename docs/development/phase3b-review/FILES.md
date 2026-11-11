@@ -99,6 +99,7 @@ Browser: headless Chrome 157 driven over CDP (`websockets`), waiting for actual 
 | `synthetic-activated.png` | Server preview → checkbox → confirm produced `source=generated`; mode label and six catalog-verified examples visible. |
 | `answer-with-evidence.png` | Chinese conclusion, honest "离线 Mock 演示（合成数据，未调用 DeepSeek）" label, collapsible calculation evidence. |
 | `answer-with-chart.png` | Course analysis with human-readable course name, exact mean/pass rate, distribution bar chart, evidence expander. |
+| `preview-details.png` | Follow-up fix: the preview now renders the detected course catalog and eight de-identified grade rows in the wide main area (the sidebar was too narrow to show tables). The caption states that full grade rows are never returned. |
 
 Observed conclusion (synthetic, reproducible): `课程 工程实践2`: 12 grade records, 12 graded, mean 74.00, pass rate 83.33% (10/12), distribution 2/3/3/3/1. These are outputs of `AnalyticsEngine`, not model prose.
 

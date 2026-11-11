@@ -24,6 +24,8 @@ from copilot.data.synthetic_college import SyntheticOptions
 TOOL_LABELS = {"get_dataset_overview": "数据集概览", "get_score_summary": "课程成绩统计",
                "compare_classes": "班级成绩比较", "get_catalog": "课程与班级目录"}
 
+PREVIEW_STATUS_LABELS = {"graded": "有成绩", "missing": "缺考/缺失", "exempt": "免修"}
+
 DEFAULT_NEXT = "请换一个更明确的问题，或在左侧“数据来源”重新确认数据集后重试。"
 
 NEXT_STEPS = {
@@ -250,6 +252,48 @@ def _show_error(exc):
     st.info("下一步：" + NEXT_STEPS.get(exc.code, DEFAULT_NEXT))
 
 
+def _preview_overview(state):
+    """Render the preview catalog and de-identified rows in the wide main area.
+
+    The sidebar is too narrow for tables. The preview API returns only
+    aggregates, a detected course catalog and at most eight de-identified rows,
+    so no student identity or full grade matrix can ever appear here.
+    """
+    choice = st.session_state.get("chat_source_choice", "")
+    key = "chat_upload_preview" if choice.startswith("上传") else "chat_syn_preview"
+    preview = st.session_state.get(key)
+    if preview is None:
+        return
+    counts = preview.counts
+    st.markdown("### 数据预览（确认前核对）")
+    st.write(f"预览：{counts.get('students', 0)} 名学生 · {counts.get('classes', 0)} 个班级 · "
+             f"{counts.get('enrollments', 0)} 条成绩记录。")
+    summary = []
+    if preview.terms:
+        summary.append("学期：" + "、".join(term_text(term) for term in preview.terms[:3]))
+    if preview.classes:
+        summary.append("班级：" + "、".join(str(label) for label in preview.classes[:12]))
+    if summary:
+        st.caption(" · ".join(summary))
+    left, right = st.columns(2)
+    with left:
+        st.markdown("**课程清单（%d 门）**" % len(preview.courses))
+        if preview.courses:
+            st.dataframe([{"课程": c.name, "学期": c.term or "—", "学分": c.credits or "—",
+                           "处理": c.reason if c.excluded else "保留"} for c in preview.courses],
+                         hide_index=True, width="stretch")
+    with right:
+        st.markdown("**成绩记录样本（前 %d 条，已脱敏）**" % len(preview.sample))
+        if preview.sample:
+            st.dataframe([{"学生": row.get("student", "—"), "课程": row.get("course", "—"),
+                           "状态": PREVIEW_STATUS_LABELS.get(row.get("status"), row.get("status", "—")),
+                           "分数": row.get("score", "—")} for row in preview.sample],
+                         hide_index=True, width="stretch")
+    st.caption("预览按设计只返回汇总、课程目录和最多 8 条脱敏样本，不返回完整成绩明细，"
+               "避免把学生行显示在页面上。样本中的学生列是脱敏编号，不含姓名或学号；确认后可提问查看统计结果。")
+    st.info("核对无误后，请在左侧「数据来源」勾选确认框并点击确认按钮；确认后即可提问。")
+
+
 def _synthetic_panel(client, state):
     st.caption("由服务端生成虚构成绩单；页面只提交生成参数，不上传文件，也不声明数据来源。")
     with st.expander("生成设置（可选）"):
@@ -272,6 +316,7 @@ def _synthetic_panel(client, state):
     counts = preview.counts
     st.write(f"预览：{counts.get('students', 0)} 名学生 · {counts.get('classes', 0)} 个班级 · "
              f"{counts.get('enrollments', 0)} 条成绩记录。")
+    st.caption("课程清单与脱敏样本已在主区展示，请核对后在下方勾选确认。")
     errors = [item for item in preview.issues if item.severity == "error"]
     important = [item for item in preview.issues if item.severity != "error" and item.code in IMPORTANT_CODES]
     if errors:
@@ -318,6 +363,7 @@ def _upload_panel(client, state):
     counts = preview.counts
     st.write(f"预览：{counts.get('students', 0)} 名学生 · {counts.get('classes', 0)} 个班级 · "
              f"{counts.get('enrollments', 0)} 条成绩记录。")
+    st.caption("课程清单与脱敏样本已在主区展示，请核对后在下方勾选确认。")
     errors = [item for item in preview.issues if item.severity == "error"]
     important = [item for item in preview.issues if item.severity != "error" and item.code in IMPORTANT_CODES]
     if errors:
@@ -526,6 +572,8 @@ def main(client_factory=None):
 
     reuse = _data_source(client, state, info)
     _intro(state)
+    if state["dataset"] is None:
+        _preview_overview(state)
     if state["notice"]:
         st.warning(state["notice"])
         state["notice"] = None

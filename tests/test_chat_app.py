@@ -98,6 +98,14 @@ def test_synthetic_activation_requires_preview_and_checkbox(chat_env):
     assert not page.exception
     assert any("预览：" in item.value and "名学生" in item.value for item in page.markdown)
     assert "/api/datasets/synthetic/preview" in chat_env.paths()
+    # The preview already returns a catalog and de-identified rows; the page must
+    # render them instead of showing only three aggregate numbers.
+    assert any("课程清单" in item.value for item in page.markdown)
+    assert any("成绩记录样本" in item.value for item in page.markdown)
+    tables = [table.value for table in page.dataframe]
+    assert any({"课程", "学分"} <= set(table.columns) for table in tables)
+    samples = next(table for table in tables if "分数" in table.columns)
+    assert not samples.empty and all(str(value).startswith("学生") for value in samples["学生"])
     assert not chat_env.store.has_dataset()
     assert control(page, page.button, "chat_syn_confirm").disabled
     control(page, page.checkbox, "chat_syn_check").check().run()
@@ -184,6 +192,8 @@ def test_upload_review_confirm_then_local_only_queries(chat_env, monkeypatch):
     page.run()
     assert not page.exception, [item.message for item in page.exception]
     assert any("预览：" in item.value for item in page.markdown)
+    assert any("成绩记录样本" in item.value for item in page.markdown)
+    assert any("课程" in table.value.columns for table in page.dataframe)
     assert "/api/datasets/college/preview" in chat_env.paths()
     assert any("不会发送给 DeepSeek" in item.value for item in list(page.markdown) + list(page.caption))
     assert control(page, page.button, "chat_upload_confirm").disabled
