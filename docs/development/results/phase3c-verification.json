@@ -1,0 +1,244 @@
+{
+  "date": "2026-11-12",
+  "baseline": "f8526e5fd16e65b62ba22dfb5d404a114cf7b60a",
+  "implementation_commits": [
+    "6b6866024231727e34e1bb305ba5fd6d09f151c8",
+    "e610a0ec6a622a7b3b1b928ab267abad9e9e7098"
+  ],
+  "provider_modes": [
+    "MockDemoProvider",
+    "Scripted Mock",
+    "Mock HTTP provider transport"
+  ],
+  "live_deepseek_calls": 0,
+  "real_student_files_read": 0,
+  "phase1_full_suite": {
+    "tests": 504,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "time": 55.027
+  },
+  "final_full_suite": {
+    "tests": 584,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "time": 63.464
+  },
+  "actual_commands": [
+    "python -m pytest -q --disable-warnings --basetemp=<workspace>/work/phase3c-phase1-all-tmp --junitxml=<workspace>/work/phase3c-phase1-all.xml",
+    "python -m pytest -q --disable-warnings -p no:cacheprovider --basetemp=<workspace>/work/phase3c-final-all-tmp --junitxml=<workspace>/work/phase3c-final-all.xml",
+    "python <workspace>/work/phase3c_after.py",
+    "python <workspace>/work/phase3c_browser_analysis_check.py --final"
+  ],
+  "targeted": {
+    "export": {
+      "passed": 9,
+      "seconds": 1.77
+    },
+    "semantics_local": {
+      "passed": 80,
+      "seconds": 9.12
+    },
+    "chat": {
+      "passed": 21,
+      "seconds": 26.38
+    },
+    "analysis_planning": {
+      "passed": 59,
+      "seconds": 2.87
+    }
+  },
+  "after_cases": [
+    {
+      "question": "你知道针对体育课的成绩分析嘛",
+      "fixture": "scripted_valid",
+      "status": "needs_clarification",
+      "answer_mode": "notice",
+      "analysis_status": "not_requested",
+      "analysis_fallback_reason": null,
+      "model_turns": 0
+    },
+    {
+      "question": "分析体育课的成绩",
+      "fixture": "scripted_valid",
+      "status": "needs_clarification",
+      "answer_mode": "notice",
+      "analysis_status": "not_requested",
+      "analysis_fallback_reason": null,
+      "model_turns": 0
+    },
+    {
+      "question": "分析体育 III 的成绩分布",
+      "fixture": "scripted_valid",
+      "status": "completed",
+      "answer_mode": "evidence_analysis",
+      "analysis_status": "verified",
+      "analysis_fallback_reason": null,
+      "model_turns": 2
+    },
+    {
+      "question": "分析体育 III 的成绩分布",
+      "fixture": "default_mock",
+      "status": "completed",
+      "answer_mode": "deterministic_fallback",
+      "analysis_status": "fallback",
+      "analysis_fallback_reason": "missing_analysis",
+      "model_turns": 2
+    },
+    {
+      "question": "分析体育 III 的成绩分布",
+      "fixture": "scripted_invalid",
+      "status": "completed",
+      "answer_mode": "deterministic_fallback",
+      "analysis_status": "fallback",
+      "analysis_fallback_reason": "invalid_analysis",
+      "model_turns": 2
+    },
+    {
+      "question": "预测某位同学下学期会不会挂科",
+      "fixture": "scripted_valid",
+      "status": "unsupported",
+      "answer_mode": "notice",
+      "analysis_status": "not_requested",
+      "analysis_fallback_reason": null,
+      "model_turns": 0
+    }
+  ],
+  "export": {
+    "counts": {
+      "classes": 2,
+      "students": 12,
+      "courses": 6,
+      "enrollments": 72,
+      "grade_records": 72
+    },
+    "dataset_version": "92ca8e1e068578d2288443300516e7935c75eec26c0f6b8aa91455481a2b6b5a",
+    "independent_xlsx_sports_mean": "85.05",
+    "independent_xlsx_sports_bins": [
+      0,
+      0,
+      5,
+      3,
+      4
+    ],
+    "formulas": 0,
+    "regenerated": false
+  },
+  "browser_phase1": {
+    "browser": "Microsoft Edge headless, CDP",
+    "viewport": "1440x1100 CSS, DPR1, light theme",
+    "provider": "mock",
+    "checks": [
+      "Initial page has no active dataset/statistics; source selection is visible and chat disabled.",
+      "Preview does not activate data; explicit checkbox plus confirmation activates 12 students / 6 courses / 72 grades.",
+      "Ambiguous ??? asks for clarification with no statistics; the separately validated example questions include ?? III.",
+      "Actual browser deferred download opens as XLSX and all five counts/version match current API snapshot; no formulas."
+    ],
+    "source_unchanged": null,
+    "services_stopped": true,
+    "live_llm_calls": 0
+  },
+  "browser_analysis": {
+    "generated_at": "2026-11-11T21:19:38.018361+00:00",
+    "final_capture": true,
+    "browser": "Microsoft Edge headless via CDP",
+    "viewport": "1440x1100 CSS, light, DPR1",
+    "synthetic_only": true,
+    "inherited_credentials": false,
+    "live_deepseek_calls": 0,
+    "external_renderer_requests": 0,
+    "owned_services_stopped": true,
+    "cases": [
+      {
+        "fixture": "Default offline Mock legacy output",
+        "provider": "mock",
+        "model": "scripted-demo-v1",
+        "simulated": true,
+        "status": "completed",
+        "answer_mode": "deterministic_fallback",
+        "analysis_status": "fallback",
+        "analysis_fallback_reason": "missing_analysis",
+        "model_turns_per_request": 2,
+        "ui_request_and_independent_http_replay": true,
+        "dataset_version": "92ca8e1e068578d2288443300516e7935c75eec26c0f6b8aa91455481a2b6b5a",
+        "course_id": "Id935981463527088a0808e1a",
+        "graded_count": 12,
+        "average_score": "85.05",
+        "pass_rate_percent": "100.00",
+        "assistant_visible_text": "smart_toy\n\n分析方式：离线 Mock 演示（合成数据，未调用 DeepSeek）\n\n统计结论\n\n模型没有返回可验证的综合分析，本次已回退为确定性统计；这不是 AI 综合分析成功。\n\n2025–2026学年 · 第1学期 · 课程 体育 III：共 12 条成绩记录，其中缺考/缺失 0 条、免修 0 条。有效成绩 12 条；平均分 85.05 分，学分加权平均分 85.05 分；及格率 100.00%（12/12），不及格 0 条。成绩分布：0–<60 0条、60–<70 0条、70–<80 5条、80–<90 3条、90–100 4条。\n\n以下图表及以上统计来自同一后端证据；确定性结论不推断成绩差异的原因。\n\n成绩分布（仅统计有分数的成绩记录）\n\n0–<60\n60–<70\n70–<80\n80–<90\n90–100\n0\n1\n2\n3\n4\n5\nkeyboard_arrow_right\n\n",
+        "final_readable_course_clarification": "smart_toy\n\n分析方式：本地业务语义解析（未调用模型）\n\n这个课程说法还不能确定具体课程。请确认目录中的课程全名后再分析。\n\n可选范围：体育 III · 2024级 · 2025-T1。\n\n下一步：请补充课程、班级或学期后重新提问，也可以直接点击上方的示例问题。",
+        "visible_section_coordinates": [],
+        "screenshots": [
+          "C:\\Users\\星空\\Documents\\Codex\\2026-11-08\\referenced-chatgpt-conversation-this-is-an\\outputs\\phase3c-clarification-final.png",
+          "C:\\Users\\星空\\Documents\\Codex\\2026-11-08\\referenced-chatgpt-conversation-this-is-an\\outputs\\phase3c-analysis-fallback.png"
+        ]
+      },
+      {
+        "fixture": "Scripted Mock selecting validated claims",
+        "provider": "scripted_mock",
+        "model": "phase3c-evidence-analysis-browser-v1",
+        "simulated": true,
+        "status": "completed",
+        "answer_mode": "evidence_analysis",
+        "analysis_status": "verified",
+        "analysis_fallback_reason": null,
+        "model_turns_per_request": 2,
+        "ui_request_and_independent_http_replay": true,
+        "dataset_version": "92ca8e1e068578d2288443300516e7935c75eec26c0f6b8aa91455481a2b6b5a",
+        "course_id": "Id935981463527088a0808e1a",
+        "graded_count": 12,
+        "average_score": "85.05",
+        "pass_rate_percent": "100.00",
+        "assistant_visible_text": "smart_toy\n\n分析方式：离线 Mock 演示（合成数据，未调用 DeepSeek）\n\nAI 综合分析（证据校验通过）\n\n统计事实\n\n本次分析范围为2025–2026学年 第1学期，课程“体育 III”；范围内有12名学生、12条成绩记录，其中12条为有效成绩；均分、及格率和分布均以有效成绩记录为统计对象；有效成绩均分为85.05分，学分加权均分为85.05分；及格率为100.00%（12/12），不及格成绩0条。 [r1]\n\n分析观察\n\n值得关注的是，记录最多的分数段为70–80分（不含上界），共5条，占有效成绩的41.67%；80分及以上共有7条，占有效成绩的58.33%；这说明高分段在本样本中的实际占比，并不表示教学效果的因果结论。 [r1]\n\n范围与局限\n\n本次仅有12条有效成绩，样本较小；这些结果仅描述本次已确认范围和已导入记录，不能据此推断其他学期、未记录学生或教学原因。 [r1]\n\n后续建议\n\n建议结合各分数段占比检查集中区间；如需了解班级差异，请另行确认同课程、同学期的班级比较范围。 [r1]\n\n模型选择解释重点并组织段落；数值、分布观察和比较关系均由后端证据提供。建议不代表因果结论。\n\n成绩分布（仅统计有分数的成绩记录）\n\n0–<60\n60–<70\n70–<80\n80–<90\n90–100\n0\n1\n2\n3\n4\n5\nkeyboard_arrow_right\n\n",
+        "final_readable_course_clarification": null,
+        "visible_section_coordinates": [
+          {
+            "text": "统计事实",
+            "top": 209.703125,
+            "bottom": 233.703125
+          },
+          {
+            "text": "分析观察",
+            "top": 370.515625,
+            "bottom": 394.515625
+          },
+          {
+            "text": "范围与局限",
+            "top": 500.125,
+            "bottom": 524.125
+          },
+          {
+            "text": "后续建议",
+            "top": 629.734375,
+            "bottom": 653.734375
+          }
+        ],
+        "screenshots": [
+          "C:\\Users\\星空\\Documents\\Codex\\2026-11-08\\referenced-chatgpt-conversation-this-is-an\\outputs\\phase3c-analysis-verified.png"
+        ]
+      }
+    ],
+    "source_sha256": {
+      "src/copilot/agent/models.py": "c2885f40d27bd483175b3dca6be2f0c9fc8583d264e7f61ab8afd3603f3ac972",
+      "src/copilot/agent/service.py": "49267ce600ac58d5b814031a1ea4fe20c847b3443b3caae0c3ad972343c72b3d",
+      "src/copilot/agent/analysis.py": "217e747bbc160ad04d0af078f6c756d3c44a53800c3022f0661e963d53520fab",
+      "src/copilot/dashboard/chat.py": "8acb4e7fce75b74ee1ba35b1098b77b252dd3bf09bf7aaaff4445d559470df45"
+    },
+    "source_unchanged_during_run": true,
+    "limitations": "Scripted provider is a deterministic test fixture selecting claims; this verifies backend validation and frontend rendering, not DeepSeek output quality."
+  },
+  "unverified": [
+    "live DeepSeek new protocol adherence/quality/latency/cost",
+    "dark/mobile/cross-browser",
+    "free-form factual prose",
+    "production controlled planning"
+  ],
+  "attempt_notes": [
+    "Legacy unknown-course fixture corrected with rejection regression.",
+    "New UI assertions corrected against actual catalog/keyword-only contracts.",
+    "Use writable pytest temp dirs and isolated Edge with GPU disabled.",
+    "Independent review required directory names and requested metric coverage before final verification."
+  ]
+}

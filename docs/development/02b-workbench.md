@@ -210,3 +210,13 @@ This retrospective packet starts at `01dbba2`, the commit that preceded Phase 2B
 The documentation-only packet preparation reran the unchanged business code with `python -m pytest -q --basetemp=.test-tmp-review-packet --junitxml=docs/development/results/phase2b-review-pytest.xml`: **230 passed, one existing warning, 19.79 seconds**. No business code was modified to prepare these materials. Previous historical failures and unverified behavior remain recorded above.
 
 Complete diffs, individual commit patches and a source review ZIP are exported to the ignored `.audit/review-export/` directory after the documentation commit. They cover the final committed checkpoint, including all related commits. Export artifacts stay outside their own Git history to avoid recursive diffs. The review ZIP contains source/configuration, learning notes and test evidence; it excludes `.env`, keys, SQLite databases, student data and private runtime logs. The pre-existing uncommitted offline-receipt delta is supplied separately and identified as owner-owned. Exact hashes and export commands are recorded in the packet README.
+
+## Phase 3C — intent, evidence analysis and current-snapshot verification
+
+The 2026-11-12 increment diagnoses both sports questions using actual recorded Mock provider messages, prevents ambiguous course references from widening scope, renders verified Chinese claim-based synthesis, and explicitly labels invalid/missing analysis fallback. The active generated SQLite dataset can be exported as XLSX with source/version guards; IDs remain available in technical details. Metric formulas and the legacy three report views are preserved.
+
+Implementation increment 1: `6b68660` (semantic guards, readable IDs, generated snapshot export); complete regression **504 passed, 2 warnings, 55.04s**. The second implementation increment and final verification are recorded in [the file/verification inventory](phase3c-review/FILES.md). [Learning and the two diagnosed call chains](phase3c-review/LEARNING.zh-CN.md) · [Controlled-planning design](phase3c-review/PLANNING.zh-CN.md).
+
+Implementation increment 2: `e610a0e`; final complete regression **584 passed, 1 existing warning, 63.48s**. Actual Edge checks cover the synthetic import/download flow, visible clarification candidates, scripted verified Chinese analysis and original Mock fallback. Both model modes are explicitly offline; generated XLSX counts/version and independent sports statistics match.
+
+No live DeepSeek request was authorized or made in this increment. Scripted/Mock analysis is labeled as such. The owner-owned offline receipt, handoff, review ZIP and `.workbuddy/` were preserved outside these commits.
