@@ -1,0 +1,7 @@
+本轮新增源码/测试（创建时未跟踪，交付时均已提交）
+src/copilot/data/synthetic_college.py
+src/copilot/dashboard/synthetic_panel.py
+tests/test_synthetic_college.py
+tests/test_synthetic_panel.py
+
+最终无未跟踪新源码；完整状态见ZIP manifest。用户原有离线回执保持未提交。

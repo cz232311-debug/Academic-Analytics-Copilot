@@ -1,0 +1,32 @@
+{
+  "generated_at": "2026-11-11T10:57:39.010549+00:00",
+  "browser": "Microsoft Edge headless",
+  "synthetic_only": true,
+  "checks": [
+    "generation_produces_60_students_8_courses_without_database_activation",
+    "actual_xlsx_download_completes",
+    "explicit_use_enters_review_and_requires_checkbox_confirmation",
+    "confirmed_generated_workbook_uses_existing_analytics_and_ai_restrictions",
+    "new_batch_changes_seed_without_overwriting_confirmed_data"
+  ],
+  "screenshots": [
+    "synthetic-generator-settings.png",
+    "synthetic-generator-ready.png",
+    "synthetic-generator-review.png",
+    "synthetic-generator-analysis.png"
+  ],
+  "source_sha256": {
+    "src/copilot/dashboard/synthetic_panel.py": "67a725f63459d06b95be9e0c92b17730567598e501ce5220432ee48292a42b62",
+    "src/copilot/dashboard/import_panel.py": "b118a669f43abfed96b9e36a5fce2fb64257003e3677c75bba9008eb0e1c3825",
+    "src/copilot/data/synthetic_college.py": "2ae641989fbc08ad35edc7850c00081c3992913b2d6d86c5a80c10a8596b310e"
+  },
+  "source_unchanged": true,
+  "confirmed_counts": {
+    "students": 60,
+    "courses_in_report": 8,
+    "graded_records": 480
+  },
+  "services_stopped": true,
+  "external_renderer_requests": 0,
+  "paid_model_calls": 0
+}

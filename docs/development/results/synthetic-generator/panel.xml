@@ -1,0 +1,14 @@
+<?xml version='1.0' encoding='utf-8'?>
+<testsuites name="pytest tests">
+  <testsuite name="pytest" errors="0" failures="0" skipped="0" tests="9" time="11.391" timestamp="2026-11-11T18:56:16.716746+08:00">
+    <testcase classname="tests.test_synthetic_panel" name="test_generator_is_secondary_and_generation_download_have_no_activation" time="0.916" />
+    <testcase classname="tests.test_synthetic_panel" name="test_generator_works_offline_and_download_is_xlsx" time="0.227" />
+    <testcase classname="tests.test_synthetic_panel" name="test_changed_options_disable_previous_file_until_regenerated" time="0.867" />
+    <testcase classname="tests.test_synthetic_panel" name="test_next_batch_changes_seed_and_bytes_without_calling_import" time="1.122" />
+    <testcase classname="tests.test_synthetic_panel" name="test_explicit_use_requires_review_then_commit_and_reports_same_version" time="1.715" />
+    <testcase classname="tests.test_synthetic_panel" name="test_edge_scenario_exposes_empty_course_and_unknown_status_before_commit" time="1.118" />
+    <testcase classname="tests.test_synthetic_panel" name="test_conflict_scenario_blocks_submission_without_overwrite" time="1.058" />
+    <testcase classname="tests.test_synthetic_panel" name="test_regeneration_preserves_confirmed_results_until_new_file_is_used_and_return_restores_settings" time="1.918" />
+    <testcase classname="tests.test_synthetic_panel" name="test_invalid_configuration_can_be_corrected_without_losing_previous_generated_file" time="1.116" />
+  </testsuite>
+</testsuites>

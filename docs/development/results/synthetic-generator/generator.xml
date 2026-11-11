@@ -1,0 +1,17 @@
+<?xml version='1.0' encoding='utf-8'?>
+<testsuites name="pytest tests">
+  <testsuite name="pytest" errors="0" failures="0" skipped="0" tests="12" time="1.537" timestamp="2026-11-11T18:53:59.066193+08:00">
+    <testcase classname="tests.test_synthetic_college" name="test_same_seed_options_reproduce_workbook_bytes_and_different_seed_changes_scores" time="0.040" />
+    <testcase classname="tests.test_synthetic_college" name="test_raw_identities_are_varied_explicitly_synthetic_and_globally_unique" time="0.015" />
+    <testcase classname="tests.test_synthetic_college" name="test_three_majors_cohort_and_academic_term_map_through_existing_adapter" time="0.020" />
+    <testcase classname="tests.test_synthetic_college" name="test_normal_summary_is_supported_by_raw_cells_and_parser_counts" time="0.020" />
+    <testcase classname="tests.test_synthetic_college" name="test_score_profiles_change_performance_without_changing_enrollment_shape" time="0.053" />
+    <testcase classname="tests.test_synthetic_college" name="test_edge_scenario_preserves_boundaries_blanks_states_and_warning_evidence" time="0.012" />
+    <testcase classname="tests.test_synthetic_college" name="test_small_edge_config_is_rejected_instead_of_silently_omitting_promised_cases" time="0.000" />
+    <testcase classname="tests.test_synthetic_college" name="test_conflict_scenario_blocks_until_explicit_first_or_last_policy" time="0.021" />
+    <testcase classname="tests.test_synthetic_college" name="test_invalid_options_reject_unsafe_sizes_years_and_noninteger_seeds" time="0.001" />
+    <testcase classname="tests.test_synthetic_college" name="test_maximum_supported_workbook_stays_within_upload_limit_and_parses" time="0.420" />
+    <testcase classname="tests.test_synthetic_college" name="test_generated_data_reaches_sqlite_and_existing_report_with_independent_expected_counts" time="0.069" />
+    <testcase classname="tests.test_synthetic_college" name="test_normalized_aliases_do_not_retain_synthetic_source_names_or_student_numbers" time="0.014" />
+  </testsuite>
+</testsuites>

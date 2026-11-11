@@ -1,5 +1,7 @@
 # Phase 2B — academic analysis workbench, first increment
 
+Synthetic validation module (2026-11-11): [configurable fictional college XLSX generation and verification](02b-synthetic-generator.md). Generate normal, edge-case or conflicting records locally, then reuse explicit review/confirmation; old fixed fixtures and analytics remain unchanged.
+
 Current UX update (2026-11-11): [readability, workflow guidance, aggregate detail downloads and actual visual checks](02b-ux-usability.md). This update corrects the dark-theme contrast defect, removes unusable future-step actions, and keeps technical evidence in a secondary local ZIP.
 
 Current increment (2026-11-10): [Phase 2B.1 staff workflow, learning record and actual browser evidence](02b1-workflow.md). The interface now starts at Upload, requires review/confirmation before Analysis, and reserves Writing/Export without executing them. Production startup does not seed demo data. The first-increment behavior and limitations below are historical, not the current operator guide.

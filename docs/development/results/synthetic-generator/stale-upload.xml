@@ -1,0 +1,6 @@
+<?xml version='1.0' encoding='utf-8'?>
+<testsuites name="pytest tests">
+  <testsuite name="pytest" errors="0" failures="0" skipped="0" tests="1" time="3.704" timestamp="2026-11-11T18:57:06.696433+08:00">
+    <testcase classname="tests.test_synthetic_panel" name="test_regeneration_preserves_confirmed_results_until_new_file_is_used_and_return_restores_settings" time="2.199" />
+  </testsuite>
+</testsuites>
