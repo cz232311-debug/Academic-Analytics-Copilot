@@ -1,5 +1,7 @@
 # Phase 2B — academic analysis workbench, first increment
 
+Current UX update (2026-11-11): [readability, workflow guidance, aggregate detail downloads and actual visual checks](02b-ux-usability.md). This update corrects the dark-theme contrast defect, removes unusable future-step actions, and keeps technical evidence in a secondary local ZIP.
+
 Current increment (2026-11-10): [Phase 2B.1 staff workflow, learning record and actual browser evidence](02b1-workflow.md). The interface now starts at Upload, requires review/confirmation before Analysis, and reserves Writing/Export without executing them. Production startup does not seed demo data. The first-increment behavior and limitations below are historical, not the current operator guide.
 
 Subsequent increment (2026-11-09): a separate [college XLSX adapter, explicit preview/confirmation flow and verification record](02b-college-import.md) now supports the bounded single-sheet export described there. The historical first-increment status below is retained as a record; arbitrary wide WPS/Excel formats remain unsupported.

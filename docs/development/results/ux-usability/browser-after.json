@@ -1,0 +1,1212 @@
+{
+  "generated_at": "2026-11-11T10:33:57.914935+00:00",
+  "browser": "Microsoft Edge headless",
+  "synthetic_only": true,
+  "theme_method": "CDP prefers-color-scheme light/dark plus Streamlit CLI base and native config; actual background checked",
+  "viewport_modes": {
+    "desktop": "1440x1100 CSS, DPR1",
+    "narrow": "1024x900 CSS, DPR1",
+    "zoom125-equivalent": "1152x880 CSS, DPR1.25 -> 1440x1100 physical; CDP layout equivalent, not browser UI Ctrl+zoom"
+  },
+  "paid_model_calls": 0,
+  "external_renderer_requests": 0,
+  "services_stopped": true,
+  "checks": [
+    "dark:home_has_clear_upload_no_statistics_readable_all_sizes",
+    "dark:actual_upload_requires_review_and_explicit_confirmation",
+    "dark:confirmation_enters_analysis_with_correct_current_statistics",
+    "dark:table_modes_and_complete_long_course_name_are_accessible",
+    "dark:all_three_views_render_desktop_narrow_and_zoom_equivalent",
+    "dark:real_zip_download_scope_statistics_checksums_and_private_sentinels",
+    "dark:scope_change_hides_old_report_and_download_until_regenerated",
+    "dark:back_navigation_preserves_confirmation_and_dataset",
+    "dark:refresh_and_conflicting_reupload_preserve_backend_data",
+    "light:home_has_clear_upload_no_statistics_readable_all_sizes",
+    "light:actual_upload_requires_review_and_explicit_confirmation",
+    "light:confirmation_enters_analysis_with_correct_current_statistics",
+    "light:table_modes_and_complete_long_course_name_are_accessible",
+    "light:all_three_views_render_desktop_narrow_and_zoom_equivalent",
+    "light:real_zip_download_scope_statistics_checksums_and_private_sentinels",
+    "light:scope_change_hides_old_report_and_download_until_regenerated",
+    "light:back_navigation_preserves_confirmation_and_dataset",
+    "light:refresh_and_conflicting_reupload_preserve_backend_data"
+  ],
+  "screenshots": [
+    "ux-after-home-dark-desktop.png",
+    "ux-after-home-dark-narrow.png",
+    "ux-after-home-dark-zoom125-equivalent.png",
+    "ux-after-review-dark.png",
+    "ux-after-analysis-dark-desktop.png",
+    "ux-after-chart-dark-desktop.png",
+    "ux-after-analysis-dark-narrow.png",
+    "ux-after-chart-dark-narrow.png",
+    "ux-after-analysis-dark-zoom125-equivalent.png",
+    "ux-after-chart-dark-zoom125-equivalent.png",
+    "ux-after-long-name-dark.png",
+    "ux-after-bands-dark.png",
+    "ux-after-download-dark.png",
+    "ux-after-scope-change-dark.png",
+    "ux-after-conflict-dark.png",
+    "ux-after-home-light-desktop.png",
+    "ux-after-home-light-narrow.png",
+    "ux-after-home-light-zoom125-equivalent.png",
+    "ux-after-review-light.png",
+    "ux-after-analysis-light-desktop.png",
+    "ux-after-chart-light-desktop.png",
+    "ux-after-analysis-light-narrow.png",
+    "ux-after-chart-light-narrow.png",
+    "ux-after-analysis-light-zoom125-equivalent.png",
+    "ux-after-chart-light-zoom125-equivalent.png",
+    "ux-after-long-name-light.png",
+    "ux-after-bands-light.png",
+    "ux-after-download-light.png",
+    "ux-after-scope-change-light.png",
+    "ux-after-conflict-light.png"
+  ],
+  "observations": [
+    {
+      "phase": "home",
+      "theme": "dark",
+      "size": "desktop",
+      "metrics": {
+        "viewport": {
+          "width": 1440,
+          "height": 1100,
+          "devicePixelRatio": 1
+        },
+        "pageWidth": 1440,
+        "app": {
+          "text": "Skip to main content\nDeploy\n学业分析报告工作台\n\n上传学院成绩单，核对数据，查看各班和课程的成绩情况。\n\n当前步骤：第1步 · 上传Excel\n\n1 上传\n\n正在进行\n\n2 核对\n\n待完成\n\n3 分析\n\n待完成\n\n从一份成绩单开始\n\n先选择一份学院导出的Excel成绩单。 系统会自动整理课程",
+          "fontSize": "18px",
+          "color": "rgb(242, 244, 247)",
+          "background": "rgb(16, 24, 40)",
+          "rawBackground": "rgba(0, 0, 0, 0)",
+          "lineHeight": "28.8px",
+          "opacity": 1
+        },
+        "title": {
+          "text": "学业分析报告工作台",
+          "fontSize": "36px",
+          "color": "rgb(242, 244, 247)",
+          "background": "rgb(16, 24, 40)",
+          "rawBackground": "rgba(0, 0, 0, 0)",
+          "lineHeight": "43.2px",
+          "opacity": 1
+        },
+        "body": {
+          "text": "上传学院成绩单，核对数据，查看各班和课程的成绩情况。",
+          "fontSize": "18px",
+          "color": "rgb(242, 244, 247)",
+          "background": "rgb(16, 24, 40)",
+          "rawBackground": "rgba(0, 0, 0, 0)",
+          "lineHeight": "28.8px",
+          "opacity": 1
+        },
+        "caption": null,
+        "button": {
+          "text": "Deploy",
+          "fontSize": "15.75px",
+          "color": "rgb(242, 244, 247)",
+          "background": "rgb(16, 24, 40)",
+          "rawBackground": "rgba(0, 0, 0, 0)",
+          "lineHeight": "15.75px",
+          "opacity": 1
+        },
+        "metrics": 0,
+        "exceptions": 0,
+        "title_contrast_ratio": 16.11,
+        "body_contrast_ratio": 16.11
+      }
+    },
+    {
+      "phase": "home",
+      "theme": "dark",
+      "size": "narrow",
+      "metrics": {
+        "viewport": {
+          "width": 1024,
+          "height": 900,
+          "devicePixelRatio": 1
+        },
+        "pageWidth": 1024,
+        "app": {
+          "text": "Skip to main content\nDeploy\n学业分析报告工作台\n\n上传学院成绩单，核对数据，查看各班和课程的成绩情况。\n\n当前步骤：第1步 · 上传Excel\n\n1 上传\n\n正在进行\n\n2 核对\n\n待完成\n\n3 分析\n\n待完成\n\n从一份成绩单开始\n\n先选择一份学院导出的Excel成绩单。 系统会自动整理课程",
+          "fontSize": "18px",
+          "color": "rgb(242, 244, 247)",
+          "background": "rgb(16, 24, 40)",
+          "rawBackground": "rgba(0, 0, 0, 0)",
+          "lineHeight": "28.8px",
+          "opacity": 1
+        },
+        "title": {
+          "text": "学业分析报告工作台",
+          "fontSize": "36px",
+          "color": "rgb(242, 244, 247)",
+          "background": "rgb(16, 24, 40)",
+          "rawBackground": "rgba(0, 0, 0, 0)",
+          "lineHeight": "43.2px",
+          "opacity": 1
+        },
+        "body": {
+          "text": "上传学院成绩单，核对数据，查看各班和课程的成绩情况。",
+          "fontSize": "18px",
+          "color": "rgb(242, 244, 247)",
+          "background": "rgb(16, 24, 40)",
+          "rawBackground": "rgba(0, 0, 0, 0)",
+          "lineHeight": "28.8px",
+          "opacity": 1
+        },
+        "caption": null,
+        "button": {
+          "text": "Deploy",
+          "fontSize": "15.75px",
+          "color": "rgb(242, 244, 247)",
+          "background": "rgb(16, 24, 40)",
+          "rawBackground": "rgba(0, 0, 0, 0)",
+          "lineHeight": "15.75px",
+          "opacity": 1
+        },
+        "metrics": 0,
+        "exceptions": 0,
+        "title_contrast_ratio": 16.11,
+        "body_contrast_ratio": 16.11
+      }
+    },
+    {
+      "phase": "home",
+      "theme": "dark",
+      "size": "zoom125-equivalent",
+      "metrics": {
+        "viewport": {
+          "width": 1152,
+          "height": 880,
+          "devicePixelRatio": 1.25
+        },
+        "pageWidth": 1152,
+        "app": {
+          "text": "Skip to main content\nDeploy\n学业分析报告工作台\n\n上传学院成绩单，核对数据，查看各班和课程的成绩情况。\n\n当前步骤：第1步 · 上传Excel\n\n1 上传\n\n正在进行\n\n2 核对\n\n待完成\n\n3 分析\n\n待完成\n\n从一份成绩单开始\n\n先选择一份学院导出的Excel成绩单。 系统会自动整理课程",
+          "fontSize": "18px",
+          "color": "rgb(242, 244, 247)",
+          "background": "rgb(16, 24, 40)",
+          "rawBackground": "rgba(0, 0, 0, 0)",
+          "lineHeight": "28.8px",
+          "opacity": 1
+        },
+        "title": {
+          "text": "学业分析报告工作台",
+          "fontSize": "36px",
+          "color": "rgb(242, 244, 247)",
+          "background": "rgb(16, 24, 40)",
+          "rawBackground": "rgba(0, 0, 0, 0)",
+          "lineHeight": "43.2px",
+          "opacity": 1
+        },
+        "body": {
+          "text": "上传学院成绩单，核对数据，查看各班和课程的成绩情况。",
+          "fontSize": "18px",
+          "color": "rgb(242, 244, 247)",
+          "background": "rgb(16, 24, 40)",
+          "rawBackground": "rgba(0, 0, 0, 0)",
+          "lineHeight": "28.8px",
+          "opacity": 1
+        },
+        "caption": null,
+        "button": {
+          "text": "Deploy",
+          "fontSize": "15.75px",
+          "color": "rgb(242, 244, 247)",
+          "background": "rgb(16, 24, 40)",
+          "rawBackground": "rgba(0, 0, 0, 0)",
+          "lineHeight": "15.75px",
+          "opacity": 1
+        },
+        "metrics": 0,
+        "exceptions": 0,
+        "title_contrast_ratio": 16.11,
+        "body_contrast_ratio": 16.11
+      }
+    },
+    {
+      "phase": "review",
+      "theme": "dark",
+      "size": "desktop",
+      "metrics": {
+        "viewport": {
+          "width": 1440,
+          "height": 1100,
+          "devicePixelRatio": 1
+        },
+        "pageWidth": 1440,
+        "app": {
+          "text": "Skip to main content\nDeploy\n学业分析报告工作台\n\n上传学院成绩单，核对数据，查看各班和课程的成绩情况。\n\n当前步骤：第2步 · 核对与确认\n\n1 上传\n\n已上传\n\n2 核对\n\n正在进行\n\n3 分析\n\n待完成\n\n解析与数据核对\n\n请先看人数和课程是否符合原表，再检查下方提示。没有阻止项后，勾选",
+          "fontSize": "18px",
+          "color": "rgb(242, 244, 247)",
+          "background": "rgb(16, 24, 40)",
+          "rawBackground": "rgba(0, 0, 0, 0)",
+          "lineHeight": "28.8px",
+          "opacity": 1
+        },
+        "title": {
+          "text": "学业分析报告工作台",
+          "fontSize": "36px",
+          "color": "rgb(242, 244, 247)",
+          "background": "rgb(16, 24, 40)",
+          "rawBackground": "rgba(0, 0, 0, 0)",
+          "lineHeight": "43.2px",
+          "opacity": 1
+        },
+        "body": {
+          "text": "上传学院成绩单，核对数据，查看各班和课程的成绩情况。",
+          "fontSize": "18px",
+          "color": "rgb(242, 244, 247)",
+          "background": "rgb(16, 24, 40)",
+          "rawBackground": "rgba(0, 0, 0, 0)",
+          "lineHeight": "28.8px",
+          "opacity": 1
+        },
+        "caption": null,
+        "button": {
+          "text": "Deploy",
+          "fontSize": "15.75px",
+          "color": "rgb(242, 244, 247)",
+          "background": "rgb(16, 24, 40)",
+          "rawBackground": "rgba(0, 0, 0, 0)",
+          "lineHeight": "15.75px",
+          "opacity": 1
+        },
+        "metrics": 4,
+        "exceptions": 0,
+        "title_contrast_ratio": 16.11,
+        "body_contrast_ratio": 16.11
+      }
+    },
+    {
+      "phase": "analysis",
+      "theme": "dark",
+      "size": "desktop",
+      "metrics": {
+        "viewport": {
+          "width": 1440,
+          "height": 1100,
+          "devicePixelRatio": 1
+        },
+        "pageWidth": 1440,
+        "app": {
+          "text": "Skip to main content\nDeploy\n学业分析报告工作台\n\n上传学院成绩单，核对数据，查看各班和课程的成绩情况。\n\n当前步骤：第3步 · 统计与图表预览\n\n1 上传\n\n已上传\n\n2 核对\n\n已确认\n\n3 分析\n\n正在进行\n\n统计与图表预览\n\n数据已确认：6名学生，17条成绩记录。下面可以查看统计与图表",
+          "fontSize": "18px",
+          "color": "rgb(242, 244, 247)",
+          "background": "rgb(16, 24, 40)",
+          "rawBackground": "rgba(0, 0, 0, 0)",
+          "lineHeight": "28.8px",
+          "opacity": 1
+        },
+        "title": {
+          "text": "学业分析报告工作台",
+          "fontSize": "36px",
+          "color": "rgb(242, 244, 247)",
+          "background": "rgb(16, 24, 40)",
+          "rawBackground": "rgba(0, 0, 0, 0)",
+          "lineHeight": "43.2px",
+          "opacity": 1
+        },
+        "body": {
+          "text": "上传学院成绩单，核对数据，查看各班和课程的成绩情况。",
+          "fontSize": "18px",
+          "color": "rgb(242, 244, 247)",
+          "background": "rgb(16, 24, 40)",
+          "rawBackground": "rgba(0, 0, 0, 0)",
+          "lineHeight": "28.8px",
+          "opacity": 1
+        },
+        "caption": null,
+        "button": {
+          "text": "Deploy",
+          "fontSize": "15.75px",
+          "color": "rgb(242, 244, 247)",
+          "background": "rgb(16, 24, 40)",
+          "rawBackground": "rgba(0, 0, 0, 0)",
+          "lineHeight": "15.75px",
+          "opacity": 1
+        },
+        "metrics": 4,
+        "exceptions": 0,
+        "title_contrast_ratio": 16.11,
+        "body_contrast_ratio": 16.11
+      }
+    },
+    {
+      "phase": "chart",
+      "theme": "dark",
+      "size": "desktop",
+      "metrics": {
+        "viewport": {
+          "width": 1440,
+          "height": 1100,
+          "devicePixelRatio": 1
+        },
+        "pageWidth": 1440,
+        "app": {
+          "text": "Skip to main content\nDeploy\n学业分析报告工作台\n\n上传学院成绩单，核对数据，查看各班和课程的成绩情况。\n\n当前步骤：第3步 · 统计与图表预览\n\n1 上传\n\n已上传\n\n2 核对\n\n已确认\n\n3 分析\n\n正在进行\n\n统计与图表预览\n\n数据已确认：6名学生，17条成绩记录。下面可以查看统计与图表",
+          "fontSize": "18px",
+          "color": "rgb(242, 244, 247)",
+          "background": "rgb(16, 24, 40)",
+          "rawBackground": "rgba(0, 0, 0, 0)",
+          "lineHeight": "28.8px",
+          "opacity": 1
+        },
+        "title": {
+          "text": "学业分析报告工作台",
+          "fontSize": "36px",
+          "color": "rgb(242, 244, 247)",
+          "background": "rgb(16, 24, 40)",
+          "rawBackground": "rgba(0, 0, 0, 0)",
+          "lineHeight": "43.2px",
+          "opacity": 1
+        },
+        "body": {
+          "text": "上传学院成绩单，核对数据，查看各班和课程的成绩情况。",
+          "fontSize": "18px",
+          "color": "rgb(242, 244, 247)",
+          "background": "rgb(16, 24, 40)",
+          "rawBackground": "rgba(0, 0, 0, 0)",
+          "lineHeight": "28.8px",
+          "opacity": 1
+        },
+        "caption": null,
+        "button": {
+          "text": "Deploy",
+          "fontSize": "15.75px",
+          "color": "rgb(242, 244, 247)",
+          "background": "rgb(16, 24, 40)",
+          "rawBackground": "rgba(0, 0, 0, 0)",
+          "lineHeight": "15.75px",
+          "opacity": 1
+        },
+        "metrics": 4,
+        "exceptions": 0,
+        "title_contrast_ratio": 16.11,
+        "body_contrast_ratio": 16.11
+      }
+    },
+    {
+      "phase": "analysis",
+      "theme": "dark",
+      "size": "narrow",
+      "metrics": {
+        "viewport": {
+          "width": 1024,
+          "height": 900,
+          "devicePixelRatio": 1
+        },
+        "pageWidth": 1024,
+        "app": {
+          "text": "Skip to main content\nDeploy\n学业分析报告工作台\n\n上传学院成绩单，核对数据，查看各班和课程的成绩情况。\n\n当前步骤：第3步 · 统计与图表预览\n\n1 上传\n\n已上传\n\n2 核对\n\n已确认\n\n3 分析\n\n正在进行\n\n统计与图表预览\n\n数据已确认：6名学生，17条成绩记录。下面可以查看统计与图表",
+          "fontSize": "18px",
+          "color": "rgb(242, 244, 247)",
+          "background": "rgb(16, 24, 40)",
+          "rawBackground": "rgba(0, 0, 0, 0)",
+          "lineHeight": "28.8px",
+          "opacity": 1
+        },
+        "title": {
+          "text": "学业分析报告工作台",
+          "fontSize": "36px",
+          "color": "rgb(242, 244, 247)",
+          "background": "rgb(16, 24, 40)",
+          "rawBackground": "rgba(0, 0, 0, 0)",
+          "lineHeight": "43.2px",
+          "opacity": 1
+        },
+        "body": {
+          "text": "上传学院成绩单，核对数据，查看各班和课程的成绩情况。",
+          "fontSize": "18px",
+          "color": "rgb(242, 244, 247)",
+          "background": "rgb(16, 24, 40)",
+          "rawBackground": "rgba(0, 0, 0, 0)",
+          "lineHeight": "28.8px",
+          "opacity": 1
+        },
+        "caption": null,
+        "button": {
+          "text": "Deploy",
+          "fontSize": "15.75px",
+          "color": "rgb(242, 244, 247)",
+          "background": "rgb(16, 24, 40)",
+          "rawBackground": "rgba(0, 0, 0, 0)",
+          "lineHeight": "15.75px",
+          "opacity": 1
+        },
+        "metrics": 4,
+        "exceptions": 0,
+        "title_contrast_ratio": 16.11,
+        "body_contrast_ratio": 16.11
+      }
+    },
+    {
+      "phase": "chart",
+      "theme": "dark",
+      "size": "narrow",
+      "metrics": {
+        "viewport": {
+          "width": 1024,
+          "height": 900,
+          "devicePixelRatio": 1
+        },
+        "pageWidth": 1024,
+        "app": {
+          "text": "Skip to main content\nDeploy\n学业分析报告工作台\n\n上传学院成绩单，核对数据，查看各班和课程的成绩情况。\n\n当前步骤：第3步 · 统计与图表预览\n\n1 上传\n\n已上传\n\n2 核对\n\n已确认\n\n3 分析\n\n正在进行\n\n统计与图表预览\n\n数据已确认：6名学生，17条成绩记录。下面可以查看统计与图表",
+          "fontSize": "18px",
+          "color": "rgb(242, 244, 247)",
+          "background": "rgb(16, 24, 40)",
+          "rawBackground": "rgba(0, 0, 0, 0)",
+          "lineHeight": "28.8px",
+          "opacity": 1
+        },
+        "title": {
+          "text": "学业分析报告工作台",
+          "fontSize": "36px",
+          "color": "rgb(242, 244, 247)",
+          "background": "rgb(16, 24, 40)",
+          "rawBackground": "rgba(0, 0, 0, 0)",
+          "lineHeight": "43.2px",
+          "opacity": 1
+        },
+        "body": {
+          "text": "上传学院成绩单，核对数据，查看各班和课程的成绩情况。",
+          "fontSize": "18px",
+          "color": "rgb(242, 244, 247)",
+          "background": "rgb(16, 24, 40)",
+          "rawBackground": "rgba(0, 0, 0, 0)",
+          "lineHeight": "28.8px",
+          "opacity": 1
+        },
+        "caption": null,
+        "button": {
+          "text": "Deploy",
+          "fontSize": "15.75px",
+          "color": "rgb(242, 244, 247)",
+          "background": "rgb(16, 24, 40)",
+          "rawBackground": "rgba(0, 0, 0, 0)",
+          "lineHeight": "15.75px",
+          "opacity": 1
+        },
+        "metrics": 4,
+        "exceptions": 0,
+        "title_contrast_ratio": 16.11,
+        "body_contrast_ratio": 16.11
+      }
+    },
+    {
+      "phase": "analysis",
+      "theme": "dark",
+      "size": "zoom125-equivalent",
+      "metrics": {
+        "viewport": {
+          "width": 1152,
+          "height": 880,
+          "devicePixelRatio": 1.25
+        },
+        "pageWidth": 1152,
+        "app": {
+          "text": "Skip to main content\nDeploy\n学业分析报告工作台\n\n上传学院成绩单，核对数据，查看各班和课程的成绩情况。\n\n当前步骤：第3步 · 统计与图表预览\n\n1 上传\n\n已上传\n\n2 核对\n\n已确认\n\n3 分析\n\n正在进行\n\n统计与图表预览\n\n数据已确认：6名学生，17条成绩记录。下面可以查看统计与图表",
+          "fontSize": "18px",
+          "color": "rgb(242, 244, 247)",
+          "background": "rgb(16, 24, 40)",
+          "rawBackground": "rgba(0, 0, 0, 0)",
+          "lineHeight": "28.8px",
+          "opacity": 1
+        },
+        "title": {
+          "text": "学业分析报告工作台",
+          "fontSize": "36px",
+          "color": "rgb(242, 244, 247)",
+          "background": "rgb(16, 24, 40)",
+          "rawBackground": "rgba(0, 0, 0, 0)",
+          "lineHeight": "43.2px",
+          "opacity": 1
+        },
+        "body": {
+          "text": "上传学院成绩单，核对数据，查看各班和课程的成绩情况。",
+          "fontSize": "18px",
+          "color": "rgb(242, 244, 247)",
+          "background": "rgb(16, 24, 40)",
+          "rawBackground": "rgba(0, 0, 0, 0)",
+          "lineHeight": "28.8px",
+          "opacity": 1
+        },
+        "caption": null,
+        "button": {
+          "text": "Deploy",
+          "fontSize": "15.75px",
+          "color": "rgb(242, 244, 247)",
+          "background": "rgb(16, 24, 40)",
+          "rawBackground": "rgba(0, 0, 0, 0)",
+          "lineHeight": "15.75px",
+          "opacity": 1
+        },
+        "metrics": 4,
+        "exceptions": 0,
+        "title_contrast_ratio": 16.11,
+        "body_contrast_ratio": 16.11
+      }
+    },
+    {
+      "phase": "chart",
+      "theme": "dark",
+      "size": "zoom125-equivalent",
+      "metrics": {
+        "viewport": {
+          "width": 1152,
+          "height": 880,
+          "devicePixelRatio": 1.25
+        },
+        "pageWidth": 1152,
+        "app": {
+          "text": "Skip to main content\nDeploy\n学业分析报告工作台\n\n上传学院成绩单，核对数据，查看各班和课程的成绩情况。\n\n当前步骤：第3步 · 统计与图表预览\n\n1 上传\n\n已上传\n\n2 核对\n\n已确认\n\n3 分析\n\n正在进行\n\n统计与图表预览\n\n数据已确认：6名学生，17条成绩记录。下面可以查看统计与图表",
+          "fontSize": "18px",
+          "color": "rgb(242, 244, 247)",
+          "background": "rgb(16, 24, 40)",
+          "rawBackground": "rgba(0, 0, 0, 0)",
+          "lineHeight": "28.8px",
+          "opacity": 1
+        },
+        "title": {
+          "text": "学业分析报告工作台",
+          "fontSize": "36px",
+          "color": "rgb(242, 244, 247)",
+          "background": "rgb(16, 24, 40)",
+          "rawBackground": "rgba(0, 0, 0, 0)",
+          "lineHeight": "43.2px",
+          "opacity": 1
+        },
+        "body": {
+          "text": "上传学院成绩单，核对数据，查看各班和课程的成绩情况。",
+          "fontSize": "18px",
+          "color": "rgb(242, 244, 247)",
+          "background": "rgb(16, 24, 40)",
+          "rawBackground": "rgba(0, 0, 0, 0)",
+          "lineHeight": "28.8px",
+          "opacity": 1
+        },
+        "caption": null,
+        "button": {
+          "text": "Deploy",
+          "fontSize": "15.75px",
+          "color": "rgb(242, 244, 247)",
+          "background": "rgb(16, 24, 40)",
+          "rawBackground": "rgba(0, 0, 0, 0)",
+          "lineHeight": "15.75px",
+          "opacity": 1
+        },
+        "metrics": 4,
+        "exceptions": 0,
+        "title_contrast_ratio": 16.11,
+        "body_contrast_ratio": 16.11
+      }
+    },
+    {
+      "phase": "home",
+      "theme": "light",
+      "size": "desktop",
+      "metrics": {
+        "viewport": {
+          "width": 1440,
+          "height": 1100,
+          "devicePixelRatio": 1
+        },
+        "pageWidth": 1440,
+        "app": {
+          "text": "Skip to main content\nDeploy\n学业分析报告工作台\n\n上传学院成绩单，核对数据，查看各班和课程的成绩情况。\n\n当前步骤：第1步 · 上传Excel\n\n1 上传\n\n正在进行\n\n2 核对\n\n待完成\n\n3 分析\n\n待完成\n\n从一份成绩单开始\n\n先选择一份学院导出的Excel成绩单。 系统会自动整理课程",
+          "fontSize": "18px",
+          "color": "rgb(24, 34, 48)",
+          "background": "rgb(255, 255, 255)",
+          "rawBackground": "rgba(0, 0, 0, 0)",
+          "lineHeight": "28.8px",
+          "opacity": 1
+        },
+        "title": {
+          "text": "学业分析报告工作台",
+          "fontSize": "36px",
+          "color": "rgb(24, 34, 48)",
+          "background": "rgb(255, 255, 255)",
+          "rawBackground": "rgba(0, 0, 0, 0)",
+          "lineHeight": "43.2px",
+          "opacity": 1
+        },
+        "body": {
+          "text": "上传学院成绩单，核对数据，查看各班和课程的成绩情况。",
+          "fontSize": "18px",
+          "color": "rgb(24, 34, 48)",
+          "background": "rgb(255, 255, 255)",
+          "rawBackground": "rgba(0, 0, 0, 0)",
+          "lineHeight": "28.8px",
+          "opacity": 1
+        },
+        "caption": null,
+        "button": {
+          "text": "Deploy",
+          "fontSize": "15.75px",
+          "color": "rgb(24, 34, 48)",
+          "background": "rgb(255, 255, 255)",
+          "rawBackground": "rgba(0, 0, 0, 0)",
+          "lineHeight": "15.75px",
+          "opacity": 1
+        },
+        "metrics": 0,
+        "exceptions": 0,
+        "title_contrast_ratio": 16.03,
+        "body_contrast_ratio": 16.03
+      }
+    },
+    {
+      "phase": "home",
+      "theme": "light",
+      "size": "narrow",
+      "metrics": {
+        "viewport": {
+          "width": 1024,
+          "height": 900,
+          "devicePixelRatio": 1
+        },
+        "pageWidth": 1024,
+        "app": {
+          "text": "Skip to main content\nDeploy\n学业分析报告工作台\n\n上传学院成绩单，核对数据，查看各班和课程的成绩情况。\n\n当前步骤：第1步 · 上传Excel\n\n1 上传\n\n正在进行\n\n2 核对\n\n待完成\n\n3 分析\n\n待完成\n\n从一份成绩单开始\n\n先选择一份学院导出的Excel成绩单。 系统会自动整理课程",
+          "fontSize": "18px",
+          "color": "rgb(24, 34, 48)",
+          "background": "rgb(255, 255, 255)",
+          "rawBackground": "rgba(0, 0, 0, 0)",
+          "lineHeight": "28.8px",
+          "opacity": 1
+        },
+        "title": {
+          "text": "学业分析报告工作台",
+          "fontSize": "36px",
+          "color": "rgb(24, 34, 48)",
+          "background": "rgb(255, 255, 255)",
+          "rawBackground": "rgba(0, 0, 0, 0)",
+          "lineHeight": "43.2px",
+          "opacity": 1
+        },
+        "body": {
+          "text": "上传学院成绩单，核对数据，查看各班和课程的成绩情况。",
+          "fontSize": "18px",
+          "color": "rgb(24, 34, 48)",
+          "background": "rgb(255, 255, 255)",
+          "rawBackground": "rgba(0, 0, 0, 0)",
+          "lineHeight": "28.8px",
+          "opacity": 1
+        },
+        "caption": null,
+        "button": {
+          "text": "Deploy",
+          "fontSize": "15.75px",
+          "color": "rgb(24, 34, 48)",
+          "background": "rgb(255, 255, 255)",
+          "rawBackground": "rgba(0, 0, 0, 0)",
+          "lineHeight": "15.75px",
+          "opacity": 1
+        },
+        "metrics": 0,
+        "exceptions": 0,
+        "title_contrast_ratio": 16.03,
+        "body_contrast_ratio": 16.03
+      }
+    },
+    {
+      "phase": "home",
+      "theme": "light",
+      "size": "zoom125-equivalent",
+      "metrics": {
+        "viewport": {
+          "width": 1152,
+          "height": 880,
+          "devicePixelRatio": 1.25
+        },
+        "pageWidth": 1152,
+        "app": {
+          "text": "Skip to main content\nDeploy\n学业分析报告工作台\n\n上传学院成绩单，核对数据，查看各班和课程的成绩情况。\n\n当前步骤：第1步 · 上传Excel\n\n1 上传\n\n正在进行\n\n2 核对\n\n待完成\n\n3 分析\n\n待完成\n\n从一份成绩单开始\n\n先选择一份学院导出的Excel成绩单。 系统会自动整理课程",
+          "fontSize": "18px",
+          "color": "rgb(24, 34, 48)",
+          "background": "rgb(255, 255, 255)",
+          "rawBackground": "rgba(0, 0, 0, 0)",
+          "lineHeight": "28.8px",
+          "opacity": 1
+        },
+        "title": {
+          "text": "学业分析报告工作台",
+          "fontSize": "36px",
+          "color": "rgb(24, 34, 48)",
+          "background": "rgb(255, 255, 255)",
+          "rawBackground": "rgba(0, 0, 0, 0)",
+          "lineHeight": "43.2px",
+          "opacity": 1
+        },
+        "body": {
+          "text": "上传学院成绩单，核对数据，查看各班和课程的成绩情况。",
+          "fontSize": "18px",
+          "color": "rgb(24, 34, 48)",
+          "background": "rgb(255, 255, 255)",
+          "rawBackground": "rgba(0, 0, 0, 0)",
+          "lineHeight": "28.8px",
+          "opacity": 1
+        },
+        "caption": null,
+        "button": {
+          "text": "Deploy",
+          "fontSize": "15.75px",
+          "color": "rgb(24, 34, 48)",
+          "background": "rgb(255, 255, 255)",
+          "rawBackground": "rgba(0, 0, 0, 0)",
+          "lineHeight": "15.75px",
+          "opacity": 1
+        },
+        "metrics": 0,
+        "exceptions": 0,
+        "title_contrast_ratio": 16.03,
+        "body_contrast_ratio": 16.03
+      }
+    },
+    {
+      "phase": "review",
+      "theme": "light",
+      "size": "desktop",
+      "metrics": {
+        "viewport": {
+          "width": 1440,
+          "height": 1100,
+          "devicePixelRatio": 1
+        },
+        "pageWidth": 1440,
+        "app": {
+          "text": "Skip to main content\nDeploy\n学业分析报告工作台\n\n上传学院成绩单，核对数据，查看各班和课程的成绩情况。\n\n当前步骤：第2步 · 核对与确认\n\n1 上传\n\n已上传\n\n2 核对\n\n正在进行\n\n3 分析\n\n待完成\n\n解析与数据核对\n\n请先看人数和课程是否符合原表，再检查下方提示。没有阻止项后，勾选",
+          "fontSize": "18px",
+          "color": "rgb(24, 34, 48)",
+          "background": "rgb(255, 255, 255)",
+          "rawBackground": "rgba(0, 0, 0, 0)",
+          "lineHeight": "28.8px",
+          "opacity": 1
+        },
+        "title": {
+          "text": "学业分析报告工作台",
+          "fontSize": "36px",
+          "color": "rgb(24, 34, 48)",
+          "background": "rgb(255, 255, 255)",
+          "rawBackground": "rgba(0, 0, 0, 0)",
+          "lineHeight": "43.2px",
+          "opacity": 1
+        },
+        "body": {
+          "text": "上传学院成绩单，核对数据，查看各班和课程的成绩情况。",
+          "fontSize": "18px",
+          "color": "rgb(24, 34, 48)",
+          "background": "rgb(255, 255, 255)",
+          "rawBackground": "rgba(0, 0, 0, 0)",
+          "lineHeight": "28.8px",
+          "opacity": 1
+        },
+        "caption": null,
+        "button": {
+          "text": "Deploy",
+          "fontSize": "15.75px",
+          "color": "rgb(24, 34, 48)",
+          "background": "rgb(255, 255, 255)",
+          "rawBackground": "rgba(0, 0, 0, 0)",
+          "lineHeight": "15.75px",
+          "opacity": 1
+        },
+        "metrics": 4,
+        "exceptions": 0,
+        "title_contrast_ratio": 16.03,
+        "body_contrast_ratio": 16.03
+      }
+    },
+    {
+      "phase": "analysis",
+      "theme": "light",
+      "size": "desktop",
+      "metrics": {
+        "viewport": {
+          "width": 1440,
+          "height": 1100,
+          "devicePixelRatio": 1
+        },
+        "pageWidth": 1440,
+        "app": {
+          "text": "Skip to main content\nDeploy\n学业分析报告工作台\n\n上传学院成绩单，核对数据，查看各班和课程的成绩情况。\n\n当前步骤：第3步 · 统计与图表预览\n\n1 上传\n\n已上传\n\n2 核对\n\n已确认\n\n3 分析\n\n正在进行\n\n统计与图表预览\n\n数据已确认：6名学生，17条成绩记录。下面可以查看统计与图表",
+          "fontSize": "18px",
+          "color": "rgb(24, 34, 48)",
+          "background": "rgb(255, 255, 255)",
+          "rawBackground": "rgba(0, 0, 0, 0)",
+          "lineHeight": "28.8px",
+          "opacity": 1
+        },
+        "title": {
+          "text": "学业分析报告工作台",
+          "fontSize": "36px",
+          "color": "rgb(24, 34, 48)",
+          "background": "rgb(255, 255, 255)",
+          "rawBackground": "rgba(0, 0, 0, 0)",
+          "lineHeight": "43.2px",
+          "opacity": 1
+        },
+        "body": {
+          "text": "上传学院成绩单，核对数据，查看各班和课程的成绩情况。",
+          "fontSize": "18px",
+          "color": "rgb(24, 34, 48)",
+          "background": "rgb(255, 255, 255)",
+          "rawBackground": "rgba(0, 0, 0, 0)",
+          "lineHeight": "28.8px",
+          "opacity": 1
+        },
+        "caption": null,
+        "button": {
+          "text": "Deploy",
+          "fontSize": "15.75px",
+          "color": "rgb(24, 34, 48)",
+          "background": "rgb(255, 255, 255)",
+          "rawBackground": "rgba(0, 0, 0, 0)",
+          "lineHeight": "15.75px",
+          "opacity": 1
+        },
+        "metrics": 4,
+        "exceptions": 0,
+        "title_contrast_ratio": 16.03,
+        "body_contrast_ratio": 16.03
+      }
+    },
+    {
+      "phase": "chart",
+      "theme": "light",
+      "size": "desktop",
+      "metrics": {
+        "viewport": {
+          "width": 1440,
+          "height": 1100,
+          "devicePixelRatio": 1
+        },
+        "pageWidth": 1440,
+        "app": {
+          "text": "Skip to main content\nDeploy\n学业分析报告工作台\n\n上传学院成绩单，核对数据，查看各班和课程的成绩情况。\n\n当前步骤：第3步 · 统计与图表预览\n\n1 上传\n\n已上传\n\n2 核对\n\n已确认\n\n3 分析\n\n正在进行\n\n统计与图表预览\n\n数据已确认：6名学生，17条成绩记录。下面可以查看统计与图表",
+          "fontSize": "18px",
+          "color": "rgb(24, 34, 48)",
+          "background": "rgb(255, 255, 255)",
+          "rawBackground": "rgba(0, 0, 0, 0)",
+          "lineHeight": "28.8px",
+          "opacity": 1
+        },
+        "title": {
+          "text": "学业分析报告工作台",
+          "fontSize": "36px",
+          "color": "rgb(24, 34, 48)",
+          "background": "rgb(255, 255, 255)",
+          "rawBackground": "rgba(0, 0, 0, 0)",
+          "lineHeight": "43.2px",
+          "opacity": 1
+        },
+        "body": {
+          "text": "上传学院成绩单，核对数据，查看各班和课程的成绩情况。",
+          "fontSize": "18px",
+          "color": "rgb(24, 34, 48)",
+          "background": "rgb(255, 255, 255)",
+          "rawBackground": "rgba(0, 0, 0, 0)",
+          "lineHeight": "28.8px",
+          "opacity": 1
+        },
+        "caption": null,
+        "button": {
+          "text": "Deploy",
+          "fontSize": "15.75px",
+          "color": "rgb(24, 34, 48)",
+          "background": "rgb(255, 255, 255)",
+          "rawBackground": "rgba(0, 0, 0, 0)",
+          "lineHeight": "15.75px",
+          "opacity": 1
+        },
+        "metrics": 4,
+        "exceptions": 0,
+        "title_contrast_ratio": 16.03,
+        "body_contrast_ratio": 16.03
+      }
+    },
+    {
+      "phase": "analysis",
+      "theme": "light",
+      "size": "narrow",
+      "metrics": {
+        "viewport": {
+          "width": 1024,
+          "height": 900,
+          "devicePixelRatio": 1
+        },
+        "pageWidth": 1024,
+        "app": {
+          "text": "Skip to main content\nDeploy\n学业分析报告工作台\n\n上传学院成绩单，核对数据，查看各班和课程的成绩情况。\n\n当前步骤：第3步 · 统计与图表预览\n\n1 上传\n\n已上传\n\n2 核对\n\n已确认\n\n3 分析\n\n正在进行\n\n统计与图表预览\n\n数据已确认：6名学生，17条成绩记录。下面可以查看统计与图表",
+          "fontSize": "18px",
+          "color": "rgb(24, 34, 48)",
+          "background": "rgb(255, 255, 255)",
+          "rawBackground": "rgba(0, 0, 0, 0)",
+          "lineHeight": "28.8px",
+          "opacity": 1
+        },
+        "title": {
+          "text": "学业分析报告工作台",
+          "fontSize": "36px",
+          "color": "rgb(24, 34, 48)",
+          "background": "rgb(255, 255, 255)",
+          "rawBackground": "rgba(0, 0, 0, 0)",
+          "lineHeight": "43.2px",
+          "opacity": 1
+        },
+        "body": {
+          "text": "上传学院成绩单，核对数据，查看各班和课程的成绩情况。",
+          "fontSize": "18px",
+          "color": "rgb(24, 34, 48)",
+          "background": "rgb(255, 255, 255)",
+          "rawBackground": "rgba(0, 0, 0, 0)",
+          "lineHeight": "28.8px",
+          "opacity": 1
+        },
+        "caption": null,
+        "button": {
+          "text": "Deploy",
+          "fontSize": "15.75px",
+          "color": "rgb(24, 34, 48)",
+          "background": "rgb(255, 255, 255)",
+          "rawBackground": "rgba(0, 0, 0, 0)",
+          "lineHeight": "15.75px",
+          "opacity": 1
+        },
+        "metrics": 4,
+        "exceptions": 0,
+        "title_contrast_ratio": 16.03,
+        "body_contrast_ratio": 16.03
+      }
+    },
+    {
+      "phase": "chart",
+      "theme": "light",
+      "size": "narrow",
+      "metrics": {
+        "viewport": {
+          "width": 1024,
+          "height": 900,
+          "devicePixelRatio": 1
+        },
+        "pageWidth": 1024,
+        "app": {
+          "text": "Skip to main content\nDeploy\n学业分析报告工作台\n\n上传学院成绩单，核对数据，查看各班和课程的成绩情况。\n\n当前步骤：第3步 · 统计与图表预览\n\n1 上传\n\n已上传\n\n2 核对\n\n已确认\n\n3 分析\n\n正在进行\n\n统计与图表预览\n\n数据已确认：6名学生，17条成绩记录。下面可以查看统计与图表",
+          "fontSize": "18px",
+          "color": "rgb(24, 34, 48)",
+          "background": "rgb(255, 255, 255)",
+          "rawBackground": "rgba(0, 0, 0, 0)",
+          "lineHeight": "28.8px",
+          "opacity": 1
+        },
+        "title": {
+          "text": "学业分析报告工作台",
+          "fontSize": "36px",
+          "color": "rgb(24, 34, 48)",
+          "background": "rgb(255, 255, 255)",
+          "rawBackground": "rgba(0, 0, 0, 0)",
+          "lineHeight": "43.2px",
+          "opacity": 1
+        },
+        "body": {
+          "text": "上传学院成绩单，核对数据，查看各班和课程的成绩情况。",
+          "fontSize": "18px",
+          "color": "rgb(24, 34, 48)",
+          "background": "rgb(255, 255, 255)",
+          "rawBackground": "rgba(0, 0, 0, 0)",
+          "lineHeight": "28.8px",
+          "opacity": 1
+        },
+        "caption": null,
+        "button": {
+          "text": "Deploy",
+          "fontSize": "15.75px",
+          "color": "rgb(24, 34, 48)",
+          "background": "rgb(255, 255, 255)",
+          "rawBackground": "rgba(0, 0, 0, 0)",
+          "lineHeight": "15.75px",
+          "opacity": 1
+        },
+        "metrics": 4,
+        "exceptions": 0,
+        "title_contrast_ratio": 16.03,
+        "body_contrast_ratio": 16.03
+      }
+    },
+    {
+      "phase": "analysis",
+      "theme": "light",
+      "size": "zoom125-equivalent",
+      "metrics": {
+        "viewport": {
+          "width": 1152,
+          "height": 880,
+          "devicePixelRatio": 1.25
+        },
+        "pageWidth": 1152,
+        "app": {
+          "text": "Skip to main content\nDeploy\n学业分析报告工作台\n\n上传学院成绩单，核对数据，查看各班和课程的成绩情况。\n\n当前步骤：第3步 · 统计与图表预览\n\n1 上传\n\n已上传\n\n2 核对\n\n已确认\n\n3 分析\n\n正在进行\n\n统计与图表预览\n\n数据已确认：6名学生，17条成绩记录。下面可以查看统计与图表",
+          "fontSize": "18px",
+          "color": "rgb(24, 34, 48)",
+          "background": "rgb(255, 255, 255)",
+          "rawBackground": "rgba(0, 0, 0, 0)",
+          "lineHeight": "28.8px",
+          "opacity": 1
+        },
+        "title": {
+          "text": "学业分析报告工作台",
+          "fontSize": "36px",
+          "color": "rgb(24, 34, 48)",
+          "background": "rgb(255, 255, 255)",
+          "rawBackground": "rgba(0, 0, 0, 0)",
+          "lineHeight": "43.2px",
+          "opacity": 1
+        },
+        "body": {
+          "text": "上传学院成绩单，核对数据，查看各班和课程的成绩情况。",
+          "fontSize": "18px",
+          "color": "rgb(24, 34, 48)",
+          "background": "rgb(255, 255, 255)",
+          "rawBackground": "rgba(0, 0, 0, 0)",
+          "lineHeight": "28.8px",
+          "opacity": 1
+        },
+        "caption": null,
+        "button": {
+          "text": "Deploy",
+          "fontSize": "15.75px",
+          "color": "rgb(24, 34, 48)",
+          "background": "rgb(255, 255, 255)",
+          "rawBackground": "rgba(0, 0, 0, 0)",
+          "lineHeight": "15.75px",
+          "opacity": 1
+        },
+        "metrics": 4,
+        "exceptions": 0,
+        "title_contrast_ratio": 16.03,
+        "body_contrast_ratio": 16.03
+      }
+    },
+    {
+      "phase": "chart",
+      "theme": "light",
+      "size": "zoom125-equivalent",
+      "metrics": {
+        "viewport": {
+          "width": 1152,
+          "height": 880,
+          "devicePixelRatio": 1.25
+        },
+        "pageWidth": 1152,
+        "app": {
+          "text": "Skip to main content\nDeploy\n学业分析报告工作台\n\n上传学院成绩单，核对数据，查看各班和课程的成绩情况。\n\n当前步骤：第3步 · 统计与图表预览\n\n1 上传\n\n已上传\n\n2 核对\n\n已确认\n\n3 分析\n\n正在进行\n\n统计与图表预览\n\n数据已确认：6名学生，17条成绩记录。下面可以查看统计与图表",
+          "fontSize": "18px",
+          "color": "rgb(24, 34, 48)",
+          "background": "rgb(255, 255, 255)",
+          "rawBackground": "rgba(0, 0, 0, 0)",
+          "lineHeight": "28.8px",
+          "opacity": 1
+        },
+        "title": {
+          "text": "学业分析报告工作台",
+          "fontSize": "36px",
+          "color": "rgb(24, 34, 48)",
+          "background": "rgb(255, 255, 255)",
+          "rawBackground": "rgba(0, 0, 0, 0)",
+          "lineHeight": "43.2px",
+          "opacity": 1
+        },
+        "body": {
+          "text": "上传学院成绩单，核对数据，查看各班和课程的成绩情况。",
+          "fontSize": "18px",
+          "color": "rgb(24, 34, 48)",
+          "background": "rgb(255, 255, 255)",
+          "rawBackground": "rgba(0, 0, 0, 0)",
+          "lineHeight": "28.8px",
+          "opacity": 1
+        },
+        "caption": null,
+        "button": {
+          "text": "Deploy",
+          "fontSize": "15.75px",
+          "color": "rgb(24, 34, 48)",
+          "background": "rgb(255, 255, 255)",
+          "rawBackground": "rgba(0, 0, 0, 0)",
+          "lineHeight": "15.75px",
+          "opacity": 1
+        },
+        "metrics": 4,
+        "exceptions": 0,
+        "title_contrast_ratio": 16.03,
+        "body_contrast_ratio": 16.03
+      }
+    }
+  ],
+  "downloads": [
+    {
+      "theme": "dark",
+      "entries": [
+        "README.md",
+        "charts/mean_bands.csv",
+        "charts/rates.csv",
+        "cleaning/issues.csv",
+        "cleaning/summary.json",
+        "report/metrics.json",
+        "report/scope.json",
+        "report/statistics.json",
+        "tables/courses.csv",
+        "verification.json"
+      ],
+      "dataset_version": "ec83200492f3779ca16fa5e6c16f1e42e5cd728eb8d2c3a2e1b0af45a0be00d1",
+      "scope": {
+        "class_id": null,
+        "course_id": null,
+        "course_type": null,
+        "grade_level": null,
+        "major": null,
+        "term": "2025-T1"
+      },
+      "bytes": 17734
+    },
+    {
+      "theme": "light",
+      "entries": [
+        "README.md",
+        "charts/mean_bands.csv",
+        "charts/rates.csv",
+        "cleaning/issues.csv",
+        "cleaning/summary.json",
+        "report/metrics.json",
+        "report/scope.json",
+        "report/statistics.json",
+        "tables/courses.csv",
+        "verification.json"
+      ],
+      "dataset_version": "ec83200492f3779ca16fa5e6c16f1e42e5cd728eb8d2c3a2e1b0af45a0be00d1",
+      "scope": {
+        "class_id": null,
+        "course_id": null,
+        "course_type": null,
+        "grade_level": null,
+        "major": null,
+        "term": "2025-T1"
+      },
+      "bytes": 17734
+    }
+  ],
+  "optional_notes": [],
+  "source_sha256": {
+    "src/copilot/dashboard/app.py": "10d35798480ecd33a3177c5e719bd23f0a1099a5b771de67f1420026f6e870d4",
+    "src/copilot/dashboard/workbench.py": "30a978c92a185aeb789d359ba54df28bdbc10c8620bc748a126bf73c897707d4",
+    "src/copilot/dashboard/import_panel.py": "57e35ca6c645d21f1ef479c7ccfa41fcba1bc1cf8428484d1a14de62d7b5b8a4",
+    "src/copilot/dashboard/presentation.py": "61fd994809390325f5467972991df5020356548109902b96c7e5fd7fcf470343",
+    "src/copilot/dashboard/workflow.py": "1dcf02f7e06ccc3f8da7d78ddf860ee5484fa507f4e58bc23cb948e0c09e8b30",
+    "src/copilot/dashboard/audit_export.py": "4dde90e1af807254f66869b0e9a641b9801c1323c3612b1060e05a6178040bb3",
+    ".streamlit/config.toml": "aa4b57b992b4ccbda41634e056afd6d73bf220d0cc13e113a2328c70d5e7ef1b"
+  },
+  "source_unchanged_during_run": true,
+  "visual_scope": "Desktop and narrow window plus CDP125% layout-equivalent; not mobile, complete accessibility audit or other browsers."
+}

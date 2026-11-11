@@ -2,7 +2,7 @@
 
 An independent engineering portfolio project for SAP STAR Application Engineer (2028 Graduates).
 
-**Current interface: Phase 2B.1 — a staff report workspace.** Start with **Upload → Review → Analysis**; **Writing → Export** are navigation placeholders. A new session shows no default statistics and the production entry does not seed a demonstration dataset. “使用示例数据体验” is an explicit secondary action and still requires review/confirmation. [Current operator guide](START_HERE.zh-CN.md) · [Workflow design and evidence](docs/development/02b1-workflow.md)
+**Current interface: a staff report workspace with a usability update.** Follow **Upload → Review → Analysis**. Writing/review and Word export are clearly marked as under development without unusable action buttons. Native light/dark themes use larger text; filters and future report settings stay secondary to results. A new session shows no default statistics and production startup does not seed demo data. “使用示例数据体验” is an explicit secondary action requiring confirmation. [Operator guide](START_HERE.zh-CN.md) · [UX findings, screenshots and verification](docs/development/02b-ux-usability.md) · [Original workflow design](docs/development/02b1-workflow.md)
 
 **Phase 2B adds a runnable Streamlit academic analysis workbench connected to FastAPI over HTTP.** It includes multidimensional course reports, charts, CSV downloads and the existing evidence-grounded Copilot. Phase 2A's user-run real DeepSeek check passed separately. [Workbench implementation and verification](docs/development/02b-workbench.md)
 
@@ -22,7 +22,7 @@ For the complete first-install and post-reboot PowerShell workflow, read [本机
 .\scripts\start_dashboard.ps1
 ```
 
-Open [the workbench](http://127.0.0.1:8501), upload an XLSX, inspect the cleaning summary and explicitly confirm. Scope controls appear only in Analysis. Changing a scope immediately invalidates the old statistics/context; click **更新统计预览** to generate the new scope. Tables and charts share one versioned backend report. Select the views and sections to retain in an aggregate-only `ReportContext`. The new workflow does not call the Agent, generate final prose or export DOCX. The existing Agent API/component remains regression-tested separately.
+Open [the workbench](http://127.0.0.1:8501), upload an XLSX, review the summary and explicitly confirm. Results appear first; expand **更改分析范围** to adjust the scope, then click **更新统计预览**. Changing scope invalidates old statistics/context and the old download. Tables and charts share one versioned backend report. The secondary **下载完整分析与数据明细** action produces an in-memory ZIP containing aggregate CSV/JSON, metric definitions, version/scope, and sanitized cleaning categories/coordinates. It excludes originals, student rows, credentials and internal traces. The workflow does not generate prose or DOCX. Existing Agent protections and regression remain intact.
 
 ## Run locally
 
@@ -89,7 +89,7 @@ Pandas owns deterministic result calculation; SQLite stores the normalized data 
 
 ## Import CSV or Excel
 
-The original normalized import path is retained for prepared tables and synthetic examples. To import an authorized college export, use the workbench's **学院成绩 XLSX 导入** panel and its separate preview/confirmation API. CSV import requires five multipart file fields named `classes`, `students`, `courses`, `enrollments`, `grade_records`. Headers must match the declared fields after trimming/lowercasing. Supply blank `score_cents` for missing/exempt records. UTF-8 BOM, surrounding whitespace, blank rows and status capitalization are cleaned explicitly. Invalid numeric cells and duplicates are rejected instead of silently dropped or coerced into missing values.
+The original normalized import path is retained for prepared tables and synthetic examples. To import an authorized college export, use the upload homepage and its separate preview/confirmation API. CSV import requires five multipart file fields named `classes`, `students`, `courses`, `enrollments`, `grade_records`. Headers must match the declared fields after trimming/lowercasing. Supply blank `score_cents` for missing/exempt records. UTF-8 BOM, surrounding whitespace, blank rows and status capitalization are cleaned explicitly. Invalid numeric cells and duplicates are rejected instead of silently dropped or coerced into missing values.
 
 ```powershell
 curl.exe -X POST http://127.0.0.1:8000/api/datasets/import `
@@ -161,6 +161,10 @@ Responses include request ID, provider mode, validated arguments, tool status, e
 The first Phase 2B workbench regression contained **230 tests**, including the original168 and actual TCP/Streamlit checks. Its [historical JUnit receipt](docs/development/results/phase2b-pytest.xml) and [15-check HTTP smoke receipt](docs/development/results/phase2b-http-smoke.json) are retained. The college-import increment completed **291 passed, zero failed/skipped, one existing TestClient warning, 54.69 seconds**, including61 new synthetic-only checks. [Current JUnit receipt](docs/development/results/college-import-pytest.xml). All automatic model calls used Mock/scripted transports. The user-run Phase 2A live check remains separate from this increment. [Phase 2A completion record](docs/development/02a-deepseek.md)
 
 Phase 2B.1 completed **344 full-suite tests**, followed by focused UI/display checks. It also passed **15 real HTTP smoke checks** and **10 actual headless Edge workflow checks** using synthetic workbooks. The [current workflow record](docs/development/02b1-workflow.md) distinguishes each test checkpoint, final presentation changes, screenshots and remaining limits. No new live DeepSeek call was made.
+
+The subsequent UX update completed **361 full-suite tests, zero failures/skips, one existing TestClient warning, 87.18 seconds**, plus **15 real HTTP checks**. The 16 added tests cover the safe aggregate ZIP and usability contracts. [Current results and browser acceptance](docs/development/02b-ux-usability.md) distinguish automated behavior from actual visual checks and unverified real-user research.
+
+Actual Edge acceptance passed **18 workflow checks** in light/dark themes, with desktop, narrow-window and CDP 125% layout-equivalent samples. Downloaded ZIPs were unpacked and compared with the API. The dark-theme sampled text contrast improved from **1.17:1 to 16.11:1**. Before/after screenshots and the precise zoom/accessibility limits are recorded in the UX document.
 
 Run the workbench HTTP acceptance with `.venv/Scripts/python.exe scripts/smoke_dashboard.py`. It starts isolated Uvicorn/Streamlit processes, tests page logic against real HTTP, and stops its own processes. No real API key is inherited. AppTest verifies page behavior; the separate Edge run supplies actual browser screenshots. Mobile, accessibility and cross-browser acceptance remain unverified. [Official Streamlit app testing guide](https://docs.streamlit.io/develop/concepts/app-testing/get-started)
 

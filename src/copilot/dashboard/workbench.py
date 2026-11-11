@@ -61,7 +61,7 @@ def show_analysis(client, state, render_report):
     classes, courses = {c.class_id: c for c in catalog.classes}, {c.course_id: c for c in catalog.courses}
     course_labels = course_option_labels(courses)
     with st.expander("更改分析范围（学期、班级或课程）", expanded=bool(state.invalid_reason)):
-        st.write("默认分析全部已确认数据。只看某个班级或课程时，在这里调整，再点击“更新统计预览”。")
+        st.write("默认显示当前所选学期的统计。要切换学期或只看某个班级、课程，请在这里调整，再点击“更新统计预览”。")
         top = st.columns(3)
         term = top[0].selectbox("学期", catalog.terms, index=_index(catalog.terms, previous.term), key="wf_term_" + suffix,
                                format_func=term_text, on_change=state.invalidate_analysis)

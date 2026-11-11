@@ -1,0 +1,219 @@
+{
+  "generated_at": "2026-11-09T22:01:18.095991+00:00",
+  "baseline": "268e094b29c49166af10c355d9c1893959f3943f",
+  "browser": "Microsoft Edge headless",
+  "theme_method": "Streamlit CLI --theme.base=light/dark",
+  "synthetic_only": true,
+  "paid_model_calls": 0,
+  "services_stopped": true,
+  "screenshots": [
+    "ux-before-home-light.png",
+    "ux-before-analysis-light.png",
+    "ux-before-chart-light.png",
+    "ux-before-home-dark.png",
+    "ux-before-analysis-dark.png",
+    "ux-before-chart-dark.png"
+  ],
+  "observations": [
+    {
+      "phase": "home",
+      "theme": "light",
+      "metrics": {
+        "viewport": {
+          "width": 1440,
+          "height": 1100,
+          "devicePixelRatio": 1
+        },
+        "pageWidth": 1440,
+        "app": {
+          "text": "Skip to main content\n学业分析报告工作台\n\n本地优先 · 先核对数据，再形成报告\n\n1 上传\n\n2 核对\n\n3 分析\n\n4 撰写\n\n5 导出\n\n从一份成绩单开始\n\n上传学院导出的 Excel，先检查识别与清洗结果，再预览统一口径的统计和图表。\n\n选择学院成绩单\n\nupload\n\nUpload\n\n5M",
+          "fontSize": "16px",
+          "color": "rgb(47, 45, 43)",
+          "background": "rgb(252, 253, 253)",
+          "lineHeight": "25.6px"
+        },
+        "title": {
+          "text": "学业分析报告工作台",
+          "fontSize": "44px",
+          "color": "rgb(47, 45, 43)",
+          "background": "rgba(0, 0, 0, 0)",
+          "lineHeight": "52.8px"
+        },
+        "body": {
+          "text": "1 上传",
+          "fontSize": "14px",
+          "color": "rgb(255, 255, 255)",
+          "background": "rgba(0, 0, 0, 0)",
+          "lineHeight": "22.4px"
+        },
+        "caption": {
+          "text": "本地优先 · 先核对数据，再形成报告",
+          "fontSize": "14px",
+          "color": "rgb(47, 45, 43)",
+          "background": "rgba(0, 0, 0, 0)",
+          "lineHeight": "22.4px"
+        },
+        "button": {
+          "text": "1 上传",
+          "fontSize": "16px",
+          "color": "rgb(255, 255, 255)",
+          "background": "rgb(197, 57, 72)",
+          "lineHeight": "25.6px"
+        },
+        "metrics": 0,
+        "exceptions": 0
+      },
+      "title_contrast_ratio": 13.46
+    },
+    {
+      "phase": "analysis",
+      "theme": "light",
+      "metrics": {
+        "viewport": {
+          "width": 1440,
+          "height": 1100,
+          "devicePixelRatio": 1
+        },
+        "pageWidth": 1440,
+        "app": {
+          "text": "Skip to main content\n学业分析报告工作台\n\n本地优先 · 先核对数据，再形成报告\n\n1 上传\n\n2 核对\n\n3 分析\n\n4 撰写\n\n5 导出\n\n统计与图表预览\n\n已确认的本地成绩单\n\n报告范围\n\n学期\n\n入学年级\n\n专业\n\n班级\n\n课程类型\n\n课程\n\n更新统计预览\n\n纳入报告的内容\n\n课程成绩分布表",
+          "fontSize": "16px",
+          "color": "rgb(47, 45, 43)",
+          "background": "rgb(252, 253, 253)",
+          "lineHeight": "25.6px"
+        },
+        "title": {
+          "text": "学业分析报告工作台",
+          "fontSize": "44px",
+          "color": "rgb(47, 45, 43)",
+          "background": "rgba(0, 0, 0, 0)",
+          "lineHeight": "52.8px"
+        },
+        "body": {
+          "text": "1 上传",
+          "fontSize": "14px",
+          "color": "rgb(47, 45, 43)",
+          "background": "rgba(0, 0, 0, 0)",
+          "lineHeight": "22.4px"
+        },
+        "caption": {
+          "text": "本地优先 · 先核对数据，再形成报告",
+          "fontSize": "14px",
+          "color": "rgb(47, 45, 43)",
+          "background": "rgba(0, 0, 0, 0)",
+          "lineHeight": "22.4px"
+        },
+        "button": {
+          "text": "1 上传",
+          "fontSize": "16px",
+          "color": "rgb(47, 45, 43)",
+          "background": "rgb(255, 255, 255)",
+          "lineHeight": "25.6px"
+        },
+        "metrics": 4,
+        "exceptions": 0
+      },
+      "title_contrast_ratio": 13.46
+    },
+    {
+      "phase": "home",
+      "theme": "dark",
+      "metrics": {
+        "viewport": {
+          "width": 1440,
+          "height": 1100,
+          "devicePixelRatio": 1
+        },
+        "pageWidth": 1440,
+        "app": {
+          "text": "Skip to main content\n学业分析报告工作台\n\n本地优先 · 先核对数据，再形成报告\n\n1 上传\n\n2 核对\n\n3 分析\n\n4 撰写\n\n5 导出\n\n从一份成绩单开始\n\n上传学院导出的 Excel，先检查识别与清洗结果，再预览统一口径的统计和图表。\n\n选择学院成绩单\n\nupload\n\nUpload\n\n5M",
+          "fontSize": "16px",
+          "color": "rgb(237, 235, 232)",
+          "background": "rgb(252, 253, 253)",
+          "lineHeight": "25.6px"
+        },
+        "title": {
+          "text": "学业分析报告工作台",
+          "fontSize": "44px",
+          "color": "rgb(237, 235, 232)",
+          "background": "rgba(0, 0, 0, 0)",
+          "lineHeight": "52.8px"
+        },
+        "body": {
+          "text": "1 上传",
+          "fontSize": "14px",
+          "color": "rgb(255, 255, 255)",
+          "background": "rgba(0, 0, 0, 0)",
+          "lineHeight": "22.4px"
+        },
+        "caption": {
+          "text": "本地优先 · 先核对数据，再形成报告",
+          "fontSize": "14px",
+          "color": "rgb(237, 235, 232)",
+          "background": "rgba(0, 0, 0, 0)",
+          "lineHeight": "22.4px"
+        },
+        "button": {
+          "text": "1 上传",
+          "fontSize": "16px",
+          "color": "rgb(255, 255, 255)",
+          "background": "rgb(207, 66, 80)",
+          "lineHeight": "25.6px"
+        },
+        "metrics": 0,
+        "exceptions": 0
+      },
+      "title_contrast_ratio": 1.17
+    },
+    {
+      "phase": "analysis",
+      "theme": "dark",
+      "metrics": {
+        "viewport": {
+          "width": 1440,
+          "height": 1100,
+          "devicePixelRatio": 1
+        },
+        "pageWidth": 1440,
+        "app": {
+          "text": "Skip to main content\n学业分析报告工作台\n\n本地优先 · 先核对数据，再形成报告\n\n1 上传\n\n2 核对\n\n3 分析\n\n4 撰写\n\n5 导出\n\n统计与图表预览\n\n已确认的本地成绩单\n\n报告范围\n\n学期\n\n入学年级\n\n专业\n\n班级\n\n课程类型\n\n课程\n\n更新统计预览\n\n纳入报告的内容\n\n课程成绩分布表",
+          "fontSize": "16px",
+          "color": "rgb(237, 235, 232)",
+          "background": "rgb(252, 253, 253)",
+          "lineHeight": "25.6px"
+        },
+        "title": {
+          "text": "学业分析报告工作台",
+          "fontSize": "44px",
+          "color": "rgb(237, 235, 232)",
+          "background": "rgba(0, 0, 0, 0)",
+          "lineHeight": "52.8px"
+        },
+        "body": {
+          "text": "1 上传",
+          "fontSize": "14px",
+          "color": "rgb(237, 235, 232)",
+          "background": "rgba(0, 0, 0, 0)",
+          "lineHeight": "22.4px"
+        },
+        "caption": {
+          "text": "本地优先 · 先核对数据，再形成报告",
+          "fontSize": "14px",
+          "color": "rgb(237, 235, 232)",
+          "background": "rgba(0, 0, 0, 0)",
+          "lineHeight": "22.4px"
+        },
+        "button": {
+          "text": "1 上传",
+          "fontSize": "16px",
+          "color": "rgb(237, 235, 232)",
+          "background": "rgb(30, 29, 26)",
+          "lineHeight": "25.6px"
+        },
+        "metrics": 4,
+        "exceptions": 0
+      },
+      "title_contrast_ratio": 1.17
+    }
+  ]
+}

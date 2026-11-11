@@ -1,0 +1,367 @@
+{
+  "generated_at": "2026-11-09T22:10:43.414518+00:00",
+  "transport": "Dashboard HTTP client and Streamlit AppTest -> actual TCP -> isolated Uvicorn -> SQLite/Pandas",
+  "llm": "offline mock provider only; no paid API requests",
+  "passed": true,
+  "dataset_version": "08274cb073400a293be4fad8adf8a15e2f92235ba98a2b5ce694d586dc51d204",
+  "checks": [
+    {
+      "check": "dashboard_client_to_real_uvicorn",
+      "passed": true
+    },
+    {
+      "check": "all_courses_one_snapshot_and_count_invariants",
+      "passed": true,
+      "courses": 96
+    },
+    {
+      "check": "filtered_report",
+      "filters": {
+        "grade_level": 1
+      },
+      "passed": true,
+      "courses": 32,
+      "graded_count": 5154
+    },
+    {
+      "check": "filtered_report",
+      "filters": {
+        "class_id": "C001"
+      },
+      "passed": true,
+      "courses": 32,
+      "graded_count": 375
+    },
+    {
+      "check": "filtered_report",
+      "filters": {
+        "course_id": "G1-C01"
+      },
+      "passed": true,
+      "courses": 1,
+      "graded_count": 469
+    },
+    {
+      "check": "filtered_report",
+      "filters": {
+        "major": "computer_science"
+      },
+      "passed": true,
+      "courses": 96,
+      "graded_count": 5144
+    },
+    {
+      "check": "filtered_report",
+      "filters": {
+        "course_type": "professional_required"
+      },
+      "passed": true,
+      "courses": 12,
+      "graded_count": 5378
+    },
+    {
+      "check": "filtered_report",
+      "filters": {
+        "grade_level": 1,
+        "major": "computer_science",
+        "course_type": "professional_required"
+      },
+      "passed": true,
+      "courses": 4,
+      "graded_count": 671
+    },
+    {
+      "check": "table_chart_csv_use_identical_backend_rates_and_version",
+      "passed": true
+    },
+    {
+      "check": "empty_filter_is_not_zero_mean",
+      "passed": true
+    },
+    {
+      "check": "mock_agent_over_real_http_with_evidence",
+      "passed": true
+    },
+    {
+      "check": "streamlit_server_and_api_error_statuses",
+      "passed": true
+    },
+    {
+      "check": "actual_streamlit_workflow_confirmation_and_filters_over_tcp",
+      "passed": true
+    },
+    {
+      "check": "unavailable_api_visible_error_without_page_exception",
+      "passed": true
+    },
+    {
+      "check": "own_servers_unreachable_after_cleanup",
+      "passed": true
+    }
+  ],
+  "samples": {
+    "course_analysis": {
+      "course_id": "G1-C01",
+      "course_name": "Mathematics",
+      "course_type": "general_required",
+      "statistics": {
+        "dataset_version": "08274cb073400a293be4fad8adf8a15e2f92235ba98a2b5ce694d586dc51d204",
+        "scope": {
+          "term": "2026-T1",
+          "grade_level": null,
+          "class_id": null,
+          "course_id": "G1-C01"
+        },
+        "metric": "enrollment_score_mean",
+        "enrollment_count": 484,
+        "student_count": 484,
+        "graded_count": 469,
+        "missing_count": 6,
+        "exempt_count": 9,
+        "passed_count": 318,
+        "failed_count": 151,
+        "failed_student_count": 151,
+        "sum_score_cents": 3270534,
+        "weighted_sum_score_cents": 9811602,
+        "graded_credits": 1407,
+        "average_score": "69.73",
+        "weighted_average_score": "69.73",
+        "pass_rate_percent": "67.80",
+        "distribution": [
+          {
+            "label": "[0,60)",
+            "lower_cents": 0,
+            "upper_cents": 6000,
+            "upper_inclusive": false,
+            "count": 151
+          },
+          {
+            "label": "[60,70)",
+            "lower_cents": 6000,
+            "upper_cents": 7000,
+            "upper_inclusive": false,
+            "count": 79
+          },
+          {
+            "label": "[70,80)",
+            "lower_cents": 7000,
+            "upper_cents": 8000,
+            "upper_inclusive": false,
+            "count": 103
+          },
+          {
+            "label": "[80,90)",
+            "lower_cents": 8000,
+            "upper_cents": 9000,
+            "upper_inclusive": false,
+            "count": 85
+          },
+          {
+            "label": "[90,100]",
+            "lower_cents": 9000,
+            "upper_cents": 10000,
+            "upper_inclusive": true,
+            "count": 51
+          }
+        ]
+      },
+      "fail_rate_percent": "32.20",
+      "excellent_count": 136,
+      "excellent_rate_percent": "29.00",
+      "average_band": "[60,70)"
+    },
+    "course_mean_bands": [
+      {
+        "label": "[90,100]",
+        "course_ids": []
+      },
+      {
+        "label": "[80,90)",
+        "course_ids": []
+      },
+      {
+        "label": "[70,80)",
+        "course_ids": [
+          "G1-C05",
+          "G1-C06",
+          "G1-C09",
+          "G1-C10",
+          "G1-C15",
+          "G1-C16",
+          "G1-C17",
+          "G1-C20",
+          "G1-C21",
+          "G1-C23",
+          "G1-C25",
+          "G1-C30",
+          "G1-C31",
+          "G1-C32",
+          "G2-C01",
+          "G2-C02",
+          "G2-C05",
+          "G2-C11",
+          "G2-C12",
+          "G2-C16",
+          "G2-C17",
+          "G2-C19",
+          "G2-C20",
+          "G2-C25",
+          "G2-C26",
+          "G2-C29",
+          "G2-C30",
+          "G2-C31",
+          "G3-C05",
+          "G3-C15",
+          "G3-C16",
+          "G3-C20",
+          "G3-C21",
+          "G3-C25",
+          "G3-C30",
+          "G3-C32"
+        ]
+      },
+      {
+        "label": "[60,70)",
+        "course_ids": [
+          "G1-C01",
+          "G1-C02",
+          "G1-C03",
+          "G1-C04",
+          "G1-C07",
+          "G1-C08",
+          "G1-C11",
+          "G1-C12",
+          "G1-C13",
+          "G1-C14",
+          "G1-C18",
+          "G1-C19",
+          "G1-C22",
+          "G1-C24",
+          "G1-C26",
+          "G1-C27",
+          "G1-C28",
+          "G1-C29",
+          "G2-C03",
+          "G2-C04",
+          "G2-C06",
+          "G2-C07",
+          "G2-C08",
+          "G2-C09",
+          "G2-C10",
+          "G2-C13",
+          "G2-C14",
+          "G2-C15",
+          "G2-C18",
+          "G2-C21",
+          "G2-C22",
+          "G2-C23",
+          "G2-C24",
+          "G2-C27",
+          "G2-C28",
+          "G2-C32",
+          "G3-C01",
+          "G3-C02",
+          "G3-C03",
+          "G3-C04",
+          "G3-C06",
+          "G3-C07",
+          "G3-C08",
+          "G3-C09",
+          "G3-C10",
+          "G3-C11",
+          "G3-C12",
+          "G3-C13",
+          "G3-C14",
+          "G3-C17",
+          "G3-C18",
+          "G3-C19",
+          "G3-C22",
+          "G3-C23",
+          "G3-C24",
+          "G3-C26",
+          "G3-C27",
+          "G3-C28",
+          "G3-C29",
+          "G3-C31"
+        ]
+      },
+      {
+        "label": "[0,60)",
+        "course_ids": []
+      }
+    ],
+    "pass_fail_rates": [
+      {
+        "Course ID": "G1-C01",
+        "Course": "G1-C01 · Mathematics",
+        "Series": "Pass rate",
+        "Rate": 67.8,
+        "Rate label": "67.80%",
+        "Records": 318,
+        "Graded n": 469
+      },
+      {
+        "Course ID": "G1-C01",
+        "Course": "G1-C01 · Mathematics",
+        "Series": "Fail rate",
+        "Rate": 32.2,
+        "Rate label": "32.20%",
+        "Records": 151,
+        "Graded n": 469
+      },
+      {
+        "Course ID": "G1-C02",
+        "Course": "G1-C02 · Academic Writing",
+        "Series": "Pass rate",
+        "Rate": 69.68,
+        "Rate label": "69.68%",
+        "Records": 324,
+        "Graded n": 465
+      },
+      {
+        "Course ID": "G1-C02",
+        "Course": "G1-C02 · Academic Writing",
+        "Series": "Fail rate",
+        "Rate": 30.32,
+        "Rate label": "30.32%",
+        "Records": 141,
+        "Graded n": 465
+      },
+      {
+        "Course ID": "G1-C03",
+        "Course": "G1-C03 · Programming",
+        "Series": "Pass rate",
+        "Rate": 64.36,
+        "Rate label": "64.36%",
+        "Records": 298,
+        "Graded n": 463
+      },
+      {
+        "Course ID": "G1-C03",
+        "Course": "G1-C03 · Programming",
+        "Series": "Fail rate",
+        "Rate": 35.64,
+        "Rate label": "35.64%",
+        "Records": 165,
+        "Graded n": 463
+      }
+    ],
+    "agent": {
+      "simulated": true,
+      "answer": "Looking at course G1-C01 in term 2026-T1, the average score was 69.73 points, while 67.80% of graded enrollments passed (318 of 469). [r1]",
+      "answer_mode": "grounded_narrative",
+      "request_id": "a20026a8ae4346bc93c22dba0c424aaa",
+      "evidence_ids": [
+        "r1"
+      ]
+    },
+    "rendered_page": {
+      "rendered_tables": 2,
+      "rendered_metrics": 4,
+      "explicit_confirmation": true,
+      "filter_submitted": "2024 cohort",
+      "report_context_ready": true
+    }
+  },
+  "servers_stopped": true
+}

@@ -1,0 +1,18 @@
+<?xml version='1.0' encoding='utf-8'?>
+<testsuites name="pytest tests">
+  <testsuite name="pytest" errors="0" failures="0" skipped="0" tests="13" time="0.883" timestamp="2026-11-10T06:08:25.329050+08:00">
+    <testcase classname="tests.test_audit_export" name="test_archive_has_documented_files_and_one_scope_version_for_all_views" time="0.009" />
+    <testcase classname="tests.test_audit_export" name="test_archive_excludes_raw_upload_preview_identifiers_messages_and_traces" time="0.008" />
+    <testcase classname="tests.test_audit_export" name="test_stale_data_or_scope_cannot_export_old_analysis[&lt;lambda&gt;0]" time="0.001" />
+    <testcase classname="tests.test_audit_export" name="test_stale_data_or_scope_cannot_export_old_analysis[&lt;lambda&gt;1]" time="0.001" />
+    <testcase classname="tests.test_audit_export" name="test_stale_data_or_scope_cannot_export_old_analysis[&lt;lambda&gt;2]" time="0.001" />
+    <testcase classname="tests.test_audit_export" name="test_stale_data_or_scope_cannot_export_old_analysis[&lt;lambda&gt;3]" time="0.001" />
+    <testcase classname="tests.test_audit_export" name="test_stale_data_or_scope_cannot_export_old_analysis[&lt;lambda&gt;4]" time="0.001" />
+    <testcase classname="tests.test_audit_export" name="test_unconfirmed_preview_cannot_export" time="0.001" />
+    <testcase classname="tests.test_audit_export" name="test_mixed_evidence_is_rejected_even_if_a_report_object_is_present" time="0.001" />
+    <testcase classname="tests.test_audit_export" name="test_formula_like_course_names_are_exported_as_text_in_each_csv" time="0.004" />
+    <testcase classname="tests.test_audit_export" name="test_valid_empty_scope_exports_nulls_and_headers_instead_of_old_rows" time="0.004" />
+    <testcase classname="tests.test_audit_export" name="test_course_without_graded_scores_exports_empty_numeric_rates_and_keeps_null_labels" time="0.004" />
+    <testcase classname="tests.test_audit_export" name="test_export_does_not_mutate_workflow_or_require_future_report_context" time="0.005" />
+  </testsuite>
+</testsuites>

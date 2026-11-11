@@ -1,0 +1,7 @@
+本轮新增源码、配置与测试（创建时未跟踪，交付时均纳入功能提交）
+.streamlit/config.toml
+src/copilot/dashboard/audit_export.py
+tests/test_audit_export.py
+
+最终无未跟踪新增源码。完整SHA与工作区状态见审查包manifest。用户原有docs/development/results/14-deepseek-offline-demo.json未纳入本轮提交。
+现有根streamlit_app.py未修改，但包含在base/current审查快照中。
