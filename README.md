@@ -20,6 +20,8 @@ For the complete first-install and post-reboot PowerShell workflow, read [本机
 
 ```powershell
 # Window A — FastAPI. DeepSeek is the formal provider; -Provider mock runs fully offline.
+# Live mode prompts for a hidden key unless one is already set in that shell;
+# -ForcePrompt replaces a stale key, and a busy port fails loudly.
 .\scripts\start_backend.ps1 -Provider mock
 ```
 

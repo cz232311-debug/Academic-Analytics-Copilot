@@ -30,9 +30,13 @@ python -m venv .venv
 Set-Location -LiteralPath 'D:\Document\ChatGPT\SAP-ApplicationEngineer'
 # 离线体验（推荐先用这个，不需要 API key）
 .\scripts\start_backend.ps1 -Provider mock
-# 正式 DeepSeek 模式（会隐藏式提示输入 API key）
+# 正式 DeepSeek 模式（当前窗口没有 key 时会隐藏式提示输入）
 .\scripts\start_backend.ps1
+# 已有/失效的 key 想重新输入时
+.\scripts\start_backend.ps1 -ForcePrompt
 ```
+
+只有默认的 `-Provider deepseek` 且**当前 PowerShell 窗口中不存在 `COPILOT_LLM_API_KEY`** 时才会提示输入；`-Provider mock` 和直接运行 `uvicorn` 命令都不会提示。启动日志会写明 key 的来源（交互输入 / 本窗口已有环境变量），但不会显示 key 本身。端口已被占用时脚本会直接报错，避免新进程静默启动失败、页面仍连旧后端。
 
 **窗口 B — 对话页面：**
 
@@ -109,6 +113,7 @@ Set-Location -LiteralPath 'D:\Document\ChatGPT\SAP-ApplicationEngineer'
 | 系统拦截了一次与问题不一致的统计 | 把课程名/编号写完整后重试 |
 | 所选课程、班级或学期不在当前数据集中 | 先用「查询当前数据集有哪些课程」核对 |
 | AI 服务响应超时/繁忙/连不上 | 稍后重试；已确认的数据不会丢失 |
+| 后端无法通过 DeepSeek 的身份验证 | key 无效或过期：停掉后端，用 `-ForcePrompt` 重新粘贴有效 key（见下方常见问题） |
 | 请确认后端分析服务已经启动 | 检查窗口 A，然后在页面点「重试连接」 |
 | 本次分析超时 | 把问题缩小到一门课程或一个班级 |
 
@@ -131,7 +136,16 @@ Set-Location -LiteralPath 'D:\Document\ChatGPT\SAP-ApplicationEngineer'
 ## 常见问题
 
 - **提示"暂时无法连接本机分析服务"**：确认窗口 A 已启动且无报错（后端默认 8000 端口），然后在页面点「重试连接」。
-- **想完全离线体验**：窗口 A 用 `-Provider mock`，全程无任何外部请求，回答会如实标注"离线 Mock 演示"。
+- **后端启动时没有提示输入 API key，页面却报「无法通过 DeepSeek 的身份验证」**：脚本只在 `.\scripts\start_backend.ps1`（不带 `-Provider mock`）且当前窗口没有 `COPILOT_LLM_API_KEY` 时才提示。若这个窗口之前配置过 key，脚本会静默复用；key 失效/复制不全时 DeepSeek 返回 401，就出现该错误（空 key 反而会是「AI 服务配置问题」，不是认证失败）。按下面顺序处理：
+  ```powershell
+  # 1. 在窗口 A 按 Ctrl+C 停掉后端
+  # 2. 清掉本窗口残留的旧 key（不要打印它）
+  Remove-Item Env:COPILOT_LLM_API_KEY -ErrorAction SilentlyContinue
+  # 3. 强制重新输入
+  .\scripts\start_backend.ps1 -ForcePrompt
+  ```
+  若提示"端口已被占用"，先关掉占用 8000 的旧后端窗口再启动。请勿把 key 写进命令行、文件或聊天记录。
+- **想完全离线体验**：窗口 A 用 `-Provider mock`，全程无任何外部请求，回答会如实标注"离线 Mock 演示"；注意先停掉占用 8000 的旧后端，否则新服务起不来。
 - **示例问题点了没反应**：输入框仍禁用说明数据集未确认；先在左侧完成预览 → 勾选 → 确认三步。
 - **对话记录不见了**：切换了数据来源或服务端版本变化，属预期行为，重新确认数据集即可。
 - **想重新生成不同的合成数据**：改「数据编号」或班级/人数/课程数后重新预览确认。
