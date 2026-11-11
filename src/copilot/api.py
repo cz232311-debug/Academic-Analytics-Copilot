@@ -7,7 +7,7 @@ from uuid import uuid4
 
 from fastapi import FastAPI, File, Form, Query, Request, UploadFile
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 from starlette.concurrency import run_in_threadpool
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
@@ -22,6 +22,7 @@ from copilot.data.importing import MAX_FILE_BYTES, import_csv_tables, import_wor
 from copilot.data.college import CollegeCommitResult, CollegePreview, DuplicatePolicy
 from copilot.data.college_service import CollegeImportService
 from copilot.data.synthetic_activation import SyntheticActivationService, SyntheticCommitRequest, SyntheticJSONOptions
+from copilot.data.synthetic_export import XLSX_MEDIA_TYPE, build_synthetic_export
 from copilot.models import ClassId, CourseId, DataError, TABLE_NAMES, Term
 from copilot.schemas import (Catalog, ClassComparison, CourseReport, CourseReportQuery, DatasetInfo, ErrorDetail, ErrorResponse,
                              ImportResult, ReportingCatalog, ReportScope, Scope, Statistics)
@@ -256,6 +257,14 @@ def create_app(database_path: str | Path | None = None, *, bootstrap_demo=True, 
     @application.post("/api/datasets/synthetic/commit", response_model=CollegeCommitResult)
     async def commit_synthetic(payload: SyntheticCommitRequest):
         return await run_in_threadpool(synthetic_import.commit, payload.options, payload.preview_token, payload.confirmed)
+
+    @application.get("/api/datasets/synthetic/export")
+    async def export_synthetic(expected_version: Annotated[str, Query(pattern=r"^[0-9a-f]{64}$")]):
+        content = await run_in_threadpool(build_synthetic_export, store, expected_version)
+        return Response(content, media_type=XLSX_MEDIA_TYPE,
+                        headers={"Content-Disposition": 'attachment; filename="synthetic-grades-snapshot.xlsx"',
+                                 "X-Dataset-Version": expected_version,
+                                 "Cache-Control": "no-store"})
 
     @application.post("/api/datasets/import", response_model=ImportResult)
     async def import_dataset(request: Request,

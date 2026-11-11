@@ -27,6 +27,8 @@ _METRICS = re.compile(r"平均|均分|成绩|分数|及格|不及格|缺考|免�
 _COMPARISON = re.compile(r"比较|对比|差异|\bcompar(?:e|ing|ison)\b|\bbetween\b|\bagainst\b", re.I)
 _CATALOG = re.compile(r"目录|课程列表|班级列表|有哪些(?:课|班)|哪些课程|哪些班级|列出.{0,8}(?:课程|班级)|\bcatalog\b|\blist\b|\bavailable\s+(?:courses|classes)\b", re.I)
 _OVERVIEW = re.compile(r"概览|概况|多少(?:名|个|门|条)?(?:学生|班级|课程|成绩)|学生(?:总)?人数|总人数|\boverview\b|\bhow\s+many\b|\bcounts?\b|\btotal\b", re.I)
+_CAPABILITY = re.compile(r"你(?:知道|了解)|能否|能不能|可不可以|是否(?:能|可以|支持)|(?:你|系统)?(?:能|会|可以|支持).{0,40}(?:吗|嘛|么|[?？])\s*$|支持(?:哪些|什么)(?:分析|功能)")
+_WHOLE_SCOPE = re.compile(r"全体|全部|整体|总体|所有|全数据|当前数据集|整个数据集|所选范围|当前范围")
 
 
 class ResolvedIntent(Record):
@@ -57,6 +59,38 @@ def _result(catalog, status, message, *, scope=None, tool=None, arguments=None, 
 
 def _choice(kind, value, label):
     return {"kind": kind, "value": value, "label": label}
+
+
+def _course_choices(rows):
+    return [_choice("course_id", row.course_id,
+                    f"{row.course_name} · {row.grade_level}级 · {row.source_term or '目录课程'}") for row in rows]
+
+
+def _unresolved_course_reference(question, matching_names):
+    """Find an explicit course subject left after removing known scope terms.
+
+    This deliberately only extracts bounded metric subjects. A partial course
+    name supplies clarification choices, never an automatically selected ID.
+    """
+    text = question
+    for name in matching_names:
+        separators = r"[\s()（）·,，.。:：;；_\-–—]*"
+        text = re.sub(separators.join(re.escape(char) for char in _norm(name)), "", text, flags=re.I)
+    text = re.sub(r"(?<![A-Za-z0-9])(?:G\d+-C\d+|I[0-9a-f]{24}|C\d{1,3})(?![A-Za-z0-9])", "", text, flags=re.I)
+    text = re.sub(r"20\d{2}\s*[-/至–—]\s*20\d{2}(?:\s*学年)?(?:\s*第?[12一二]学期)?|20\d{2}-T[1-3]|(?:20\d{2})?\s*第?[12一二]学期", "", text, flags=re.I)
+    text = re.sub(r"(?<!\d)(?:20\d{2}|\d{2})\s*级?|(?:第)?(?:[0-9]{1,3}|[一二三四五六七八九十]{1,3})\s*班", "", text)
+    for aliases in MAJOR_ALIASES.values():
+        for alias in sorted(aliases, key=len, reverse=True):
+            text = text.replace(alias, "")
+    text = _WHOLE_SCOPE.sub("", text)
+    text = re.sub(r"(?:请|帮我|给我|查看|看看|查询|分析|统计|比较|对比|针对|关于|一下|本学期|这学期|同一学期|学期|数据集|数据|成绩单|范围|班级|班|年级|专业)", "", text)
+    match = re.search(r"平均|均分|成绩|分数|及格|不及格|分布", text)
+    if not match:
+        return ""
+    subject = re.split(r"[，。?？:：]", text[:match.start()])[-1][-40:]
+    subject = re.sub(r"^[\s的与和及、]+|[\s的与和及、]+$", "", subject)
+    subject = re.sub(r"(?:课程|课)$", "", subject).strip()
+    return subject if len(_norm(subject)) >= 2 else ""
 
 
 def _class_number(record):
@@ -131,6 +165,12 @@ def resolve_question(question: str, catalog: ReportingCatalog, session_scope: Se
         values.get("major") and values["major"] not in catalog.majors):
         return _result(catalog, "needs_clarification", "已确认范围中的实体已不在当前目录，请重新选择分析范围。")
 
+    if _CAPABILITY.search(q):
+        return _result(catalog, "needs_clarification",
+            "可以进行数据集概览、单课程成绩统计、同课程班级比较，以及课程和班级目录查询。"
+            "请先选择目录中的具体课程并说明想看均分、及格率或成绩分布；本次仅介绍能力，尚未执行统计。",
+            scope=inherited)
+
     compare = bool(_COMPARISON.search(q))
     catalog_request = bool(_CATALOG.search(q)) and not compare
     metric_request = bool(_METRICS.search(q))
@@ -173,7 +213,7 @@ def resolve_question(question: str, catalog: ReportingCatalog, session_scope: Se
         explicit["term"] = term
 
     requested_courses = list(dict.fromkeys(identifier.upper() if identifier.upper().startswith("G") else "I" + identifier[1:].lower()
-        for identifier in re.findall(r"\b(?:G\d+-C\d+|I[0-9a-f]{24})\b", q, re.I)))
+        for identifier in re.findall(r"(?<![A-Za-z0-9])(?:G\d+-C\d+|I[0-9a-f]{24})(?![A-Za-z0-9])", q, re.I)))
     unknown_ids = [identifier for identifier in requested_courses if identifier not in courses]
     if unknown_ids:
         return _result(catalog, "needs_clarification", "当前课程目录中没有这个课程标识，请选择现有课程。")
@@ -182,7 +222,7 @@ def resolve_question(question: str, catalog: ReportingCatalog, session_scope: Se
     course_candidates = [courses[identifier] for identifier in requested_courses]
     if not course_candidates and matching_names:
         course_candidates = [row for row in catalog.courses if row.course_name in matching_names]
-    explicit_course_aliases = re.findall(r"(?:课程|course)\s*(C\d{1,3})\b", q, re.I)
+    explicit_course_aliases = re.findall(r"(?:课程|course)\s*(C\d{1,3})(?![A-Za-z0-9])", q, re.I)
     if explicit_course_aliases:
         if len(set(alias.upper() for alias in explicit_course_aliases)) != 1:
             return _result(catalog, "unsupported", "一次只支持一门课程，请明确课程标识。")
@@ -200,11 +240,25 @@ def resolve_question(question: str, catalog: ReportingCatalog, session_scope: Se
                 choices=[_choice("course_id", row.course_id, f"{row.course_name} · {row.grade_level}级 · {row.source_term or '目录课程'}") for row in course_candidates])
         values["course_id"] = explicit["course_id"] = course_candidates[0].course_id
 
+    if (metric_request or compare) and not catalog_request:
+        unresolved = _unresolved_course_reference(q, matching_names)
+        if unresolved:
+            candidates = [row for row in catalog.courses if _norm(unresolved) in _norm(row.course_name)
+                          and (values["grade_level"] is None or row.grade_level == values["grade_level"])
+                          and (not term or row.source_term is None or row.source_term == term)]
+            message = ("这个课程说法还不能确定具体课程。请确认目录中的课程全名后再分析。" if candidates else
+                       "当前课程目录找不到问题中指定的课程，请核对课程全名或从现有课程中选择。")
+            # A new unresolved subject must not be silently replaced by a
+            # previously confirmed session course, even with one candidate.
+            return _result(catalog, "needs_clarification", message,
+                           scope=SessionScope(**{**values, "course_id": None}),
+                           choices=_course_choices(candidates or catalog.courses))
+
     # Cxx after an explicit course label is a course alias; other Cxxx tokens
     # identify classes. No suffix is selected without checking the directory.
-    class_text = re.sub(r"(?:课程|course)\s*C\d{1,3}\b", "", q, flags=re.I)
+    class_text = re.sub(r"(?:课程|course)\s*C\d{1,3}(?![A-Za-z0-9])", "", q, flags=re.I)
     class_text = re.sub(r"G\d+-C\d+", "", class_text, flags=re.I)
-    class_ids = list(dict.fromkeys("C" + digits.zfill(3) for digits in re.findall(r"\bC(\d{1,3})\b", class_text, re.I)))
+    class_ids = list(dict.fromkeys("C" + digits.zfill(3) for digits in re.findall(r"(?<![A-Za-z0-9])C(\d{1,3})(?![A-Za-z0-9])", class_text, re.I)))
     if any(identifier not in classes for identifier in class_ids):
         return _result(catalog, "needs_clarification", "当前班级目录中没有这个班级标识，请重新选择。")
     numbers = [_chinese_number(number) for number in re.findall(r"(?:第)?([0-9]{1,3}|[一二三四五六七八九十]{1,3})班", compact)]
@@ -266,7 +320,9 @@ def resolve_question(question: str, catalog: ReportingCatalog, session_scope: Se
         arguments = {"term": term, "course_id": values["course_id"], "class_ids": class_ids}
         return _result(catalog, "ready", "将比较所选班级同一课程、同一学期的成绩。", tool="compare_classes", arguments=arguments, scope=scope, explicit=explicit)
 
-    if not values["course_id"] and (re.search(r"课程|这门|该课|\bfor\b", q, re.I) or re.search(r"[\u4e00-\u9fffA-Za-z][^，。?？]{0,30}的(?:平均|均分|及格)", q)):
+    scope_filter = any(values[key] is not None for key in ("class_id", "grade_level", "major"))
+    if not values["course_id"] and (re.search(r"课程|这门|该课|\bfor\b", q, re.I)
+            or (not q.isascii() and not scope_filter and not _WHOLE_SCOPE.search(q))):
         return _result(catalog, "needs_clarification", "当前目录找不到唯一匹配课程，请选择课程或补充课程全名与入学年级。", scope=scope,
                        choices=[_choice("course_id", row.course_id, f"{row.course_name} · {row.grade_level}级") for row in catalog.courses])
     arguments = {"term": term, "course_id": values["course_id"], "class_id": values["class_id"], "grade_level": values["grade_level"]}

@@ -54,9 +54,10 @@ class AnalyticsEngine:
         meta, frame = self.database.snapshot(scope, expected_version=expected_version, generated_only=generated_only)
         return summarize(frame, meta["dataset_version"], scope)
 
-    def course_report(self, scope: ReportScope, *, expected_version=None) -> CourseReport:
+    def course_report(self, scope: ReportScope, *, expected_version=None, generated_only=False) -> CourseReport:
         # All views derive from the same transaction/frame and summarize().
-        meta, frame = self.database.snapshot(scope, expected_version=expected_version, reporting=True)
+        meta, frame = self.database.snapshot(scope, expected_version=expected_version,
+                                             generated_only=generated_only, reporting=True)
         version = meta["dataset_version"]
         base = scope.base_scope()
         rows = []

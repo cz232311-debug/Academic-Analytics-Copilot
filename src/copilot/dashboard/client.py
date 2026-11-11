@@ -37,6 +37,7 @@ class DashboardError(Exception):
 
 
 ERROR_MESSAGES = {
+    "export_snapshot_invalid": "当前数据关联不完整，无法下载。请重新确认合成数据后重试。",
     # Chat-first user-facing text. All messages are safe to show in the UI:
     # no exception text, no server internals, no request payload is echoed.
     "unknown_entity": "所选学期、班级或课程已经不可用。请重新选择分析范围，再更新统计。",
@@ -114,6 +115,8 @@ class DashboardClient:
                 pass
             message = ERROR_MESSAGES.get(code, "暂时无法完成这项操作。请稍后重试；仍然失败时，请联系负责系统的同事。")
             raise DashboardError(code, message, request_id=request_id if isinstance(request_id, str) else None)
+        if model is None:
+            return response
         try:
             return model.model_validate_json(response.content)
         except (ValidationError, ValueError):
@@ -164,6 +167,16 @@ class DashboardClient:
         """Only options are sent: the server generates and parses the workbook."""
         payload = options.model_dump(mode="json") if hasattr(options, "model_dump") else dict(options)
         return self._request("POST", "/api/datasets/synthetic/preview", CollegePreview, payload=payload)
+
+    def synthetic_export(self, expected_version: str) -> bytes:
+        """Fetch on demand; never cache workbook bytes across dataset changes."""
+        response = self._request("GET", "/api/datasets/synthetic/export", None,
+                                 params={"expected_version": expected_version})
+        content_type = response.headers.get("content-type", "").split(";", 1)[0]
+        if (content_type != "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                or response.headers.get("x-dataset-version") != expected_version):
+            raise DashboardError("invalid_response", "下载的数据版本或格式不正确，请刷新页面后重试。")
+        return response.content
 
     def synthetic_commit(self, options: SyntheticOptions, preview_token: str, *, confirmed=True) -> CollegeCommitResult:
         payload = {"options": options.model_dump(mode="json") if hasattr(options, "model_dump") else dict(options),

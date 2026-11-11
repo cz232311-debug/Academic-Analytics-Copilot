@@ -12,6 +12,7 @@ The legacy five-step report workspace remains available in workbench_app.py;
 this app is the recommended first screen (see scripts/start_dashboard.ps1).
 """
 import hashlib
+from functools import partial
 
 import pandas as pd
 import streamlit as st
@@ -119,7 +120,8 @@ def _observe_dataset(client, state):
         if exc.code != "no_dataset":
             raise
         info = None
-    if state["dataset"] is not None and (info is None or info.dataset_version != state["dataset"].dataset_version):
+    if state["dataset"] is not None and (info is None or info.dataset_version != state["dataset"].dataset_version
+                                          or info.source != state["dataset"].source):
         _reset(state)
         state["dataset"] = None
         state["restored"] = True
@@ -142,6 +144,14 @@ def _num(value):
     return "—" if value is None else str(value)
 
 
+def _catalog_labels(catalog):
+    if catalog is None:
+        return {}
+    labels = {row.course_id: row.course_name for row in catalog.courses}
+    labels.update({row.class_id: row.class_label or row.class_id for row in catalog.classes})
+    return labels
+
+
 def _scope_cn(scope, labels=None):
     parts = []
     if scope.get("term"):
@@ -151,7 +161,9 @@ def _scope_cn(scope, labels=None):
         name = (labels or {}).get(identifier)
         parts.append(f"课程 {name}" if name else f"课程 {identifier}" if len(identifier) <= 12 else "所选课程")
     if scope.get("class_id"):
-        parts.append(f"班级 {scope['class_id']}")
+        parts.append("班级 " + (labels or {}).get(scope["class_id"], "所选班级"))
+    if scope.get("major"):
+        parts.append(STAFF_MAJOR_LABELS.get(scope["major"], "所选专业"))
     if scope.get("grade_level") is not None:
         parts.append(f"{scope['grade_level']}级")
     return " · ".join(parts) or "当前范围"
@@ -177,7 +189,7 @@ def _statistics_cn(data, labels=None):
 def _evidence_cn(result, catalog=None):
     # Show human course names in the conclusion. Internal long IDs stay inside
     # the expandable evidence panel, not in the first thing a staff member reads.
-    labels = {row.course_id: row.course_name for row in catalog.courses} if catalog else {}
+    labels = _catalog_labels(catalog)
     lines = []
     for item in result.evidence:
         data = item.data
@@ -190,19 +202,20 @@ def _evidence_cn(result, catalog=None):
                          f"每名学生每学期选课 {data.get('minimum_courses_per_student', 0)}–"
                          f"{data.get('maximum_courses_per_student', 0)} 门。")
         elif item.tool == "compare_classes":
-            lines.append(f"同一课程 {data.get('course_id', '—')} · {term_text(data['term']) if data.get('term') else '当前学期'} 的班级比较：")
+            lines.append(f"同一课程 {labels.get(data.get('course_id'), '所选课程')} · {term_text(data['term']) if data.get('term') else '当前学期'} 的班级比较：")
             for row in data.get("results", []):
                 lines.append(f"- {_statistics_cn(row, labels)}")
             leaders = data.get("highest_mean_class_ids") or []
             if len(leaders) == 1:
-                lines.append(f"按未四舍五入的精确均分比较，{leaders[0]} 的平均分最高。")
+                lines.append(f"按未四舍五入的精确均分比较，{labels.get(leaders[0], '所选班级')} 的平均分最高。")
             elif leaders:
-                lines.append("按未四舍五入的精确均分比较，" + "、".join(leaders) + " 并列最高。")
+                lines.append("按未四舍五入的精确均分比较，" + "、".join(labels.get(item, "所选班级") for item in leaders) + " 并列最高。")
         elif item.tool == "get_catalog":
             courses, classes = data.get("courses", []), data.get("classes", [])
             lines.append(f"当前目录共有 {len(courses)} 门课程、{len(classes)} 个班级。")
             if courses:
-                names = "、".join(f"{row['course_name']}（{row['course_id']}）" for row in courses[:12])
+                names = "、".join(str(row['course_name']) + (f"（{term_text(row['source_term'])}）" if row.get('source_term') else "")
+                                 for row in courses[:12])
                 lines.append("课程：" + names + ("…" if len(courses) > 12 else ""))
             if classes:
                 names = "、".join(str(row.get("class_label") or row["class_id"]) for row in classes[:12])
@@ -210,7 +223,8 @@ def _evidence_cn(result, catalog=None):
     return "\n\n".join(lines) if lines else "本次没有产生可核验的统计证据，请调整问题后重试。"
 
 
-def _render_charts(result):
+def _render_charts(result, catalog=None):
+    labels = _catalog_labels(catalog)
     for item in result.evidence:
         if item.tool == "get_score_summary" and item.data.get("distribution"):
             rows = [{"分数段": BAND_LABELS.get(row["label"], row["label"]), "人数": row["count"]}
@@ -218,11 +232,12 @@ def _render_charts(result):
             st.caption("成绩分布（仅统计有分数的成绩记录）")
             st.bar_chart(pd.DataFrame(rows).set_index("分数段"))
         elif item.tool == "compare_classes" and item.data.get("results"):
-            rows = [{"班级": row.get("scope", {}).get("class_id", "—"),
-                     "平均分": float(row["average_score"]) if row.get("average_score") is not None else 0.0}
-                    for row in item.data["results"]]
-            st.caption("各班平均分（使用未四舍五入的精确均分）")
-            st.bar_chart(pd.DataFrame(rows).set_index("班级"))
+            rows = [{"班级": labels.get(row.get("scope", {}).get("class_id"), "所选班级"),
+                     "平均分": float(row["average_score"])}
+                    for row in item.data["results"] if row.get("average_score") is not None]
+            st.caption("各班平均分（图示为显示舍入值，最高班级按精确均分判断；无有效成绩的班级不画作零分）")
+            if rows:
+                st.bar_chart(pd.DataFrame(rows).set_index("班级"))
 
 
 def _answer_mode_label(result):
@@ -256,9 +271,10 @@ def _render_message(message, state):
     st.markdown("**统计结论**")
     st.write(_evidence_cn(result, state["catalog"]))
     st.caption("以上中文结论由页面依据后端计算证据中的数值生成，不包含模型措辞，也不推断成绩差异的原因。")
-    _render_charts(result)
+    _render_charts(result, state["catalog"])
     with st.expander("计算证据与技术详情"):
         st.caption(f"数据版本：{result.dataset_version[:12]}…（回答与证据版本一致）")
+        st.code(result.dataset_version, language=None)
         if not result.evidence:
             st.info("本次没有统计证据。")
         for item in result.evidence:
@@ -449,11 +465,24 @@ def _data_source(client, state, info):
             st.write("当前分析方式：**" + _mode_label(state) + "**")
             st.write(f"学生 {dataset.counts.get('students', 0)} 人 · 课程 {dataset.counts.get('courses', 0)} 门 · "
                      f"班级 {dataset.counts.get('classes', 0)} 个")
+            st.write(f"成绩记录 {dataset.counts.get('grade_records', 0)} 条")
+            st.caption(f"数据版本：{dataset.dataset_version[:12]}…")
             if dataset.terms:
                 st.write("学期：" + "、".join(term_text(term) for term in dataset.terms[:3]))
             with st.expander("版本与来源详情"):
+                st.caption("完整版本可用右侧复制按钮复制。")
+                st.code(dataset.dataset_version, language=None)
                 st.json({"dataset_version": dataset.dataset_version, "source": dataset.source,
                          "external_llm_allowed": dataset.external_llm_allowed, "counts": dataset.counts})
+            if dataset.source == "generated":
+                # Deferred fetch rechecks source/version on EVERY click. A byte
+                # cache would let an old rendered button serve a stale workbook.
+                st.download_button("下载当前合成成绩单（XLSX）",
+                                   data=partial(client.synthetic_export, dataset.dataset_version),
+                                   file_name=f"synthetic-{dataset.dataset_version[:12]}.xlsx",
+                                   mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                                   key="chat_synthetic_export", on_click="ignore", width="stretch")
+                st.caption("导出当前已确认的全部合成记录；数据切换后请刷新页面再下载。")
             st.caption("这份数据集会一直使用，直到你点击「重新选择数据」或更换上传文件；"
                        "重开页面后也会自动沿用，不需要重新确认。")
             if st.button("重新选择数据", key="chat_reset_data"):

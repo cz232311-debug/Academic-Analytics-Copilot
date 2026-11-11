@@ -144,7 +144,7 @@ def test_resolve_endpoint_maps_chinese_entities_to_catalog_ids(college_client):
 @pytest.mark.parametrize("question,expected_tool", [
     ("分析高等数学 (I)-1 的平均分", "get_score_summary"),
     ("2024 级软件工程的成绩总体情况怎么样？", "get_score_summary"),
-    ("2024级软工的数据结构与算法平均分", "get_score_summary"),
+    ("2024级软工的Web技术基础平均分", "get_score_summary"),
     ("查询当前数据集有哪些课程", "get_catalog"),
     ("数据概览", "get_dataset_overview"),
 ])
