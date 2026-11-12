@@ -1,0 +1,120 @@
+{
+  "schema": "phase3d_live_protocol_v1",
+  "mode": "plan",
+  "dataset": {
+    "source": "generated",
+    "seed": 20261111,
+    "counts": {
+      "students": 12,
+      "classes": 2,
+      "courses": 6,
+      "enrollments": 72,
+      "grade_records": 72
+    },
+    "dataset_version": "92ca8e1e068578d2288443300516e7935c75eec26c0f6b8aa91455481a2b6b5a"
+  },
+  "recorded_fields": [
+    "provider",
+    "model",
+    "simulated",
+    "tools_and_arguments",
+    "model_turns",
+    "answer_mode",
+    "fallback_reason",
+    "analysis_status",
+    "analysis_fallback_reason",
+    "claim_ids",
+    "chinese_analysis",
+    "evidence_consistency",
+    "usage",
+    "elapsed_ms",
+    "cost"
+  ],
+  "budget": {
+    "max_live_requests": 2,
+    "max_model_turns_per_request": 4,
+    "max_output_tokens": 2048,
+    "request_timeout_seconds": 45,
+    "automatic_retries": 0,
+    "note": "C3 resolves locally to a clarification and builds no provider."
+  },
+  "request_preview": {
+    "system_prompt_chars": 2756,
+    "analysis_protocol_chars": 1889,
+    "user_message_chars": 150,
+    "claim_count": 12,
+    "mandatory_claim_count": 3,
+    "tool_result_chars": 4138,
+    "evidence_ids": [
+      "r1"
+    ],
+    "aggregate_counts": {
+      "student_count": 12,
+      "enrollment_count": 12,
+      "graded_count": 12,
+      "missing_count": 0,
+      "exempt_count": 0
+    }
+  },
+  "cases": [
+    {
+      "id": "C1",
+      "question": "分析体育 III 的成绩分布。",
+      "intent_status": "ready",
+      "tool": "get_score_summary",
+      "arguments": {
+        "term": "2025-T1",
+        "course_id": "Id935981463527088a0808e1a",
+        "class_id": null,
+        "grade_level": null
+      },
+      "analysis_goal": "distribution",
+      "required_metrics": [],
+      "would_call_model": true,
+      "clarification_candidates": []
+    },
+    {
+      "id": "C2",
+      "question": "分析体育 III 的成绩表现，有哪些值得关注的地方？",
+      "intent_status": "ready",
+      "tool": "get_score_summary",
+      "arguments": {
+        "term": "2025-T1",
+        "course_id": "Id935981463527088a0808e1a",
+        "class_id": null,
+        "grade_level": null
+      },
+      "analysis_goal": "summary",
+      "required_metrics": [],
+      "would_call_model": true,
+      "clarification_candidates": []
+    },
+    {
+      "id": "C3",
+      "question": "分析体育课的成绩。",
+      "intent_status": "needs_clarification",
+      "tool": null,
+      "arguments": {},
+      "analysis_goal": null,
+      "required_metrics": [],
+      "would_call_model": false,
+      "clarification_candidates": [
+        "体育 III · 2024级 · 2025-T1"
+      ]
+    }
+  ],
+  "backend": {
+    "provider": "not constructed",
+    "model": "not constructed",
+    "transport": "none",
+    "this_run_is_a_real_model_call": false
+  },
+  "measurement_note": "plan: local intent resolution and payload sizing only; no provider built.",
+  "live_model_calls": 0,
+  "safety": {
+    "api_key_printed": false,
+    "base_url_printed": false,
+    "raw_student_rows_printed": false,
+    "data_source": "server-generated synthetic only"
+  }
+}

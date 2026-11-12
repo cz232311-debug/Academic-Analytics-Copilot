@@ -75,7 +75,8 @@ def _state():
     if "chat" not in st.session_state:
         st.session_state.chat = {"messages": [], "dataset": None, "scope": None,
                                  "catalog": None, "examples": None, "notice": None,
-                                 "restored": False, "restored_notice": None}
+                                 "restored": False, "restored_notice": None,
+                                 "agent_runtime": None}
     return st.session_state.chat
 
 
@@ -84,6 +85,9 @@ def _reset(state):
     state["scope"] = None
     state["catalog"] = None
     state["examples"] = None
+    # The backend may be restarted with a different provider; never keep a
+    # cached "live model" label across a dataset change.
+    state["agent_runtime"] = None
     for key in ("pending_question", "chat_syn_preview", "chat_syn_options",
                 "chat_upload_preview", "chat_upload_name", "chat_upload_bytes", "chat_upload_digest"):
         st.session_state.pop(key, None)
@@ -100,9 +104,68 @@ def _mode(state):
     return "grounded" if state["dataset"].source == "generated" else "local"
 
 
-def _mode_label(state):
-    return ("DeepSeek AI 分析（合成数据）" if state["dataset"].source == "generated"
-            else "本地规则分析（上传数据）")
+STATE_LEGEND = (
+    ("合成数据 + 离线 Mock", "不会调用 DeepSeek、不产生费用；若出现证据综合分析，那是测试夹具，不是真实模型输出。"),
+    ("合成数据 + 真实 DeepSeek", "结构化意图会外发；回答会标注模型分析是否通过证据校验。"),
+    ("上传数据 + 本地规则", "不构造模型 provider，任何内容都不外发。"),
+    ("澄清 / 不支持", "由本地语义层直接决定，完全未调用模型（model_turns=0）。"),
+    ("模型分析成功", "evidence_analysis · analysis_status=verified；中文句子由后端证据渲染。"),
+    ("模型分析失败后的 fallback", "deterministic_fallback，明确提示，只显示确定性统计。"),
+)
+
+
+def _agent_runtime(client, state):
+    """Read the backend's real provider status only for a confirmed synthetic dataset.
+
+    Uploaded data never builds a model provider, so no status request is needed
+    (and the first-open HTTP path contract stays untouched). The cached value is
+    tied to the dataset version, so switching datasets or restarting the backend
+    with a different provider cannot leave a stale "live model" label behind.
+    """
+    dataset = state["dataset"]
+    if dataset is None or dataset.source != "generated":
+        return None
+    cached = state.get("agent_runtime")
+    if cached is not None and cached["version"] == dataset.dataset_version:
+        return cached["status"]
+    try:
+        status = client.agent_status()
+    except DashboardError:
+        status = None
+    state["agent_runtime"] = {"version": dataset.dataset_version, "status": status}
+    return status
+
+
+def _mode_label(state, runtime=None):
+    if state["dataset"].source != "generated":
+        return "本地规则分析（上传数据）"
+    if runtime is None:
+        return "模型状态未确认（合成数据，请检查后端服务）"
+    if runtime.simulated:
+        return "离线 Mock 演示（合成数据，未调用 DeepSeek）"
+    return f"DeepSeek AI 分析（{runtime.model or '已配置模型'}）"
+
+
+def _runtime_panel(state, runtime):
+    """Make the six observable states legible, including non-model outcomes."""
+    with st.expander("本次分析状态说明"):
+        dataset = state["dataset"]
+        if dataset.source != "generated":
+            st.write("**当前：上传数据 + 本地规则。** 不构造模型 provider，不发送任何外部请求。")
+        elif runtime is None:
+            st.warning("未能读取后端模型状态。请确认后端服务已启动，然后刷新页面。")
+        elif runtime.simulated:
+            st.write(f"**当前：合成数据 + 离线 Mock。** provider `{runtime.provider}` · "
+                     f"model `{runtime.model}` · simulated `True`。")
+            st.write("不会调用 DeepSeek、不产生费用；页面若出现证据综合分析，来自测试夹具，不是真实模型输出。")
+        else:
+            st.write(f"**当前：合成数据 + 真实 DeepSeek。** provider `{runtime.provider}` · "
+                     f"model `{runtime.model}` · simulated `False`。")
+            st.write("结构化意图会发送给模型；上传数据永不外发。")
+        st.markdown("**如何读懂每条回答**")
+        for name, detail in STATE_LEGEND:
+            st.write(f"- {name}：{detail}")
+        st.caption("技术详情中的完整 course_id、dataset_version 与 Evidence 保持不变。")
 
 
 def _observe_dataset(client, state):
@@ -241,15 +304,27 @@ def _render_charts(result, catalog=None):
 
 
 def _answer_mode_label(result):
+    """Use the response's own provider flags, never a static sidebar guess.
+
+    A verified analysis produced by an offline fixture must never read like a
+    successful live-model analysis, and a Mock's missing protocol output is an
+    expected demo behaviour rather than a model failure.
+    """
     if result.status != "completed":
-        return "本地业务语义解析（未调用模型）"
+        return "澄清 / 不支持（本地语义解析，未调用模型）"
     if result.provider == "local":
-        return "本地规则分析（上传数据）"
-    if result.simulated:
-        return "离线 Mock 演示（合成数据，未调用 DeepSeek）"
-    if result.analysis_status == "fallback" or result.answer_mode == "deterministic_fallback":
-        return "DeepSeek 已调用 · 本次显示确定性统计回退"
-    return "DeepSeek AI 分析（合成数据）"
+        return "本地规则分析（上传数据，未调用模型）"
+    prefix = ("离线 Mock 演示（合成数据，未调用 DeepSeek）" if result.simulated
+              else "DeepSeek AI 分析（合成数据）")
+    if result.analysis_status == "verified":
+        return prefix + (" · 证据分析夹具（非真实模型输出）" if result.simulated
+                         else " · 综合分析校验通过")
+    if result.analysis_status == "fallback":
+        return prefix + (" · 确定性统计回退（Mock 不产出该协议，预期行为）" if result.simulated
+                         else " · 模型分析未通过校验，已回退确定性统计")
+    if result.answer_mode == "grounded_narrative":
+        return prefix + " · 英文叙述模板"
+    return prefix + " · 确定性统计"
 
 
 def _render_message(message, state):
@@ -271,15 +346,21 @@ def _render_message(message, state):
     if state["dataset"] is not None and result.dataset_version != state["dataset"].dataset_version:
         st.warning("这条回答来自不同的数据版本，数值不能与当前数据集直接比较。请重新提问。")
     if result.analysis_status == "verified" and result.analysis is not None:
-        st.markdown("**AI 综合分析（证据校验通过）**")
+        title = ("证据综合分析（离线 Mock 夹具 · 非真实模型输出）" if result.simulated
+                 else "AI 综合分析（证据校验通过 · DeepSeek）")
+        st.markdown("**" + title + "**")
         st.write(result.answer)
         st.caption("模型选择解释重点并组织段落；数值、分布观察和比较关系均由后端证据提供。建议不代表因果结论。")
     else:
         st.markdown("**统计结论**")
         if result.analysis_status == "fallback":
-            reason = ("模型没有返回可验证的综合分析" if result.analysis_fallback_reason == "missing_analysis"
-                      else "模型的综合分析未通过证据校验")
-            st.warning(reason + "，本次已回退为确定性统计；这不是 AI 综合分析成功。")
+            if result.simulated and result.analysis_fallback_reason == "missing_analysis":
+                reason = "当前离线 Mock 不产出综合分析协议，本次显示确定性统计（预期行为，不是真实模型失败）"
+            elif result.analysis_fallback_reason == "missing_analysis":
+                reason = "模型没有返回可验证的综合分析"
+            else:
+                reason = "模型的综合分析未通过证据校验"
+            st.warning(reason + "；这不是 AI 综合分析成功。")
         st.write(_evidence_cn(result, state["catalog"]))
         st.caption("以下图表及以上统计来自同一后端证据；确定性结论不推断成绩差异的原因。")
     _render_charts(result, state["catalog"])
@@ -414,9 +495,9 @@ def _synthetic_panel(client, state):
     if not preview.can_import:
         st.warning("这份预览暂不能导入，请调整设置后重新预览。")
         return
-    st.caption("全部姓名、学号与成绩均为虚构。确认后可使用 DeepSeek AI 分析。")
+    st.caption("全部姓名、学号与成绩均为虚构。确认后按后端当前配置运行：Mock 离线演示，配置 DeepSeek 才会调用模型。")
     checked = st.checkbox("我已核对，确认使用这份合成示例数据", key="chat_syn_check")
-    if st.button("确认并启用 DeepSeek 分析", key="chat_syn_confirm", disabled=not checked, type="primary"):
+    if st.button("确认并启用合成数据集", key="chat_syn_confirm", disabled=not checked, type="primary"):
         try:
             with st.spinner("正在激活合成数据集…"):
                 result = client.synthetic_commit(st.session_state.chat_syn_options, preview.preview_token)
@@ -470,14 +551,15 @@ def _upload_panel(client, state):
             _show_error(exc)
 
 
-def _data_source(client, state, info):
+def _data_source(client, state, info, runtime=None):
     with st.sidebar:
         st.header("数据来源")
         if state["dataset"] is not None:
             dataset = state["dataset"]
             st.success("数据集已确认")
             st.write("来源：" + ("合成示例数据（全部虚构）" if dataset.source == "generated" else "上传的 Excel 成绩单"))
-            st.write("当前分析方式：**" + _mode_label(state) + "**")
+            st.write("当前分析方式：**" + _mode_label(state, runtime) + "**")
+            _runtime_panel(state, runtime)
             st.write(f"学生 {dataset.counts.get('students', 0)} 人 · 课程 {dataset.counts.get('courses', 0)} 门 · "
                      f"班级 {dataset.counts.get('classes', 0)} 个")
             st.write(f"成绩记录 {dataset.counts.get('grade_records', 0)} 条")
@@ -510,8 +592,10 @@ def _data_source(client, state, info):
             st.info("还没有确认数据集。请先选择来源并确认，之后才能提问。")
             if info is not None:
                 st.caption("服务端已有数据，但需要你在本页明确确认后才会启用（不会默认激活）。")
-            choice = st.radio("选择数据来源", ["合成示例数据（可体验 DeepSeek）", "上传 Excel 成绩单（仅本地分析）"],
+            choice = st.radio("选择数据来源", ["合成示例数据（虚构数据）", "上传 Excel 成绩单（仅本地分析）"],
                               key="chat_source_choice")
+            st.caption("实际使用的模型由后端启动方式决定：Mock 全程离线，配置 DeepSeek 才会调用模型；"
+                       "上传数据始终只做本地规则分析。确认数据集后侧栏会显示真实 provider 与 model。")
             if choice.startswith("合成"):
                 _synthetic_panel(client, state)
             else:
@@ -606,7 +690,7 @@ def _style():
                 "</style>", unsafe_allow_html=True)
 
 
-def _intro(state):
+def _intro(state, runtime=None):
     st.title("Academic Analytics Copilot — AI 学业数据分析助手")
     st.write("用中文提出学业统计问题。系统先核对数据目录，再由可信统计工具计算，最后给出能查到计算证据的结果。")
     with st.container(border=True):
@@ -614,11 +698,12 @@ def _intro(state):
         for title, detail in SUPPORTED:
             st.write(f"{title}：{detail}")
         st.caption("暂不支持个人成绩查询、名单、排名、预测或成绩差异的原因分析。"
-                   "统计数值全部来自后端统计引擎，AI 只负责选择工具与组织语言，不能自行写入数字。")
+                   "工具与参数由本地语义层确定；模型只在已验证的证据要点中选择重点与组织方式，"
+                   "中文句子和数字均由后端渲染，不能自行写入数值或因果结论。")
     if state["dataset"] is None:
         st.info("还没有确认数据集。请在左侧「数据来源」选择合成示例数据或上传成绩单，确认后才能开始提问。")
     else:
-        st.success("当前：" + _mode_label(state) + "。每条回答都会标注它实际使用的分析方式。")
+        st.success("当前：" + _mode_label(state, runtime) + "。每条回答都会标注它实际使用的分析方式。")
         st.caption("这份数据集会一直使用到你主动更换；每次提问独立解析，不引用上一轮对话内容。"
                    "请在问题里写明课程、班级或学期。")
 
@@ -643,8 +728,9 @@ def main(client_factory=None):
         _intro(state)
         return
 
-    _data_source(client, state, info)
-    _intro(state)
+    runtime = _agent_runtime(client, state)
+    _data_source(client, state, info, runtime)
+    _intro(state, runtime)
     if state["dataset"] is None:
         _preview_overview(state)
     if state["notice"]:

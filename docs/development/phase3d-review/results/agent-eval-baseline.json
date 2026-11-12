@@ -1,0 +1,1219 @@
+{
+  "schema": "phase3d_agent_eval_baseline_v1",
+  "dataset_version": "92ca8e1e068578d2288443300516e7935c75eec26c0f6b8aa91455481a2b6b5a",
+  "data_source": "server-generated synthetic only",
+  "meta": {
+    "provider_kind": "scripted_offline_fixture",
+    "provider_name": "scripted_mock",
+    "is_real_deepseek_run": false,
+    "live_model_calls": 0,
+    "what_this_measures": [
+      "local catalog-bound intent resolution",
+      "tool/argument correctness",
+      "evidence-analysis protocol validation",
+      "deterministic Chinese rendering and numeric consistency"
+    ],
+    "what_this_does_NOT_measure": [
+      "real DeepSeek protocol adherence",
+      "real model accuracy or claim-selection quality",
+      "latency, token usage or cost"
+    ],
+    "warning": "Do NOT report these pass rates as a real-model accuracy figure. A scripted provider always replies exactly as programmed."
+  },
+  "totals": {
+    "cases": 20,
+    "passed": 20,
+    "failed": 0,
+    "no_model_call_cases": 4
+  },
+  "by_category": {
+    "预设统计问题": {
+      "total": 4,
+      "passed": 4
+    },
+    "中文自然表达变体": {
+      "total": 3,
+      "passed": 3
+    },
+    "模糊课程名称": {
+      "total": 2,
+      "passed": 2
+    },
+    "明确课程成绩分布": {
+      "total": 2,
+      "passed": 2
+    },
+    "班级比较": {
+      "total": 2,
+      "passed": 2
+    },
+    "综合分析请求": {
+      "total": 2,
+      "passed": 2
+    },
+    "超出范围的问题": {
+      "total": 2,
+      "passed": 2
+    },
+    "模型输出不符合协议": {
+      "total": 2,
+      "passed": 2
+    },
+    "数值和分析结论校验": {
+      "total": 1,
+      "passed": 1
+    }
+  },
+  "cases": [
+    {
+      "id": "E01",
+      "category": "预设统计问题",
+      "question": "当前数据集的概览是什么？",
+      "expected_status": "ready",
+      "expected_tool": "get_dataset_overview",
+      "intent_resolution": {
+        "status": "ready",
+        "tool": "get_dataset_overview",
+        "arguments": {},
+        "message": "将查询当前数据集的整体概览。"
+      },
+      "tool_correctness": {
+        "matches_expected": true,
+        "arguments_present": true
+      },
+      "fact_consistency": {
+        "checked": true,
+        "version_aligned": true,
+        "numbers_traceable": true,
+        "evidence_ids": [
+          "r1"
+        ],
+        "statistic_values": []
+      },
+      "analysis_quality": {
+        "status": "verified",
+        "claim_ids": [
+          "r1.scope",
+          "r1.sample",
+          "r1.coverage",
+          "r1.limits",
+          "r1.review_scope"
+        ],
+        "sections": [
+          "findings",
+          "observations",
+          "limitations",
+          "suggestions"
+        ],
+        "fallback_reason": null,
+        "has_limitations": true,
+        "has_suggestions": true
+      },
+      "failure_reason": null,
+      "execution": {
+        "provider": "scripted_mock",
+        "model": "phase3d-eval-fixture-v1",
+        "simulated": true,
+        "model_turns": 2,
+        "answer_mode": "evidence_analysis",
+        "analysis_status": "verified",
+        "analysis_fallback_reason": null,
+        "fallback_reason": null
+      },
+      "passed": true
+    },
+    {
+      "id": "E02",
+      "category": "预设统计问题",
+      "question": "查询当前数据集有哪些课程",
+      "expected_status": "ready",
+      "expected_tool": "get_catalog",
+      "intent_resolution": {
+        "status": "ready",
+        "tool": "get_catalog",
+        "arguments": {
+          "grade_level": null
+        },
+        "message": "将查询当前目录中匹配的课程和班级。"
+      },
+      "tool_correctness": {
+        "matches_expected": true,
+        "arguments_present": true
+      },
+      "fact_consistency": {
+        "checked": true,
+        "version_aligned": true,
+        "numbers_traceable": true,
+        "evidence_ids": [
+          "r1"
+        ],
+        "statistic_values": []
+      },
+      "analysis_quality": {
+        "status": "verified",
+        "claim_ids": [
+          "r1.scope",
+          "r1.sample",
+          "r1.catalog_entries",
+          "r1.limits",
+          "r1.review_scope"
+        ],
+        "sections": [
+          "findings",
+          "observations",
+          "limitations",
+          "suggestions"
+        ],
+        "fallback_reason": null,
+        "has_limitations": true,
+        "has_suggestions": true
+      },
+      "failure_reason": null,
+      "execution": {
+        "provider": "scripted_mock",
+        "model": "phase3d-eval-fixture-v1",
+        "simulated": true,
+        "model_turns": 2,
+        "answer_mode": "evidence_analysis",
+        "analysis_status": "verified",
+        "analysis_fallback_reason": null,
+        "fallback_reason": null
+      },
+      "passed": true
+    },
+    {
+      "id": "E03",
+      "category": "预设统计问题",
+      "question": "分析工程实践2的平均分和及格率",
+      "expected_status": "ready",
+      "expected_tool": "get_score_summary",
+      "intent_resolution": {
+        "status": "ready",
+        "tool": "get_score_summary",
+        "arguments": {
+          "term": "2025-T1",
+          "course_id": "I04508f5855eed45aefb204dc",
+          "class_id": null,
+          "grade_level": null
+        },
+        "message": "已匹配课程目录和本次统计范围。"
+      },
+      "tool_correctness": {
+        "matches_expected": true,
+        "arguments_present": true
+      },
+      "fact_consistency": {
+        "checked": true,
+        "version_aligned": true,
+        "numbers_traceable": true,
+        "evidence_ids": [
+          "r1"
+        ],
+        "statistic_values": [
+          "25.00",
+          "74.00",
+          "83.33"
+        ]
+      },
+      "analysis_quality": {
+        "status": "verified",
+        "claim_ids": [
+          "r1.scope",
+          "r1.sample",
+          "r1.mean",
+          "r1.pass_rate",
+          "r1.dominant_band",
+          "r1.limits",
+          "r1.review_distribution"
+        ],
+        "sections": [
+          "findings",
+          "observations",
+          "limitations",
+          "suggestions"
+        ],
+        "fallback_reason": null,
+        "has_limitations": true,
+        "has_suggestions": true
+      },
+      "failure_reason": null,
+      "execution": {
+        "provider": "scripted_mock",
+        "model": "phase3d-eval-fixture-v1",
+        "simulated": true,
+        "model_turns": 2,
+        "answer_mode": "evidence_analysis",
+        "analysis_status": "verified",
+        "analysis_fallback_reason": null,
+        "fallback_reason": null
+      },
+      "passed": true
+    },
+    {
+      "id": "E04",
+      "category": "预设统计问题",
+      "question": "查询软件工程有哪些课程",
+      "expected_status": "ready",
+      "expected_tool": "get_catalog",
+      "intent_resolution": {
+        "status": "ready",
+        "tool": "get_catalog",
+        "arguments": {
+          "grade_level": null,
+          "major": "software_engineering"
+        },
+        "message": "将查询当前目录中匹配的课程和班级。"
+      },
+      "tool_correctness": {
+        "matches_expected": true,
+        "arguments_present": true
+      },
+      "fact_consistency": {
+        "checked": true,
+        "version_aligned": true,
+        "numbers_traceable": true,
+        "evidence_ids": [
+          "r1"
+        ],
+        "statistic_values": []
+      },
+      "analysis_quality": {
+        "status": "verified",
+        "claim_ids": [
+          "r1.scope",
+          "r1.sample",
+          "r1.catalog_entries",
+          "r1.limits",
+          "r1.review_scope"
+        ],
+        "sections": [
+          "findings",
+          "observations",
+          "limitations",
+          "suggestions"
+        ],
+        "fallback_reason": null,
+        "has_limitations": true,
+        "has_suggestions": true
+      },
+      "failure_reason": null,
+      "execution": {
+        "provider": "scripted_mock",
+        "model": "phase3d-eval-fixture-v1",
+        "simulated": true,
+        "model_turns": 2,
+        "answer_mode": "evidence_analysis",
+        "analysis_status": "verified",
+        "analysis_fallback_reason": null,
+        "fallback_reason": null
+      },
+      "passed": true
+    },
+    {
+      "id": "E05",
+      "category": "中文自然表达变体",
+      "question": "看一下工程实践2的成绩",
+      "expected_status": "ready",
+      "expected_tool": "get_score_summary",
+      "intent_resolution": {
+        "status": "ready",
+        "tool": "get_score_summary",
+        "arguments": {
+          "term": "2025-T1",
+          "course_id": "I04508f5855eed45aefb204dc",
+          "class_id": null,
+          "grade_level": null
+        },
+        "message": "已匹配课程目录和本次统计范围。"
+      },
+      "tool_correctness": {
+        "matches_expected": true,
+        "arguments_present": true
+      },
+      "fact_consistency": {
+        "checked": true,
+        "version_aligned": true,
+        "numbers_traceable": true,
+        "evidence_ids": [
+          "r1"
+        ],
+        "statistic_values": [
+          "25.00",
+          "74.00",
+          "83.33"
+        ]
+      },
+      "analysis_quality": {
+        "status": "verified",
+        "claim_ids": [
+          "r1.scope",
+          "r1.sample",
+          "r1.mean",
+          "r1.pass_rate",
+          "r1.dominant_band",
+          "r1.limits",
+          "r1.review_distribution"
+        ],
+        "sections": [
+          "findings",
+          "observations",
+          "limitations",
+          "suggestions"
+        ],
+        "fallback_reason": null,
+        "has_limitations": true,
+        "has_suggestions": true
+      },
+      "failure_reason": null,
+      "execution": {
+        "provider": "scripted_mock",
+        "model": "phase3d-eval-fixture-v1",
+        "simulated": true,
+        "model_turns": 2,
+        "answer_mode": "evidence_analysis",
+        "analysis_status": "verified",
+        "analysis_fallback_reason": null,
+        "fallback_reason": null
+      },
+      "passed": true
+    },
+    {
+      "id": "E06",
+      "category": "中文自然表达变体",
+      "question": "帮我看看工程实践2的均分",
+      "expected_status": "ready",
+      "expected_tool": "get_score_summary",
+      "intent_resolution": {
+        "status": "ready",
+        "tool": "get_score_summary",
+        "arguments": {
+          "term": "2025-T1",
+          "course_id": "I04508f5855eed45aefb204dc",
+          "class_id": null,
+          "grade_level": null
+        },
+        "message": "已匹配课程目录和本次统计范围。"
+      },
+      "tool_correctness": {
+        "matches_expected": true,
+        "arguments_present": true
+      },
+      "fact_consistency": {
+        "checked": true,
+        "version_aligned": true,
+        "numbers_traceable": true,
+        "evidence_ids": [
+          "r1"
+        ],
+        "statistic_values": [
+          "25.00",
+          "74.00"
+        ]
+      },
+      "analysis_quality": {
+        "status": "verified",
+        "claim_ids": [
+          "r1.scope",
+          "r1.sample",
+          "r1.mean",
+          "r1.dominant_band",
+          "r1.limits",
+          "r1.review_distribution"
+        ],
+        "sections": [
+          "findings",
+          "observations",
+          "limitations",
+          "suggestions"
+        ],
+        "fallback_reason": null,
+        "has_limitations": true,
+        "has_suggestions": true
+      },
+      "failure_reason": null,
+      "execution": {
+        "provider": "scripted_mock",
+        "model": "phase3d-eval-fixture-v1",
+        "simulated": true,
+        "model_turns": 2,
+        "answer_mode": "evidence_analysis",
+        "analysis_status": "verified",
+        "analysis_fallback_reason": null,
+        "fallback_reason": null
+      },
+      "passed": true
+    },
+    {
+      "id": "E07",
+      "category": "中文自然表达变体",
+      "question": "工程实践2有没有人不及格",
+      "expected_status": "ready",
+      "expected_tool": "get_score_summary",
+      "intent_resolution": {
+        "status": "ready",
+        "tool": "get_score_summary",
+        "arguments": {
+          "term": "2025-T1",
+          "course_id": "I04508f5855eed45aefb204dc",
+          "class_id": null,
+          "grade_level": null
+        },
+        "message": "已匹配课程目录和本次统计范围。"
+      },
+      "tool_correctness": {
+        "matches_expected": true,
+        "arguments_present": true
+      },
+      "fact_consistency": {
+        "checked": true,
+        "version_aligned": true,
+        "numbers_traceable": true,
+        "evidence_ids": [
+          "r1"
+        ],
+        "statistic_values": [
+          "25.00",
+          "83.33"
+        ]
+      },
+      "analysis_quality": {
+        "status": "verified",
+        "claim_ids": [
+          "r1.scope",
+          "r1.sample",
+          "r1.pass_rate",
+          "r1.dominant_band",
+          "r1.limits",
+          "r1.review_distribution"
+        ],
+        "sections": [
+          "findings",
+          "observations",
+          "limitations",
+          "suggestions"
+        ],
+        "fallback_reason": null,
+        "has_limitations": true,
+        "has_suggestions": true
+      },
+      "failure_reason": null,
+      "execution": {
+        "provider": "scripted_mock",
+        "model": "phase3d-eval-fixture-v1",
+        "simulated": true,
+        "model_turns": 2,
+        "answer_mode": "evidence_analysis",
+        "analysis_status": "verified",
+        "analysis_fallback_reason": null,
+        "fallback_reason": null
+      },
+      "passed": true
+    },
+    {
+      "id": "E08",
+      "category": "模糊课程名称",
+      "question": "分析体育课的成绩",
+      "expected_status": "needs_clarification",
+      "expected_tool": null,
+      "intent_resolution": {
+        "status": "needs_clarification",
+        "tool": null,
+        "arguments": {},
+        "message": "这个课程说法还不能确定具体课程。请确认目录中的课程全名后再分析。"
+      },
+      "tool_correctness": {
+        "matches_expected": true,
+        "arguments_present": false
+      },
+      "fact_consistency": {
+        "checked": false,
+        "version_aligned": null,
+        "numbers_traceable": null,
+        "evidence_ids": []
+      },
+      "analysis_quality": {
+        "status": "no_model_call_expected",
+        "claim_ids": [],
+        "sections": [],
+        "fallback_reason": null
+      },
+      "failure_reason": "expected_clarification",
+      "passed": true
+    },
+    {
+      "id": "E09",
+      "category": "模糊课程名称",
+      "question": "分析体育类课程的成绩",
+      "expected_status": "needs_clarification",
+      "expected_tool": null,
+      "intent_resolution": {
+        "status": "needs_clarification",
+        "tool": null,
+        "arguments": {},
+        "message": "当前课程目录找不到问题中指定的课程，请核对课程全名或从现有课程中选择。"
+      },
+      "tool_correctness": {
+        "matches_expected": true,
+        "arguments_present": false
+      },
+      "fact_consistency": {
+        "checked": false,
+        "version_aligned": null,
+        "numbers_traceable": null,
+        "evidence_ids": []
+      },
+      "analysis_quality": {
+        "status": "no_model_call_expected",
+        "claim_ids": [],
+        "sections": [],
+        "fallback_reason": null
+      },
+      "failure_reason": "expected_clarification",
+      "passed": true
+    },
+    {
+      "id": "E10",
+      "category": "明确课程成绩分布",
+      "question": "分析体育 III的成绩分布",
+      "expected_status": "ready",
+      "expected_tool": "get_score_summary",
+      "intent_resolution": {
+        "status": "ready",
+        "tool": "get_score_summary",
+        "arguments": {
+          "term": "2025-T1",
+          "course_id": "Id935981463527088a0808e1a",
+          "class_id": null,
+          "grade_level": null
+        },
+        "message": "已匹配课程目录和本次统计范围。"
+      },
+      "tool_correctness": {
+        "matches_expected": true,
+        "arguments_present": true
+      },
+      "fact_consistency": {
+        "checked": true,
+        "version_aligned": true,
+        "numbers_traceable": true,
+        "evidence_ids": [
+          "r1"
+        ],
+        "statistic_values": [
+          "41.67",
+          "58.33"
+        ]
+      },
+      "analysis_quality": {
+        "status": "verified",
+        "claim_ids": [
+          "r1.scope",
+          "r1.sample",
+          "r1.dominant_band",
+          "r1.high_band",
+          "r1.limits",
+          "r1.review_distribution"
+        ],
+        "sections": [
+          "findings",
+          "observations",
+          "limitations",
+          "suggestions"
+        ],
+        "fallback_reason": null,
+        "has_limitations": true,
+        "has_suggestions": true
+      },
+      "failure_reason": null,
+      "execution": {
+        "provider": "scripted_mock",
+        "model": "phase3d-eval-fixture-v1",
+        "simulated": true,
+        "model_turns": 2,
+        "answer_mode": "evidence_analysis",
+        "analysis_status": "verified",
+        "analysis_fallback_reason": null,
+        "fallback_reason": null
+      },
+      "passed": true
+    },
+    {
+      "id": "E11",
+      "category": "明确课程成绩分布",
+      "question": "工程实践2的分数都集中在哪一段",
+      "expected_status": "ready",
+      "expected_tool": "get_score_summary",
+      "intent_resolution": {
+        "status": "ready",
+        "tool": "get_score_summary",
+        "arguments": {
+          "term": "2025-T1",
+          "course_id": "I04508f5855eed45aefb204dc",
+          "class_id": null,
+          "grade_level": null
+        },
+        "message": "已匹配课程目录和本次统计范围。"
+      },
+      "tool_correctness": {
+        "matches_expected": true,
+        "arguments_present": true
+      },
+      "fact_consistency": {
+        "checked": true,
+        "version_aligned": true,
+        "numbers_traceable": true,
+        "evidence_ids": [
+          "r1"
+        ],
+        "statistic_values": [
+          "25.00",
+          "74.00",
+          "83.33"
+        ]
+      },
+      "analysis_quality": {
+        "status": "verified",
+        "claim_ids": [
+          "r1.scope",
+          "r1.sample",
+          "r1.mean",
+          "r1.pass_rate",
+          "r1.dominant_band",
+          "r1.limits",
+          "r1.review_distribution"
+        ],
+        "sections": [
+          "findings",
+          "observations",
+          "limitations",
+          "suggestions"
+        ],
+        "fallback_reason": null,
+        "has_limitations": true,
+        "has_suggestions": true
+      },
+      "failure_reason": null,
+      "execution": {
+        "provider": "scripted_mock",
+        "model": "phase3d-eval-fixture-v1",
+        "simulated": true,
+        "model_turns": 2,
+        "answer_mode": "evidence_analysis",
+        "analysis_status": "verified",
+        "analysis_fallback_reason": null,
+        "fallback_reason": null
+      },
+      "passed": true
+    },
+    {
+      "id": "E12",
+      "category": "班级比较",
+      "question": "比较 C001 和 C002 的工程实践2成绩",
+      "expected_status": "ready",
+      "expected_tool": "compare_classes",
+      "intent_resolution": {
+        "status": "ready",
+        "tool": "compare_classes",
+        "arguments": {
+          "term": "2025-T1",
+          "course_id": "I04508f5855eed45aefb204dc",
+          "class_ids": [
+            "C001",
+            "C002"
+          ]
+        },
+        "message": "将比较所选班级同一课程、同一学期的成绩。"
+      },
+      "tool_correctness": {
+        "matches_expected": true,
+        "arguments_present": true
+      },
+      "fact_consistency": {
+        "checked": true,
+        "version_aligned": true,
+        "numbers_traceable": true,
+        "evidence_ids": [
+          "r1"
+        ],
+        "statistic_values": [
+          "12.95"
+        ]
+      },
+      "analysis_quality": {
+        "status": "verified",
+        "claim_ids": [
+          "r1.scope",
+          "r1.sample",
+          "r1.mean_comparison",
+          "r1.limits",
+          "r1.review_comparison"
+        ],
+        "sections": [
+          "findings",
+          "observations",
+          "limitations",
+          "suggestions"
+        ],
+        "fallback_reason": null,
+        "has_limitations": true,
+        "has_suggestions": true
+      },
+      "failure_reason": null,
+      "execution": {
+        "provider": "scripted_mock",
+        "model": "phase3d-eval-fixture-v1",
+        "simulated": true,
+        "model_turns": 2,
+        "answer_mode": "evidence_analysis",
+        "analysis_status": "verified",
+        "analysis_fallback_reason": null,
+        "fallback_reason": null
+      },
+      "passed": true
+    },
+    {
+      "id": "E13",
+      "category": "班级比较",
+      "question": "比较2024软工1班和2024软工2班的工程实践2成绩",
+      "expected_status": "ready",
+      "expected_tool": "compare_classes",
+      "intent_resolution": {
+        "status": "ready",
+        "tool": "compare_classes",
+        "arguments": {
+          "term": "2025-T1",
+          "course_id": "I04508f5855eed45aefb204dc",
+          "class_ids": [
+            "C001",
+            "C002"
+          ]
+        },
+        "message": "将比较所选班级同一课程、同一学期的成绩。"
+      },
+      "tool_correctness": {
+        "matches_expected": true,
+        "arguments_present": true
+      },
+      "fact_consistency": {
+        "checked": true,
+        "version_aligned": true,
+        "numbers_traceable": true,
+        "evidence_ids": [
+          "r1"
+        ],
+        "statistic_values": [
+          "12.95"
+        ]
+      },
+      "analysis_quality": {
+        "status": "verified",
+        "claim_ids": [
+          "r1.scope",
+          "r1.sample",
+          "r1.mean_comparison",
+          "r1.limits",
+          "r1.review_comparison"
+        ],
+        "sections": [
+          "findings",
+          "observations",
+          "limitations",
+          "suggestions"
+        ],
+        "fallback_reason": null,
+        "has_limitations": true,
+        "has_suggestions": true
+      },
+      "failure_reason": null,
+      "execution": {
+        "provider": "scripted_mock",
+        "model": "phase3d-eval-fixture-v1",
+        "simulated": true,
+        "model_turns": 2,
+        "answer_mode": "evidence_analysis",
+        "analysis_status": "verified",
+        "analysis_fallback_reason": null,
+        "fallback_reason": null
+      },
+      "passed": true
+    },
+    {
+      "id": "E14",
+      "category": "综合分析请求",
+      "question": "分析工程实践2的成绩表现，有哪些值得关注的地方？",
+      "expected_status": "ready",
+      "expected_tool": "get_score_summary",
+      "intent_resolution": {
+        "status": "ready",
+        "tool": "get_score_summary",
+        "arguments": {
+          "term": "2025-T1",
+          "course_id": "I04508f5855eed45aefb204dc",
+          "class_id": null,
+          "grade_level": null
+        },
+        "message": "已匹配课程目录和本次统计范围。"
+      },
+      "tool_correctness": {
+        "matches_expected": true,
+        "arguments_present": true
+      },
+      "fact_consistency": {
+        "checked": true,
+        "version_aligned": true,
+        "numbers_traceable": true,
+        "evidence_ids": [
+          "r1"
+        ],
+        "statistic_values": [
+          "25.00",
+          "74.00",
+          "83.33"
+        ]
+      },
+      "analysis_quality": {
+        "status": "verified",
+        "claim_ids": [
+          "r1.scope",
+          "r1.sample",
+          "r1.mean",
+          "r1.pass_rate",
+          "r1.dominant_band",
+          "r1.limits",
+          "r1.review_distribution"
+        ],
+        "sections": [
+          "findings",
+          "observations",
+          "limitations",
+          "suggestions"
+        ],
+        "fallback_reason": null,
+        "has_limitations": true,
+        "has_suggestions": true
+      },
+      "failure_reason": null,
+      "execution": {
+        "provider": "scripted_mock",
+        "model": "phase3d-eval-fixture-v1",
+        "simulated": true,
+        "model_turns": 2,
+        "answer_mode": "evidence_analysis",
+        "analysis_status": "verified",
+        "analysis_fallback_reason": null,
+        "fallback_reason": null
+      },
+      "passed": true
+    },
+    {
+      "id": "E15",
+      "category": "综合分析请求",
+      "question": "工程实践2的成绩有什么特点",
+      "expected_status": "ready",
+      "expected_tool": "get_score_summary",
+      "intent_resolution": {
+        "status": "ready",
+        "tool": "get_score_summary",
+        "arguments": {
+          "term": "2025-T1",
+          "course_id": "I04508f5855eed45aefb204dc",
+          "class_id": null,
+          "grade_level": null
+        },
+        "message": "已匹配课程目录和本次统计范围。"
+      },
+      "tool_correctness": {
+        "matches_expected": true,
+        "arguments_present": true
+      },
+      "fact_consistency": {
+        "checked": true,
+        "version_aligned": true,
+        "numbers_traceable": true,
+        "evidence_ids": [
+          "r1"
+        ],
+        "statistic_values": [
+          "25.00",
+          "74.00",
+          "83.33"
+        ]
+      },
+      "analysis_quality": {
+        "status": "verified",
+        "claim_ids": [
+          "r1.scope",
+          "r1.sample",
+          "r1.mean",
+          "r1.pass_rate",
+          "r1.dominant_band",
+          "r1.limits",
+          "r1.review_distribution"
+        ],
+        "sections": [
+          "findings",
+          "observations",
+          "limitations",
+          "suggestions"
+        ],
+        "fallback_reason": null,
+        "has_limitations": true,
+        "has_suggestions": true
+      },
+      "failure_reason": null,
+      "execution": {
+        "provider": "scripted_mock",
+        "model": "phase3d-eval-fixture-v1",
+        "simulated": true,
+        "model_turns": 2,
+        "answer_mode": "evidence_analysis",
+        "analysis_status": "verified",
+        "analysis_fallback_reason": null,
+        "fallback_reason": null
+      },
+      "passed": true
+    },
+    {
+      "id": "E16",
+      "category": "超出范围的问题",
+      "question": "预测某位同学下学期会不会挂科",
+      "expected_status": "unsupported",
+      "expected_tool": null,
+      "intent_resolution": {
+        "status": "unsupported",
+        "tool": null,
+        "arguments": {},
+        "message": "仅支持聚合学业统计，不支持个人名单、代码执行、预测、排名或因果分析。"
+      },
+      "tool_correctness": {
+        "matches_expected": true,
+        "arguments_present": false
+      },
+      "fact_consistency": {
+        "checked": false,
+        "version_aligned": null,
+        "numbers_traceable": null,
+        "evidence_ids": []
+      },
+      "analysis_quality": {
+        "status": "no_model_call_expected",
+        "claim_ids": [],
+        "sections": [],
+        "fallback_reason": null
+      },
+      "failure_reason": "expected_unsupported",
+      "passed": true
+    },
+    {
+      "id": "E17",
+      "category": "超出范围的问题",
+      "question": "列出所有学生的姓名和学号",
+      "expected_status": "unsupported",
+      "expected_tool": null,
+      "intent_resolution": {
+        "status": "unsupported",
+        "tool": null,
+        "arguments": {},
+        "message": "仅支持聚合学业统计，不支持个人名单、代码执行、预测、排名或因果分析。"
+      },
+      "tool_correctness": {
+        "matches_expected": true,
+        "arguments_present": false
+      },
+      "fact_consistency": {
+        "checked": false,
+        "version_aligned": null,
+        "numbers_traceable": null,
+        "evidence_ids": []
+      },
+      "analysis_quality": {
+        "status": "no_model_call_expected",
+        "claim_ids": [],
+        "sections": [],
+        "fallback_reason": null
+      },
+      "failure_reason": "expected_unsupported",
+      "passed": true
+    },
+    {
+      "id": "E18",
+      "category": "模型输出不符合协议",
+      "question": "分析工程实践2的成绩分布",
+      "expected_status": "ready",
+      "expected_tool": "get_score_summary",
+      "intent_resolution": {
+        "status": "ready",
+        "tool": "get_score_summary",
+        "arguments": {
+          "term": "2025-T1",
+          "course_id": "I04508f5855eed45aefb204dc",
+          "class_id": null,
+          "grade_level": null
+        },
+        "message": "已匹配课程目录和本次统计范围。"
+      },
+      "tool_correctness": {
+        "matches_expected": true,
+        "arguments_present": true
+      },
+      "fact_consistency": {
+        "checked": true,
+        "version_aligned": true,
+        "numbers_traceable": true,
+        "evidence_ids": [
+          "r1"
+        ],
+        "statistic_values": [
+          "74.00",
+          "83.33"
+        ]
+      },
+      "analysis_quality": {
+        "status": "fallback",
+        "claim_ids": [],
+        "sections": [],
+        "fallback_reason": "invalid_analysis",
+        "has_limitations": false,
+        "has_suggestions": false
+      },
+      "failure_reason": null,
+      "execution": {
+        "provider": "scripted_mock",
+        "model": "phase3d-eval-fixture-v1",
+        "simulated": true,
+        "model_turns": 2,
+        "answer_mode": "deterministic_fallback",
+        "analysis_status": "fallback",
+        "analysis_fallback_reason": "invalid_analysis",
+        "fallback_reason": "invalid_narrative"
+      },
+      "passed": true,
+      "fabricated_text_rejected": true
+    },
+    {
+      "id": "E19",
+      "category": "模型输出不符合协议",
+      "question": "分析工程实践2的成绩分布",
+      "expected_status": "ready",
+      "expected_tool": "get_score_summary",
+      "intent_resolution": {
+        "status": "ready",
+        "tool": "get_score_summary",
+        "arguments": {
+          "term": "2025-T1",
+          "course_id": "I04508f5855eed45aefb204dc",
+          "class_id": null,
+          "grade_level": null
+        },
+        "message": "已匹配课程目录和本次统计范围。"
+      },
+      "tool_correctness": {
+        "matches_expected": true,
+        "arguments_present": true
+      },
+      "fact_consistency": {
+        "checked": true,
+        "version_aligned": true,
+        "numbers_traceable": true,
+        "evidence_ids": [
+          "r1"
+        ],
+        "statistic_values": [
+          "74.00",
+          "83.33"
+        ]
+      },
+      "analysis_quality": {
+        "status": "fallback",
+        "claim_ids": [],
+        "sections": [],
+        "fallback_reason": "invalid_analysis",
+        "has_limitations": false,
+        "has_suggestions": false
+      },
+      "failure_reason": null,
+      "execution": {
+        "provider": "scripted_mock",
+        "model": "phase3d-eval-fixture-v1",
+        "simulated": true,
+        "model_turns": 2,
+        "answer_mode": "deterministic_fallback",
+        "analysis_status": "fallback",
+        "analysis_fallback_reason": "invalid_analysis",
+        "fallback_reason": "invalid_narrative"
+      },
+      "passed": true,
+      "fabricated_text_rejected": true
+    },
+    {
+      "id": "E20",
+      "category": "数值和分析结论校验",
+      "question": "分析工程实践2的平均分、及格率和成绩分布",
+      "expected_status": "ready",
+      "expected_tool": "get_score_summary",
+      "intent_resolution": {
+        "status": "ready",
+        "tool": "get_score_summary",
+        "arguments": {
+          "term": "2025-T1",
+          "course_id": "I04508f5855eed45aefb204dc",
+          "class_id": null,
+          "grade_level": null
+        },
+        "message": "已匹配课程目录和本次统计范围。"
+      },
+      "tool_correctness": {
+        "matches_expected": true,
+        "arguments_present": true
+      },
+      "fact_consistency": {
+        "checked": true,
+        "version_aligned": true,
+        "numbers_traceable": true,
+        "evidence_ids": [
+          "r1"
+        ],
+        "statistic_values": [
+          "25.00",
+          "33.33",
+          "74.00",
+          "83.33"
+        ]
+      },
+      "analysis_quality": {
+        "status": "verified",
+        "claim_ids": [
+          "r1.scope",
+          "r1.sample",
+          "r1.mean",
+          "r1.pass_rate",
+          "r1.dominant_band",
+          "r1.high_band",
+          "r1.limits",
+          "r1.review_distribution"
+        ],
+        "sections": [
+          "findings",
+          "observations",
+          "limitations",
+          "suggestions"
+        ],
+        "fallback_reason": null,
+        "has_limitations": true,
+        "has_suggestions": true
+      },
+      "failure_reason": null,
+      "execution": {
+        "provider": "scripted_mock",
+        "model": "phase3d-eval-fixture-v1",
+        "simulated": true,
+        "model_turns": 2,
+        "answer_mode": "evidence_analysis",
+        "analysis_status": "verified",
+        "analysis_fallback_reason": null,
+        "fallback_reason": null
+      },
+      "passed": true
+    }
+  ]
+}

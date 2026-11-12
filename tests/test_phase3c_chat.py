@@ -132,6 +132,8 @@ def test_page_displays_verified_analysis_or_explicit_fallback(chat_env, monkeypa
         assert result.analysis_status == "verified"
         assert result.answer in body  # _evidence_cn must not overwrite it.
         assert "41.67%" in body and "58.33%" in body and "样本较小" in body
-        assert "AI 综合分析（证据校验通过）" in body
+        # A scripted offline fixture must not be presented as a live-model result.
+        assert "证据综合分析（离线 Mock 夹具 · 非真实模型输出）" in body
+        assert "AI 综合分析（证据校验通过 · DeepSeek）" not in body
         assert result.evidence[0].arguments["course_id"] not in body
     assert any("离线 Mock" in item.value for item in page.caption)

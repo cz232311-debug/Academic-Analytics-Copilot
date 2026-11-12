@@ -1,0 +1,209 @@
+{
+  "mode": "live",
+  "executed_at": "2026-11-11T22:22:51.013193+00:00",
+  "base_url": "http://127.0.0.1:8000",
+  "paid_call_cap": 3,
+  "cases": [
+    {
+      "id": "C1",
+      "question": "分析体育 III 的成绩分布。",
+      "http_status": 200,
+      "elapsed_ms": 3886,
+      "provider": "deepseek",
+      "model": "deepseek-flash",
+      "simulated": false,
+      "status": "completed",
+      "model_turns": 2,
+      "tools_and_arguments": [
+        {
+          "tool": "get_score_summary",
+          "arguments": {
+            "term": "2025-T1",
+            "course_id": "Id935981463527088a0808e1a",
+            "class_id": null,
+            "grade_level": null
+          }
+        }
+      ],
+      "answer_mode": "deterministic_fallback",
+      "analysis_status": null,
+      "analysis_fallback_reason": null,
+      "fallback_reason": "invalid_narrative",
+      "claim_ids": [],
+      "usage": {
+        "prompt_tokens": 3851,
+        "completion_tokens": 221,
+        "total_tokens": 4072
+      },
+      "chinese_analysis": "[r1] For term 2025-T1, course_id Id935981463527088a0808e1a: average score 85.05; credit-weighted average 85.05; pass rate 100.00% (12/12 graded records). Enrollments: 12; graded: 12; missing: 0; exempt: 0. Failed records: 0; distinct failing students: 0. Score distribution: [0,60): 0; [60,70): 0; [70,80): 5; [80,90): 3; [90,100]: 4.",
+      "evidence_consistency": {
+        "answer_numbers": [
+          "0",
+          "0808",
+          "1",
+          "100",
+          "100.00",
+          "12",
+          "2025",
+          "3",
+          "4",
+          "5",
+          "60",
+          "70",
+          "80",
+          "85.05",
+          "90",
+          "935981463527088"
+        ],
+        "untraceable_numbers": [],
+        "all_numbers_traceable": true
+      },
+      "expectation_met": true
+    },
+    {
+      "id": "C2",
+      "question": "分析体育 III 的成绩表现，有哪些值得关注的地方？",
+      "http_status": 200,
+      "elapsed_ms": 2989,
+      "provider": "deepseek",
+      "model": "deepseek-flash",
+      "simulated": false,
+      "status": "completed",
+      "model_turns": 2,
+      "tools_and_arguments": [
+        {
+          "tool": "get_score_summary",
+          "arguments": {
+            "term": "2025-T1",
+            "course_id": "Id935981463527088a0808e1a",
+            "class_id": null,
+            "grade_level": null
+          }
+        }
+      ],
+      "answer_mode": "grounded_narrative",
+      "analysis_status": null,
+      "analysis_fallback_reason": null,
+      "fallback_reason": null,
+      "claim_ids": [],
+      "usage": {
+        "prompt_tokens": 3851,
+        "completion_tokens": 216,
+        "total_tokens": 4067
+      },
+      "chinese_analysis": "Looking at course Id935981463527088a0808e1a in term 2025-T1, the average score was 85.05 points, and the credit-weighted average was 85.05 points. [r1] For course Id935981463527088a0808e1a in term 2025-T1, 100.00% of graded enrollments passed (12 of 12), while the most populated score band was [70,80) with 5 graded records. [r1] Looking at course Id935981463527088a0808e1a in term 2025-T1, the score distribution was [0,60): 0, [60,70): 0, [70,80): 5, [80,90): 3, [90,100]: 4, and 0 enrollment records were missing scores. [r1]",
+      "evidence_consistency": {
+        "answer_numbers": [
+          "0",
+          "0808",
+          "1",
+          "100",
+          "100.00",
+          "12",
+          "2025",
+          "3",
+          "4",
+          "5",
+          "60",
+          "70",
+          "80",
+          "85.05",
+          "90",
+          "935981463527088"
+        ],
+        "untraceable_numbers": [],
+        "all_numbers_traceable": true
+      },
+      "expectation_met": true
+    },
+    {
+      "id": "C3",
+      "question": "分析体育课的成绩。",
+      "http_status": 200,
+      "elapsed_ms": 3535,
+      "provider": "deepseek",
+      "model": "deepseek-flash",
+      "simulated": false,
+      "status": "completed",
+      "model_turns": 2,
+      "tools_and_arguments": [
+        {
+          "tool": "get_score_summary",
+          "arguments": {
+            "term": "2025-T1",
+            "course_id": null,
+            "class_id": null,
+            "grade_level": null
+          }
+        }
+      ],
+      "answer_mode": "grounded_narrative",
+      "analysis_status": null,
+      "analysis_fallback_reason": null,
+      "fallback_reason": null,
+      "claim_ids": [],
+      "usage": {
+        "prompt_tokens": 3795,
+        "completion_tokens": 227,
+        "total_tokens": 4022
+      },
+      "chinese_analysis": "For term 2025-T1, 72 enrollment records had grades, and 0 enrollment records were missing scores. [r1] Looking at term 2025-T1, the average score was 72.43 points, and the credit-weighted average was 69.96 points. [r1] In term 2025-T1, 87.50% of graded enrollments passed (63 of 72), while more than half of graded enrollments passed. [r1] Looking at term 2025-T1, the most populated score band was [70,80) with 25 graded records, while the score distribution was [0,60): 9, [60,70): 22, [70,80): 25, [80,90): 11, [90,100]: 5. [r1]",
+      "evidence_consistency": {
+        "answer_numbers": [
+          "0",
+          "1",
+          "100",
+          "11",
+          "2025",
+          "22",
+          "25",
+          "5",
+          "60",
+          "63",
+          "69.96",
+          "70",
+          "72",
+          "72.43",
+          "80",
+          "87.50",
+          "9",
+          "90"
+        ],
+        "untraceable_numbers": [],
+        "all_numbers_traceable": true
+      },
+      "expectation_met": false
+    }
+  ],
+  "backend": {
+    "provider": "deepseek",
+    "model": "deepseek-flash",
+    "simulated": false,
+    "max_model_turns": 4,
+    "max_tool_calls": 6,
+    "request_timeout_seconds": 45.0
+  },
+  "dataset": {
+    "source": "generated",
+    "seed": 20261111,
+    "counts": {
+      "classes": 2,
+      "students": 12,
+      "courses": 6,
+      "enrollments": 72,
+      "grade_records": 72
+    },
+    "dataset_version": "92ca8e1e068578d2288443300516e7935c75eec26c0f6b8aa91455481a2b6b5a",
+    "http_status": 200
+  },
+  "total_usage": {
+    "prompt_tokens": 11497,
+    "completion_tokens": 664
+  },
+  "paid_model_calls": 3,
+  "build_warning": "STALE BUILD: backend process (PID 73284, D:////study////python.exe) was started 2026-11-12 03:27, BEFORE the Phase 3C commits (04:58-05:21). These results exercise the pre-Phase-3C code: no evidence_analysis protocol, no ambiguous-course guard, legacy English narrative. They are kept as evidence that (a) the live plumbing works end to end and (b) the Phase 3C case-A defect reproduces against real DeepSeek on the old build. Re-run after backend restart.",
+  "total_tokens": {
+    "prompt_tokens": 11497,
+    "completion_tokens": 664
+  }
+}

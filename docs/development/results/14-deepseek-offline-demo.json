@@ -4,7 +4,7 @@
   "question": "What is the average score and pass rate for G1-C01?",
   "http_status": 200,
   "response": {
-    "request_id": "c2cadf3aceee450f827e4908da00f28d",
+    "request_id": "6e0952bf96dc4694aca45a5a8aa047f9",
     "provider": "mock",
     "model": "scripted-demo-v1",
     "simulated": true,
@@ -23,7 +23,7 @@
           "grade_level": null
         },
         "status": "ok",
-        "elapsed_ms": 8,
+        "elapsed_ms": 32,
         "evidence_id": "r1",
         "result_digest": "07fc6f2115f48be93b0b292c5fdb5834adf524fe36587685fc7eb0fca4a4d1b9",
         "error_code": null

@@ -1,0 +1,131 @@
+{
+  "schema": "phase3d_ab_v1",
+  "question": "分析体育 III 的成绩分布",
+  "dataset_version": "92ca8e1e068578d2288443300516e7935c75eec26c0f6b8aa91455481a2b6b5a",
+  "counts": {
+    "students": 12,
+    "courses": 6,
+    "grade_records": 72,
+    "graded_count": 12,
+    "average_score": "85.05",
+    "pass_rate_percent": "100.00"
+  },
+  "provenance": {
+    "A": "deterministic Python render_fallback + _evidence_cn; no model wording",
+    "B": "render_analysis from SCRIPTED claim IDs; Chinese sentences are server templates",
+    "real_deepseek_output": false,
+    "live_model_calls": 0
+  },
+  "A": {
+    "backend_fallback": "[r1] For term 2025-T1, course_id Id935981463527088a0808e1a: average score 85.05; credit-weighted average 85.05; pass rate 100.00% (12/12 graded records). Enrollments: 12; graded: 12; missing: 0; exempt: 0. Failed records: 0; distinct failing students: 0. Score distribution: [0,60): 0; [60,70): 0; [70,80): 5; [80,90): 3; [90,100]: 4.",
+    "chat_first_conclusion": "2025–2026学年 · 第1学期 · 课程 体育 III：共 12 条成绩记录，其中缺考/缺失 0 条、免修 0 条。有效成绩 12 条；平均分 85.05 分，学分加权平均分 85.05 分；及格率 100.00%（12/12），不及格 0 条。成绩分布：0–<60 0条、60–<70 0条、70–<80 5条、80–<90 3条、90–100 4条。",
+    "chars": 180,
+    "statistic_values": [
+      "100.00",
+      "85.05"
+    ]
+  },
+  "B": {
+    "analysis": "**统计事实**\n\n本次分析范围为2025–2026学年 第1学期，课程“体育 III”；范围内有12名学生、12条成绩记录，其中12条为有效成绩；均分、及格率和分布均以有效成绩记录为统计对象；有效成绩均分为85.05分，学分加权均分为85.05分；及格率为100.00%（12/12），不及格成绩0条。 [r1]\n\n**分析观察**\n\n值得关注的是，记录最多的分数段为70–80分（不含上界），共5条，占有效成绩的41.67%；80分及以上共有7条，占有效成绩的58.33%；这说明高分段在本样本中的实际占比，并不表示教学效果的因果结论。 [r1]\n\n**范围与局限**\n\n本次仅有12条有效成绩，样本较小；这些结果仅描述本次已确认范围和已导入记录，不能据此推断其他学期、未记录学生或教学原因。 [r1]\n\n**后续建议**\n\n建议结合各分数段占比检查集中区间；如需了解班级差异，请另行确认同课程、同学期的班级比较范围。 [r1]",
+    "chars": 416,
+    "statistic_values": [
+      "100.00",
+      "58.33",
+      "41.67",
+      "85.05"
+    ],
+    "claim_ids": [
+      "r1.scope",
+      "r1.sample",
+      "r1.mean",
+      "r1.pass_rate",
+      "r1.dominant_band",
+      "r1.high_band",
+      "r1.limits",
+      "r1.review_distribution"
+    ],
+    "section_kinds": [
+      "findings",
+      "observations",
+      "limitations",
+      "suggestions"
+    ],
+    "evidence_ids": [
+      "r1"
+    ]
+  },
+  "assessment": {
+    "1_more_information_than_indicator_roster": {
+      "verdict": "yes_but_from_deterministic_code",
+      "A_information_points": {
+        "indicators": [
+          "mean",
+          "weighted_mean",
+          "pass_rate",
+          "failed_count",
+          "distribution_bins",
+          "enrollment/missing/exempt counts"
+        ],
+        "derived_relations": [],
+        "limitations": [],
+        "suggestions": []
+      },
+      "B_information_points": {
+        "indicators": [
+          "mean",
+          "weighted_mean",
+          "pass_rate",
+          "failed_count",
+          "distribution_bins",
+          "enrollment/missing/exempt counts",
+          "dominant_band_share",
+          "high_band_share"
+        ],
+        "derived_relations": [
+          "41.67% dominant band",
+          "58.33% >=80",
+          "graded-record denominator"
+        ],
+        "limitations": [
+          "small sample (n=12)",
+          "scope-only, no cross-term/generalisation",
+          "no causal inference"
+        ],
+        "suggestions": [
+          "inspect band shares",
+          "request a separate scoped comparison"
+        ]
+      },
+      "explanation": "The two extra facts (41.67%, 58.33% >=80) and the denominator note are computed by analysis.py from Evidence, not discovered by the model. The model only decides which pre-written claims appear and in what order."
+    },
+    "2_highlights_what_actually_matters": {
+      "verdict": "partially",
+      "distribution_claim_selected": true,
+      "focus_style_used": true,
+      "explanation": "The goal=distribution guard forces a distribution observation and the fixture uses focus style. Whether a real model would pick these is untested."
+    },
+    "3_sample_and_scope_limitations": {
+      "verdict": "yes",
+      "small_sample": true,
+      "scope_only": true,
+      "no_causality": true,
+      "A_has_any_limitation": false,
+      "explanation": "A has no limitation statement at all; B adds a mandatory limitations section."
+    },
+    "4_unsupported_comparison_or_causation": {
+      "verdict": "none_detected",
+      "assertive_causal_words": [],
+      "unauthorised_comparison_claim": false,
+      "numbers_all_traceable": true,
+      "explanation": "Every number in B is in Evidence or a derived claim fact. Causal wording appears only in negated form ('并不表示教学效果的因果结论')."
+    },
+    "5_value_of_the_extra_model_call": {
+      "verdict": "design_value_only_real_gain_unverified",
+      "model_turns_A": 2,
+      "model_turns_B": 2,
+      "extra_turns_for_B": 0,
+      "explanation": "Both paths already use a 2-turn loop. B does not add a model round; it changes what the final turn must return. The only model contribution is claim selection and ordering. Since every verified B so far is a scripted fixture, a real DeepSeek gain (or its fallback rate) is NOT yet measured."
+    }
+  },
+  "headline": "B is more informative than A, but the added information is deterministic code, not model insight. The unverified question is whether a real model can reliably produce a valid, useful claim selection instead of falling back."
+}

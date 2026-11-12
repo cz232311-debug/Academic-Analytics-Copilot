@@ -140,7 +140,10 @@ def test_synthetic_activation_requires_preview_and_checkbox(chat_env):
     assert "/api/datasets/synthetic/commit" in chat_env.paths()
     assert chat_env.store.overview().source == "generated"
     assert chat_env.store.overview().external_llm_allowed is True
-    assert any("DeepSeek AI 分析（合成数据）" in item.value for item in page.markdown)
+    # The backend runs Mock in tests; the sidebar must not claim a live model.
+    assert any("离线 Mock 演示" in item.value for item in page.markdown)
+    assert not any("DeepSeek AI 分析" in item.value for item in page.markdown)
+    assert "/api/agent/status" in chat_env.paths()
     assert page.chat_input[0].proto.disabled is False
 
 

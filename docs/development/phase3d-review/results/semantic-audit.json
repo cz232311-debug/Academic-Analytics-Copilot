@@ -1,0 +1,1277 @@
+{
+  "total_cases": 76,
+  "suspect_count": 0,
+  "by_category": {
+    "explicit_course": {
+      "total": 60,
+      "suspect": 0
+    },
+    "ambiguous_family": {
+      "total": 5,
+      "suspect": 0
+    },
+    "capability": {
+      "total": 5,
+      "suspect": 0
+    },
+    "class_course": {
+      "total": 2,
+      "suspect": 0
+    },
+    "id_boundary": {
+      "total": 4,
+      "suspect": 0
+    }
+  },
+  "suspects": [],
+  "all_cases": [
+    {
+      "id": "EX001",
+      "question": "工程实践2的成绩",
+      "expectation": "ready_own_course",
+      "status": "ready",
+      "tool": "get_score_summary",
+      "arguments": {
+        "term": "2025-T1",
+        "course_id": "I04508f5855eed45aefb204dc"
+      },
+      "message": "已匹配课程目录和本次统计范围。",
+      "ok": true,
+      "reason": "",
+      "category": "explicit_course",
+      "pattern": "explicit_plain",
+      "entity": "工程实践2"
+    },
+    {
+      "id": "EX002",
+      "question": "分析工程实践2的成绩分布",
+      "expectation": "ready_own_course",
+      "status": "ready",
+      "tool": "get_score_summary",
+      "arguments": {
+        "term": "2025-T1",
+        "course_id": "I04508f5855eed45aefb204dc"
+      },
+      "message": "已匹配课程目录和本次统计范围。",
+      "ok": true,
+      "reason": "",
+      "category": "explicit_course",
+      "pattern": "explicit_analysis",
+      "entity": "工程实践2"
+    },
+    {
+      "id": "EX003",
+      "question": "工程实践2的平均分和及格率",
+      "expectation": "ready_own_course",
+      "status": "ready",
+      "tool": "get_score_summary",
+      "arguments": {
+        "term": "2025-T1",
+        "course_id": "I04508f5855eed45aefb204dc"
+      },
+      "message": "已匹配课程目录和本次统计范围。",
+      "ok": true,
+      "reason": "",
+      "category": "explicit_course",
+      "pattern": "explicit_mean_pass",
+      "entity": "工程实践2"
+    },
+    {
+      "id": "EX004",
+      "question": "工程实践2的及格率是多少",
+      "expectation": "ready_own_course",
+      "status": "ready",
+      "tool": "get_score_summary",
+      "arguments": {
+        "term": "2025-T1",
+        "course_id": "I04508f5855eed45aefb204dc"
+      },
+      "message": "已匹配课程目录和本次统计范围。",
+      "ok": true,
+      "reason": "",
+      "category": "explicit_course",
+      "pattern": "explicit_passrate",
+      "entity": "工程实践2"
+    },
+    {
+      "id": "EX005",
+      "question": "工程实践2有多少人不及格",
+      "expectation": "ready_own_course",
+      "status": "ready",
+      "tool": "get_score_summary",
+      "arguments": {
+        "term": "2025-T1",
+        "course_id": "I04508f5855eed45aefb204dc"
+      },
+      "message": "已匹配课程目录和本次统计范围。",
+      "ok": true,
+      "reason": "",
+      "category": "explicit_course",
+      "pattern": "explicit_fail_count",
+      "entity": "工程实践2"
+    },
+    {
+      "id": "EX006",
+      "question": "工程实践2有没有人不及格",
+      "expectation": "ready_own_course",
+      "status": "ready",
+      "tool": "get_score_summary",
+      "arguments": {
+        "term": "2025-T1",
+        "course_id": "I04508f5855eed45aefb204dc"
+      },
+      "message": "已匹配课程目录和本次统计范围。",
+      "ok": true,
+      "reason": "",
+      "category": "explicit_course",
+      "pattern": "explicit_anyone_fail",
+      "entity": "工程实践2"
+    },
+    {
+      "id": "EX007",
+      "question": "工程实践2有没有人及格",
+      "expectation": "ready_own_course",
+      "status": "ready",
+      "tool": "get_score_summary",
+      "arguments": {
+        "term": "2025-T1",
+        "course_id": "I04508f5855eed45aefb204dc"
+      },
+      "message": "已匹配课程目录和本次统计范围。",
+      "ok": true,
+      "reason": "",
+      "category": "explicit_course",
+      "pattern": "explicit_anyone_pass",
+      "entity": "工程实践2"
+    },
+    {
+      "id": "EX008",
+      "question": "工程实践2谁不及格",
+      "expectation": "ready_own_course_or_notice",
+      "status": "ready",
+      "tool": "get_score_summary",
+      "arguments": {
+        "term": "2025-T1",
+        "course_id": "I04508f5855eed45aefb204dc"
+      },
+      "message": "已匹配课程目录和本次统计范围。",
+      "ok": true,
+      "reason": "",
+      "category": "explicit_course",
+      "pattern": "explicit_who_fail",
+      "entity": "工程实践2"
+    },
+    {
+      "id": "EX009",
+      "question": "工程实践2的成绩怎么样",
+      "expectation": "ready_own_course",
+      "status": "ready",
+      "tool": "get_score_summary",
+      "arguments": {
+        "term": "2025-T1",
+        "course_id": "I04508f5855eed45aefb204dc"
+      },
+      "message": "已匹配课程目录和本次统计范围。",
+      "ok": true,
+      "reason": "",
+      "category": "explicit_course",
+      "pattern": "explicit_how",
+      "entity": "工程实践2"
+    },
+    {
+      "id": "EX010",
+      "question": "工程实践2有哪些值得关注的地方",
+      "expectation": "ready_own_course",
+      "status": "ready",
+      "tool": "get_score_summary",
+      "arguments": {
+        "term": "2025-T1",
+        "course_id": "I04508f5855eed45aefb204dc"
+      },
+      "message": "已匹配课程目录和本次统计范围。",
+      "ok": true,
+      "reason": "",
+      "category": "explicit_course",
+      "pattern": "explicit_review",
+      "entity": "工程实践2"
+    },
+    {
+      "id": "EX011",
+      "question": "Web技术基础的成绩",
+      "expectation": "ready_own_course",
+      "status": "ready",
+      "tool": "get_score_summary",
+      "arguments": {
+        "term": "2025-T1",
+        "course_id": "I12bc5753a0cb00411028e543"
+      },
+      "message": "已匹配课程目录和本次统计范围。",
+      "ok": true,
+      "reason": "",
+      "category": "explicit_course",
+      "pattern": "explicit_plain",
+      "entity": "Web技术基础"
+    },
+    {
+      "id": "EX012",
+      "question": "分析Web技术基础的成绩分布",
+      "expectation": "ready_own_course",
+      "status": "ready",
+      "tool": "get_score_summary",
+      "arguments": {
+        "term": "2025-T1",
+        "course_id": "I12bc5753a0cb00411028e543"
+      },
+      "message": "已匹配课程目录和本次统计范围。",
+      "ok": true,
+      "reason": "",
+      "category": "explicit_course",
+      "pattern": "explicit_analysis",
+      "entity": "Web技术基础"
+    },
+    {
+      "id": "EX013",
+      "question": "Web技术基础的平均分和及格率",
+      "expectation": "ready_own_course",
+      "status": "ready",
+      "tool": "get_score_summary",
+      "arguments": {
+        "term": "2025-T1",
+        "course_id": "I12bc5753a0cb00411028e543"
+      },
+      "message": "已匹配课程目录和本次统计范围。",
+      "ok": true,
+      "reason": "",
+      "category": "explicit_course",
+      "pattern": "explicit_mean_pass",
+      "entity": "Web技术基础"
+    },
+    {
+      "id": "EX014",
+      "question": "Web技术基础的及格率是多少",
+      "expectation": "ready_own_course",
+      "status": "ready",
+      "tool": "get_score_summary",
+      "arguments": {
+        "term": "2025-T1",
+        "course_id": "I12bc5753a0cb00411028e543"
+      },
+      "message": "已匹配课程目录和本次统计范围。",
+      "ok": true,
+      "reason": "",
+      "category": "explicit_course",
+      "pattern": "explicit_passrate",
+      "entity": "Web技术基础"
+    },
+    {
+      "id": "EX015",
+      "question": "Web技术基础有多少人不及格",
+      "expectation": "ready_own_course",
+      "status": "ready",
+      "tool": "get_score_summary",
+      "arguments": {
+        "term": "2025-T1",
+        "course_id": "I12bc5753a0cb00411028e543"
+      },
+      "message": "已匹配课程目录和本次统计范围。",
+      "ok": true,
+      "reason": "",
+      "category": "explicit_course",
+      "pattern": "explicit_fail_count",
+      "entity": "Web技术基础"
+    },
+    {
+      "id": "EX016",
+      "question": "Web技术基础有没有人不及格",
+      "expectation": "ready_own_course",
+      "status": "ready",
+      "tool": "get_score_summary",
+      "arguments": {
+        "term": "2025-T1",
+        "course_id": "I12bc5753a0cb00411028e543"
+      },
+      "message": "已匹配课程目录和本次统计范围。",
+      "ok": true,
+      "reason": "",
+      "category": "explicit_course",
+      "pattern": "explicit_anyone_fail",
+      "entity": "Web技术基础"
+    },
+    {
+      "id": "EX017",
+      "question": "Web技术基础有没有人及格",
+      "expectation": "ready_own_course",
+      "status": "ready",
+      "tool": "get_score_summary",
+      "arguments": {
+        "term": "2025-T1",
+        "course_id": "I12bc5753a0cb00411028e543"
+      },
+      "message": "已匹配课程目录和本次统计范围。",
+      "ok": true,
+      "reason": "",
+      "category": "explicit_course",
+      "pattern": "explicit_anyone_pass",
+      "entity": "Web技术基础"
+    },
+    {
+      "id": "EX018",
+      "question": "Web技术基础谁不及格",
+      "expectation": "ready_own_course_or_notice",
+      "status": "ready",
+      "tool": "get_score_summary",
+      "arguments": {
+        "term": "2025-T1",
+        "course_id": "I12bc5753a0cb00411028e543"
+      },
+      "message": "已匹配课程目录和本次统计范围。",
+      "ok": true,
+      "reason": "",
+      "category": "explicit_course",
+      "pattern": "explicit_who_fail",
+      "entity": "Web技术基础"
+    },
+    {
+      "id": "EX019",
+      "question": "Web技术基础的成绩怎么样",
+      "expectation": "ready_own_course",
+      "status": "ready",
+      "tool": "get_score_summary",
+      "arguments": {
+        "term": "2025-T1",
+        "course_id": "I12bc5753a0cb00411028e543"
+      },
+      "message": "已匹配课程目录和本次统计范围。",
+      "ok": true,
+      "reason": "",
+      "category": "explicit_course",
+      "pattern": "explicit_how",
+      "entity": "Web技术基础"
+    },
+    {
+      "id": "EX020",
+      "question": "Web技术基础有哪些值得关注的地方",
+      "expectation": "ready_own_course",
+      "status": "ready",
+      "tool": "get_score_summary",
+      "arguments": {
+        "term": "2025-T1",
+        "course_id": "I12bc5753a0cb00411028e543"
+      },
+      "message": "已匹配课程目录和本次统计范围。",
+      "ok": true,
+      "reason": "",
+      "category": "explicit_course",
+      "pattern": "explicit_review",
+      "entity": "Web技术基础"
+    },
+    {
+      "id": "EX021",
+      "question": "高等数学 (I)-1的成绩",
+      "expectation": "ready_own_course",
+      "status": "ready",
+      "tool": "get_score_summary",
+      "arguments": {
+        "term": "2025-T1",
+        "course_id": "I18af9e72424622315e2cddcc"
+      },
+      "message": "已匹配课程目录和本次统计范围。",
+      "ok": true,
+      "reason": "",
+      "category": "explicit_course",
+      "pattern": "explicit_plain",
+      "entity": "高等数学 (I)-1"
+    },
+    {
+      "id": "EX022",
+      "question": "分析高等数学 (I)-1的成绩分布",
+      "expectation": "ready_own_course",
+      "status": "ready",
+      "tool": "get_score_summary",
+      "arguments": {
+        "term": "2025-T1",
+        "course_id": "I18af9e72424622315e2cddcc"
+      },
+      "message": "已匹配课程目录和本次统计范围。",
+      "ok": true,
+      "reason": "",
+      "category": "explicit_course",
+      "pattern": "explicit_analysis",
+      "entity": "高等数学 (I)-1"
+    },
+    {
+      "id": "EX023",
+      "question": "高等数学 (I)-1的平均分和及格率",
+      "expectation": "ready_own_course",
+      "status": "ready",
+      "tool": "get_score_summary",
+      "arguments": {
+        "term": "2025-T1",
+        "course_id": "I18af9e72424622315e2cddcc"
+      },
+      "message": "已匹配课程目录和本次统计范围。",
+      "ok": true,
+      "reason": "",
+      "category": "explicit_course",
+      "pattern": "explicit_mean_pass",
+      "entity": "高等数学 (I)-1"
+    },
+    {
+      "id": "EX024",
+      "question": "高等数学 (I)-1的及格率是多少",
+      "expectation": "ready_own_course",
+      "status": "ready",
+      "tool": "get_score_summary",
+      "arguments": {
+        "term": "2025-T1",
+        "course_id": "I18af9e72424622315e2cddcc"
+      },
+      "message": "已匹配课程目录和本次统计范围。",
+      "ok": true,
+      "reason": "",
+      "category": "explicit_course",
+      "pattern": "explicit_passrate",
+      "entity": "高等数学 (I)-1"
+    },
+    {
+      "id": "EX025",
+      "question": "高等数学 (I)-1有多少人不及格",
+      "expectation": "ready_own_course",
+      "status": "ready",
+      "tool": "get_score_summary",
+      "arguments": {
+        "term": "2025-T1",
+        "course_id": "I18af9e72424622315e2cddcc"
+      },
+      "message": "已匹配课程目录和本次统计范围。",
+      "ok": true,
+      "reason": "",
+      "category": "explicit_course",
+      "pattern": "explicit_fail_count",
+      "entity": "高等数学 (I)-1"
+    },
+    {
+      "id": "EX026",
+      "question": "高等数学 (I)-1有没有人不及格",
+      "expectation": "ready_own_course",
+      "status": "ready",
+      "tool": "get_score_summary",
+      "arguments": {
+        "term": "2025-T1",
+        "course_id": "I18af9e72424622315e2cddcc"
+      },
+      "message": "已匹配课程目录和本次统计范围。",
+      "ok": true,
+      "reason": "",
+      "category": "explicit_course",
+      "pattern": "explicit_anyone_fail",
+      "entity": "高等数学 (I)-1"
+    },
+    {
+      "id": "EX027",
+      "question": "高等数学 (I)-1有没有人及格",
+      "expectation": "ready_own_course",
+      "status": "ready",
+      "tool": "get_score_summary",
+      "arguments": {
+        "term": "2025-T1",
+        "course_id": "I18af9e72424622315e2cddcc"
+      },
+      "message": "已匹配课程目录和本次统计范围。",
+      "ok": true,
+      "reason": "",
+      "category": "explicit_course",
+      "pattern": "explicit_anyone_pass",
+      "entity": "高等数学 (I)-1"
+    },
+    {
+      "id": "EX028",
+      "question": "高等数学 (I)-1谁不及格",
+      "expectation": "ready_own_course_or_notice",
+      "status": "ready",
+      "tool": "get_score_summary",
+      "arguments": {
+        "term": "2025-T1",
+        "course_id": "I18af9e72424622315e2cddcc"
+      },
+      "message": "已匹配课程目录和本次统计范围。",
+      "ok": true,
+      "reason": "",
+      "category": "explicit_course",
+      "pattern": "explicit_who_fail",
+      "entity": "高等数学 (I)-1"
+    },
+    {
+      "id": "EX029",
+      "question": "高等数学 (I)-1的成绩怎么样",
+      "expectation": "ready_own_course",
+      "status": "ready",
+      "tool": "get_score_summary",
+      "arguments": {
+        "term": "2025-T1",
+        "course_id": "I18af9e72424622315e2cddcc"
+      },
+      "message": "已匹配课程目录和本次统计范围。",
+      "ok": true,
+      "reason": "",
+      "category": "explicit_course",
+      "pattern": "explicit_how",
+      "entity": "高等数学 (I)-1"
+    },
+    {
+      "id": "EX030",
+      "question": "高等数学 (I)-1有哪些值得关注的地方",
+      "expectation": "ready_own_course",
+      "status": "ready",
+      "tool": "get_score_summary",
+      "arguments": {
+        "term": "2025-T1",
+        "course_id": "I18af9e72424622315e2cddcc"
+      },
+      "message": "已匹配课程目录和本次统计范围。",
+      "ok": true,
+      "reason": "",
+      "category": "explicit_course",
+      "pattern": "explicit_review",
+      "entity": "高等数学 (I)-1"
+    },
+    {
+      "id": "EX031",
+      "question": "大学英语 (II)的成绩",
+      "expectation": "ready_own_course",
+      "status": "ready",
+      "tool": "get_score_summary",
+      "arguments": {
+        "term": "2025-T1",
+        "course_id": "I570310f50adb7d4dd818434c"
+      },
+      "message": "已匹配课程目录和本次统计范围。",
+      "ok": true,
+      "reason": "",
+      "category": "explicit_course",
+      "pattern": "explicit_plain",
+      "entity": "大学英语 (II)"
+    },
+    {
+      "id": "EX032",
+      "question": "分析大学英语 (II)的成绩分布",
+      "expectation": "ready_own_course",
+      "status": "ready",
+      "tool": "get_score_summary",
+      "arguments": {
+        "term": "2025-T1",
+        "course_id": "I570310f50adb7d4dd818434c"
+      },
+      "message": "已匹配课程目录和本次统计范围。",
+      "ok": true,
+      "reason": "",
+      "category": "explicit_course",
+      "pattern": "explicit_analysis",
+      "entity": "大学英语 (II)"
+    },
+    {
+      "id": "EX033",
+      "question": "大学英语 (II)的平均分和及格率",
+      "expectation": "ready_own_course",
+      "status": "ready",
+      "tool": "get_score_summary",
+      "arguments": {
+        "term": "2025-T1",
+        "course_id": "I570310f50adb7d4dd818434c"
+      },
+      "message": "已匹配课程目录和本次统计范围。",
+      "ok": true,
+      "reason": "",
+      "category": "explicit_course",
+      "pattern": "explicit_mean_pass",
+      "entity": "大学英语 (II)"
+    },
+    {
+      "id": "EX034",
+      "question": "大学英语 (II)的及格率是多少",
+      "expectation": "ready_own_course",
+      "status": "ready",
+      "tool": "get_score_summary",
+      "arguments": {
+        "term": "2025-T1",
+        "course_id": "I570310f50adb7d4dd818434c"
+      },
+      "message": "已匹配课程目录和本次统计范围。",
+      "ok": true,
+      "reason": "",
+      "category": "explicit_course",
+      "pattern": "explicit_passrate",
+      "entity": "大学英语 (II)"
+    },
+    {
+      "id": "EX035",
+      "question": "大学英语 (II)有多少人不及格",
+      "expectation": "ready_own_course",
+      "status": "ready",
+      "tool": "get_score_summary",
+      "arguments": {
+        "term": "2025-T1",
+        "course_id": "I570310f50adb7d4dd818434c"
+      },
+      "message": "已匹配课程目录和本次统计范围。",
+      "ok": true,
+      "reason": "",
+      "category": "explicit_course",
+      "pattern": "explicit_fail_count",
+      "entity": "大学英语 (II)"
+    },
+    {
+      "id": "EX036",
+      "question": "大学英语 (II)有没有人不及格",
+      "expectation": "ready_own_course",
+      "status": "ready",
+      "tool": "get_score_summary",
+      "arguments": {
+        "term": "2025-T1",
+        "course_id": "I570310f50adb7d4dd818434c"
+      },
+      "message": "已匹配课程目录和本次统计范围。",
+      "ok": true,
+      "reason": "",
+      "category": "explicit_course",
+      "pattern": "explicit_anyone_fail",
+      "entity": "大学英语 (II)"
+    },
+    {
+      "id": "EX037",
+      "question": "大学英语 (II)有没有人及格",
+      "expectation": "ready_own_course",
+      "status": "ready",
+      "tool": "get_score_summary",
+      "arguments": {
+        "term": "2025-T1",
+        "course_id": "I570310f50adb7d4dd818434c"
+      },
+      "message": "已匹配课程目录和本次统计范围。",
+      "ok": true,
+      "reason": "",
+      "category": "explicit_course",
+      "pattern": "explicit_anyone_pass",
+      "entity": "大学英语 (II)"
+    },
+    {
+      "id": "EX038",
+      "question": "大学英语 (II)谁不及格",
+      "expectation": "ready_own_course_or_notice",
+      "status": "ready",
+      "tool": "get_score_summary",
+      "arguments": {
+        "term": "2025-T1",
+        "course_id": "I570310f50adb7d4dd818434c"
+      },
+      "message": "已匹配课程目录和本次统计范围。",
+      "ok": true,
+      "reason": "",
+      "category": "explicit_course",
+      "pattern": "explicit_who_fail",
+      "entity": "大学英语 (II)"
+    },
+    {
+      "id": "EX039",
+      "question": "大学英语 (II)的成绩怎么样",
+      "expectation": "ready_own_course",
+      "status": "ready",
+      "tool": "get_score_summary",
+      "arguments": {
+        "term": "2025-T1",
+        "course_id": "I570310f50adb7d4dd818434c"
+      },
+      "message": "已匹配课程目录和本次统计范围。",
+      "ok": true,
+      "reason": "",
+      "category": "explicit_course",
+      "pattern": "explicit_how",
+      "entity": "大学英语 (II)"
+    },
+    {
+      "id": "EX040",
+      "question": "大学英语 (II)有哪些值得关注的地方",
+      "expectation": "ready_own_course",
+      "status": "ready",
+      "tool": "get_score_summary",
+      "arguments": {
+        "term": "2025-T1",
+        "course_id": "I570310f50adb7d4dd818434c"
+      },
+      "message": "已匹配课程目录和本次统计范围。",
+      "ok": true,
+      "reason": "",
+      "category": "explicit_course",
+      "pattern": "explicit_review",
+      "entity": "大学英语 (II)"
+    },
+    {
+      "id": "EX041",
+      "question": "程序设计基础 Python的成绩",
+      "expectation": "ready_own_course",
+      "status": "ready",
+      "tool": "get_score_summary",
+      "arguments": {
+        "term": "2025-T1",
+        "course_id": "Id284c5edd45522ff74efe5c1"
+      },
+      "message": "已匹配课程目录和本次统计范围。",
+      "ok": true,
+      "reason": "",
+      "category": "explicit_course",
+      "pattern": "explicit_plain",
+      "entity": "程序设计基础 Python"
+    },
+    {
+      "id": "EX042",
+      "question": "分析程序设计基础 Python的成绩分布",
+      "expectation": "ready_own_course",
+      "status": "ready",
+      "tool": "get_score_summary",
+      "arguments": {
+        "term": "2025-T1",
+        "course_id": "Id284c5edd45522ff74efe5c1"
+      },
+      "message": "已匹配课程目录和本次统计范围。",
+      "ok": true,
+      "reason": "",
+      "category": "explicit_course",
+      "pattern": "explicit_analysis",
+      "entity": "程序设计基础 Python"
+    },
+    {
+      "id": "EX043",
+      "question": "程序设计基础 Python的平均分和及格率",
+      "expectation": "ready_own_course",
+      "status": "ready",
+      "tool": "get_score_summary",
+      "arguments": {
+        "term": "2025-T1",
+        "course_id": "Id284c5edd45522ff74efe5c1"
+      },
+      "message": "已匹配课程目录和本次统计范围。",
+      "ok": true,
+      "reason": "",
+      "category": "explicit_course",
+      "pattern": "explicit_mean_pass",
+      "entity": "程序设计基础 Python"
+    },
+    {
+      "id": "EX044",
+      "question": "程序设计基础 Python的及格率是多少",
+      "expectation": "ready_own_course",
+      "status": "ready",
+      "tool": "get_score_summary",
+      "arguments": {
+        "term": "2025-T1",
+        "course_id": "Id284c5edd45522ff74efe5c1"
+      },
+      "message": "已匹配课程目录和本次统计范围。",
+      "ok": true,
+      "reason": "",
+      "category": "explicit_course",
+      "pattern": "explicit_passrate",
+      "entity": "程序设计基础 Python"
+    },
+    {
+      "id": "EX045",
+      "question": "程序设计基础 Python有多少人不及格",
+      "expectation": "ready_own_course",
+      "status": "ready",
+      "tool": "get_score_summary",
+      "arguments": {
+        "term": "2025-T1",
+        "course_id": "Id284c5edd45522ff74efe5c1"
+      },
+      "message": "已匹配课程目录和本次统计范围。",
+      "ok": true,
+      "reason": "",
+      "category": "explicit_course",
+      "pattern": "explicit_fail_count",
+      "entity": "程序设计基础 Python"
+    },
+    {
+      "id": "EX046",
+      "question": "程序设计基础 Python有没有人不及格",
+      "expectation": "ready_own_course",
+      "status": "ready",
+      "tool": "get_score_summary",
+      "arguments": {
+        "term": "2025-T1",
+        "course_id": "Id284c5edd45522ff74efe5c1"
+      },
+      "message": "已匹配课程目录和本次统计范围。",
+      "ok": true,
+      "reason": "",
+      "category": "explicit_course",
+      "pattern": "explicit_anyone_fail",
+      "entity": "程序设计基础 Python"
+    },
+    {
+      "id": "EX047",
+      "question": "程序设计基础 Python有没有人及格",
+      "expectation": "ready_own_course",
+      "status": "ready",
+      "tool": "get_score_summary",
+      "arguments": {
+        "term": "2025-T1",
+        "course_id": "Id284c5edd45522ff74efe5c1"
+      },
+      "message": "已匹配课程目录和本次统计范围。",
+      "ok": true,
+      "reason": "",
+      "category": "explicit_course",
+      "pattern": "explicit_anyone_pass",
+      "entity": "程序设计基础 Python"
+    },
+    {
+      "id": "EX048",
+      "question": "程序设计基础 Python谁不及格",
+      "expectation": "ready_own_course_or_notice",
+      "status": "ready",
+      "tool": "get_score_summary",
+      "arguments": {
+        "term": "2025-T1",
+        "course_id": "Id284c5edd45522ff74efe5c1"
+      },
+      "message": "已匹配课程目录和本次统计范围。",
+      "ok": true,
+      "reason": "",
+      "category": "explicit_course",
+      "pattern": "explicit_who_fail",
+      "entity": "程序设计基础 Python"
+    },
+    {
+      "id": "EX049",
+      "question": "程序设计基础 Python的成绩怎么样",
+      "expectation": "ready_own_course",
+      "status": "ready",
+      "tool": "get_score_summary",
+      "arguments": {
+        "term": "2025-T1",
+        "course_id": "Id284c5edd45522ff74efe5c1"
+      },
+      "message": "已匹配课程目录和本次统计范围。",
+      "ok": true,
+      "reason": "",
+      "category": "explicit_course",
+      "pattern": "explicit_how",
+      "entity": "程序设计基础 Python"
+    },
+    {
+      "id": "EX050",
+      "question": "程序设计基础 Python有哪些值得关注的地方",
+      "expectation": "ready_own_course",
+      "status": "ready",
+      "tool": "get_score_summary",
+      "arguments": {
+        "term": "2025-T1",
+        "course_id": "Id284c5edd45522ff74efe5c1"
+      },
+      "message": "已匹配课程目录和本次统计范围。",
+      "ok": true,
+      "reason": "",
+      "category": "explicit_course",
+      "pattern": "explicit_review",
+      "entity": "程序设计基础 Python"
+    },
+    {
+      "id": "EX051",
+      "question": "体育 III的成绩",
+      "expectation": "ready_own_course",
+      "status": "ready",
+      "tool": "get_score_summary",
+      "arguments": {
+        "term": "2025-T1",
+        "course_id": "Id935981463527088a0808e1a"
+      },
+      "message": "已匹配课程目录和本次统计范围。",
+      "ok": true,
+      "reason": "",
+      "category": "explicit_course",
+      "pattern": "explicit_plain",
+      "entity": "体育 III"
+    },
+    {
+      "id": "EX052",
+      "question": "分析体育 III的成绩分布",
+      "expectation": "ready_own_course",
+      "status": "ready",
+      "tool": "get_score_summary",
+      "arguments": {
+        "term": "2025-T1",
+        "course_id": "Id935981463527088a0808e1a"
+      },
+      "message": "已匹配课程目录和本次统计范围。",
+      "ok": true,
+      "reason": "",
+      "category": "explicit_course",
+      "pattern": "explicit_analysis",
+      "entity": "体育 III"
+    },
+    {
+      "id": "EX053",
+      "question": "体育 III的平均分和及格率",
+      "expectation": "ready_own_course",
+      "status": "ready",
+      "tool": "get_score_summary",
+      "arguments": {
+        "term": "2025-T1",
+        "course_id": "Id935981463527088a0808e1a"
+      },
+      "message": "已匹配课程目录和本次统计范围。",
+      "ok": true,
+      "reason": "",
+      "category": "explicit_course",
+      "pattern": "explicit_mean_pass",
+      "entity": "体育 III"
+    },
+    {
+      "id": "EX054",
+      "question": "体育 III的及格率是多少",
+      "expectation": "ready_own_course",
+      "status": "ready",
+      "tool": "get_score_summary",
+      "arguments": {
+        "term": "2025-T1",
+        "course_id": "Id935981463527088a0808e1a"
+      },
+      "message": "已匹配课程目录和本次统计范围。",
+      "ok": true,
+      "reason": "",
+      "category": "explicit_course",
+      "pattern": "explicit_passrate",
+      "entity": "体育 III"
+    },
+    {
+      "id": "EX055",
+      "question": "体育 III有多少人不及格",
+      "expectation": "ready_own_course",
+      "status": "ready",
+      "tool": "get_score_summary",
+      "arguments": {
+        "term": "2025-T1",
+        "course_id": "Id935981463527088a0808e1a"
+      },
+      "message": "已匹配课程目录和本次统计范围。",
+      "ok": true,
+      "reason": "",
+      "category": "explicit_course",
+      "pattern": "explicit_fail_count",
+      "entity": "体育 III"
+    },
+    {
+      "id": "EX056",
+      "question": "体育 III有没有人不及格",
+      "expectation": "ready_own_course",
+      "status": "ready",
+      "tool": "get_score_summary",
+      "arguments": {
+        "term": "2025-T1",
+        "course_id": "Id935981463527088a0808e1a"
+      },
+      "message": "已匹配课程目录和本次统计范围。",
+      "ok": true,
+      "reason": "",
+      "category": "explicit_course",
+      "pattern": "explicit_anyone_fail",
+      "entity": "体育 III"
+    },
+    {
+      "id": "EX057",
+      "question": "体育 III有没有人及格",
+      "expectation": "ready_own_course",
+      "status": "ready",
+      "tool": "get_score_summary",
+      "arguments": {
+        "term": "2025-T1",
+        "course_id": "Id935981463527088a0808e1a"
+      },
+      "message": "已匹配课程目录和本次统计范围。",
+      "ok": true,
+      "reason": "",
+      "category": "explicit_course",
+      "pattern": "explicit_anyone_pass",
+      "entity": "体育 III"
+    },
+    {
+      "id": "EX058",
+      "question": "体育 III谁不及格",
+      "expectation": "ready_own_course_or_notice",
+      "status": "ready",
+      "tool": "get_score_summary",
+      "arguments": {
+        "term": "2025-T1",
+        "course_id": "Id935981463527088a0808e1a"
+      },
+      "message": "已匹配课程目录和本次统计范围。",
+      "ok": true,
+      "reason": "",
+      "category": "explicit_course",
+      "pattern": "explicit_who_fail",
+      "entity": "体育 III"
+    },
+    {
+      "id": "EX059",
+      "question": "体育 III的成绩怎么样",
+      "expectation": "ready_own_course",
+      "status": "ready",
+      "tool": "get_score_summary",
+      "arguments": {
+        "term": "2025-T1",
+        "course_id": "Id935981463527088a0808e1a"
+      },
+      "message": "已匹配课程目录和本次统计范围。",
+      "ok": true,
+      "reason": "",
+      "category": "explicit_course",
+      "pattern": "explicit_how",
+      "entity": "体育 III"
+    },
+    {
+      "id": "EX060",
+      "question": "体育 III有哪些值得关注的地方",
+      "expectation": "ready_own_course",
+      "status": "ready",
+      "tool": "get_score_summary",
+      "arguments": {
+        "term": "2025-T1",
+        "course_id": "Id935981463527088a0808e1a"
+      },
+      "message": "已匹配课程目录和本次统计范围。",
+      "ok": true,
+      "reason": "",
+      "category": "explicit_course",
+      "pattern": "explicit_review",
+      "entity": "体育 III"
+    },
+    {
+      "id": "AM061",
+      "question": "分析工程课的成绩。",
+      "expectation": "clarify_or_ready_same_scope",
+      "status": "needs_clarification",
+      "tool": null,
+      "arguments": {},
+      "message": "这个课程说法还不能确定具体课程。请确认目录中的课程全名后再分析。",
+      "ok": true,
+      "reason": "",
+      "category": "ambiguous_family",
+      "pattern": "family_probe",
+      "entity": "工程实践2"
+    },
+    {
+      "id": "AM062",
+      "question": "分析高等课的成绩。",
+      "expectation": "clarify_or_ready_same_scope",
+      "status": "needs_clarification",
+      "tool": null,
+      "arguments": {},
+      "message": "这个课程说法还不能确定具体课程。请确认目录中的课程全名后再分析。",
+      "ok": true,
+      "reason": "",
+      "category": "ambiguous_family",
+      "pattern": "family_probe",
+      "entity": "高等数学 (I)-1"
+    },
+    {
+      "id": "AM063",
+      "question": "分析大学课的成绩。",
+      "expectation": "clarify_or_ready_same_scope",
+      "status": "needs_clarification",
+      "tool": null,
+      "arguments": {},
+      "message": "这个课程说法还不能确定具体课程。请确认目录中的课程全名后再分析。",
+      "ok": true,
+      "reason": "",
+      "category": "ambiguous_family",
+      "pattern": "family_probe",
+      "entity": "大学英语 (II)"
+    },
+    {
+      "id": "AM064",
+      "question": "分析程序课的成绩。",
+      "expectation": "clarify_or_ready_same_scope",
+      "status": "needs_clarification",
+      "tool": null,
+      "arguments": {},
+      "message": "这个课程说法还不能确定具体课程。请确认目录中的课程全名后再分析。",
+      "ok": true,
+      "reason": "",
+      "category": "ambiguous_family",
+      "pattern": "family_probe",
+      "entity": "程序设计基础 Python"
+    },
+    {
+      "id": "AM065",
+      "question": "分析体育课的成绩。",
+      "expectation": "clarify_or_ready_same_scope",
+      "status": "needs_clarification",
+      "tool": null,
+      "arguments": {},
+      "message": "这个课程说法还不能确定具体课程。请确认目录中的课程全名后再分析。",
+      "ok": true,
+      "reason": "",
+      "category": "ambiguous_family",
+      "pattern": "family_probe",
+      "entity": "体育 III"
+    },
+    {
+      "id": "CA066",
+      "question": "你知道针对工程实践2的成绩分析嘛",
+      "expectation": "clarify_no_tool",
+      "status": "needs_clarification",
+      "tool": null,
+      "arguments": {},
+      "message": "可以进行数据集概览、单课程成绩统计、同课程班级比较，以及课程和班级目录查询。请先选择目录中的具体课程并说明想看均分、及格率或成绩分布；本次仅介绍能力，尚未执行统",
+      "ok": true,
+      "reason": "",
+      "category": "capability",
+      "pattern": "capability_generic",
+      "entity": "工程实践2"
+    },
+    {
+      "id": "CA067",
+      "question": "你能分析工程实践2的成绩吗",
+      "expectation": "clarify_no_tool",
+      "status": "needs_clarification",
+      "tool": null,
+      "arguments": {},
+      "message": "可以进行数据集概览、单课程成绩统计、同课程班级比较，以及课程和班级目录查询。请先选择目录中的具体课程并说明想看均分、及格率或成绩分布；本次仅介绍能力，尚未执行统",
+      "ok": true,
+      "reason": "",
+      "category": "capability",
+      "pattern": "capability_can_you",
+      "entity": "工程实践2"
+    },
+    {
+      "id": "CA068",
+      "question": "你知道针对Web技术基础的成绩分析嘛",
+      "expectation": "clarify_no_tool",
+      "status": "needs_clarification",
+      "tool": null,
+      "arguments": {},
+      "message": "可以进行数据集概览、单课程成绩统计、同课程班级比较，以及课程和班级目录查询。请先选择目录中的具体课程并说明想看均分、及格率或成绩分布；本次仅介绍能力，尚未执行统",
+      "ok": true,
+      "reason": "",
+      "category": "capability",
+      "pattern": "capability_generic",
+      "entity": "Web技术基础"
+    },
+    {
+      "id": "CA069",
+      "question": "你能分析Web技术基础的成绩吗",
+      "expectation": "clarify_no_tool",
+      "status": "needs_clarification",
+      "tool": null,
+      "arguments": {},
+      "message": "可以进行数据集概览、单课程成绩统计、同课程班级比较，以及课程和班级目录查询。请先选择目录中的具体课程并说明想看均分、及格率或成绩分布；本次仅介绍能力，尚未执行统",
+      "ok": true,
+      "reason": "",
+      "category": "capability",
+      "pattern": "capability_can_you",
+      "entity": "Web技术基础"
+    },
+    {
+      "id": "CA070",
+      "question": "你可以做什么分析",
+      "expectation": "clarify_no_tool",
+      "status": "unsupported",
+      "tool": null,
+      "arguments": {},
+      "message": "目前支持数据概览、课程成绩统计、同课程班级比较、课程和班级目录查询。",
+      "ok": true,
+      "reason": "",
+      "category": "capability",
+      "pattern": "capability_what",
+      "entity": null
+    },
+    {
+      "id": "CL071",
+      "question": "2024软工1班的工程实践2成绩",
+      "expectation": "ready_own_course",
+      "status": "ready",
+      "tool": "get_score_summary",
+      "arguments": {
+        "term": "2025-T1",
+        "course_id": "I04508f5855eed45aefb204dc",
+        "class_id": "C001",
+        "grade_level": 2024,
+        "major": "software_engineering"
+      },
+      "message": "已匹配课程目录和本次统计范围。",
+      "ok": true,
+      "reason": "",
+      "category": "class_course",
+      "pattern": "class_course",
+      "entity": "2024软工1班+工程实践2"
+    },
+    {
+      "id": "CL072",
+      "question": "2024软工1班的工程实践2有没有人不及格",
+      "expectation": "ready_own_course",
+      "status": "ready",
+      "tool": "get_score_summary",
+      "arguments": {
+        "term": "2025-T1",
+        "course_id": "I04508f5855eed45aefb204dc",
+        "class_id": "C001",
+        "grade_level": 2024,
+        "major": "software_engineering"
+      },
+      "message": "已匹配课程目录和本次统计范围。",
+      "ok": true,
+      "reason": "",
+      "category": "class_course",
+      "pattern": "class_fail",
+      "entity": "2024软工1班+工程实践2"
+    },
+    {
+      "id": "BD073",
+      "question": "比较I04508f5855eed45aefb204dc和I04508f5855eed45aefb204dc的成绩",
+      "expectation": "same_resolution_both_spellings",
+      "status": "needs_clarification",
+      "tool": null,
+      "arguments": {},
+      "message": "班级比较需要一门明确课程和至少两个明确班级，请补充或从目录选择。",
+      "category": "id_boundary",
+      "pattern": "id_adjacent",
+      "entity": "I04508f5855eed45aefb204dc"
+    },
+    {
+      "id": "BD074",
+      "question": "比较 I04508f5855eed45aefb204dc 和 I04508f5855eed45aefb204dc 的成绩",
+      "expectation": "same_resolution_both_spellings",
+      "status": "needs_clarification",
+      "tool": null,
+      "arguments": {},
+      "message": "班级比较需要一门明确课程和至少两个明确班级，请补充或从目录选择。",
+      "category": "id_boundary",
+      "pattern": "id_spaced",
+      "entity": "I04508f5855eed45aefb204dc"
+    },
+    {
+      "id": "BD075",
+      "question": "比较I12bc5753a0cb00411028e543和I12bc5753a0cb00411028e543的成绩",
+      "expectation": "same_resolution_both_spellings",
+      "status": "needs_clarification",
+      "tool": null,
+      "arguments": {},
+      "message": "班级比较需要一门明确课程和至少两个明确班级，请补充或从目录选择。",
+      "category": "id_boundary",
+      "pattern": "id_adjacent",
+      "entity": "I12bc5753a0cb00411028e543"
+    },
+    {
+      "id": "BD076",
+      "question": "比较 I12bc5753a0cb00411028e543 和 I12bc5753a0cb00411028e543 的成绩",
+      "expectation": "same_resolution_both_spellings",
+      "status": "needs_clarification",
+      "tool": null,
+      "arguments": {},
+      "message": "班级比较需要一门明确课程和至少两个明确班级，请补充或从目录选择。",
+      "category": "id_boundary",
+      "pattern": "id_spaced",
+      "entity": "I12bc5753a0cb00411028e543"
+    }
+  ]
+}

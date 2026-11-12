@@ -30,6 +30,16 @@ _OVERVIEW = re.compile(r"概览|概况|多少(?:名|个|门|条)?(?:学生|班�
 _CAPABILITY = re.compile(r"你(?:知道|了解)|能否|能不能|可不可以|是否(?:能|可以|支持)|(?:你|系统)?(?:能|会|可以|支持).{0,40}(?:吗|嘛|么|[?？])\s*$|支持(?:哪些|什么)(?:分析|功能)")
 _WHOLE_SCOPE = re.compile(r"全体|全部|整体|总体|所有|全数据|当前数据集|整个数据集|所选范围|当前范围")
 _ENTIRE_DATASET = re.compile(r"整个数据集|全数据集|全部数据集|所有数据集|全数据范围")
+# Interrogative and auxiliary words that ask a question; they are never a
+# course subject. Stripped only from the residual text AFTER known catalog
+# names have been removed, so they cannot corrupt a real course name.
+_QUESTION_WORDS = re.compile(
+    r"有没有人|有多少人|有没有|是否有|多少人|几个人|有谁|是不是|怎么样|怎样|"
+    r"哪些|什么|谁|怎么|如何|多少|是否|能否|能不能|可不可以|吗|呢|吧|啊|嘛|么|几")
+# Review-oriented phrasing ("值得关注的地方", "表现如何") asks for the same
+# deterministic score summary as metric words; it must count as an analysis
+# request instead of falling through to unsupported.
+_REVIEW = re.compile(r"值得关注|值得注意|亮点|异常|特点|强项|薄弱|表现|情况|怎么样|怎样|如何")
 
 
 class ResolvedIntent(Record):
@@ -86,6 +96,7 @@ def _unresolved_course_reference(question, matching_names):
     text = _WHOLE_SCOPE.sub("", text)
     text = re.sub(r"^(?:(?:请问|请|麻烦|帮我|给我|我想|想要|希望|看看|了解|知道)\s*)+", "", text)
     text = re.sub(r"(?:这门课|该门课|这门|该课|请|帮我|给我|查看|看看|查询|分析|统计|比较|对比|针对|关于|一下|本学期|这学期|同一学期|学期|数据集|数据|成绩单|范围|班级|班|年级|专业|学生)", "", text)
+    text = _QUESTION_WORDS.sub("", text)
     match = re.search(r"平均|均分|成绩|分数|及格|不及格|分布", text)
     if not match:
         return ""
@@ -175,7 +186,7 @@ def resolve_question(question: str, catalog: ReportingCatalog, session_scope: Se
 
     compare = bool(_COMPARISON.search(q))
     catalog_request = bool(_CATALOG.search(q)) and not compare
-    metric_request = bool(_METRICS.search(q))
+    metric_request = bool(_METRICS.search(q)) or bool(_REVIEW.search(q))
     overview_request = bool(_OVERVIEW.search(q)) and not compare and not metric_request and not catalog_request
     if not any((compare, catalog_request, metric_request, overview_request)):
         return _result(catalog, "unsupported", "目前支持数据概览、课程成绩统计、同课程班级比较、课程和班级目录查询。")

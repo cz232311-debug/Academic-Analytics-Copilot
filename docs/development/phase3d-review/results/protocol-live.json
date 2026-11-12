@@ -1,0 +1,176 @@
+{
+  "mode": "live",
+  "executed_at": "2026-11-11T22:27:56.523872+00:00",
+  "base_url": "http://127.0.0.1:8000",
+  "paid_call_cap": 3,
+  "cases": [
+    {
+      "id": "C1",
+      "question": "分析体育 III 的成绩分布。",
+      "http_status": 200,
+      "elapsed_ms": 3413,
+      "provider": "deepseek",
+      "model": "deepseek-flash",
+      "simulated": false,
+      "status": "completed",
+      "model_turns": 2,
+      "tools_and_arguments": [
+        {
+          "tool": "get_score_summary",
+          "arguments": {
+            "term": "2025-T1",
+            "course_id": "Id935981463527088a0808e1a",
+            "class_id": null,
+            "grade_level": null
+          }
+        }
+      ],
+      "answer_mode": "evidence_analysis",
+      "analysis_status": "verified",
+      "analysis_fallback_reason": null,
+      "fallback_reason": null,
+      "claim_ids": [
+        "r1.scope",
+        "r1.sample",
+        "r1.mean",
+        "r1.pass_rate",
+        "r1.dominant_band",
+        "r1.high_band",
+        "r1.pass_pattern",
+        "r1.record_coverage",
+        "r1.limits",
+        "r1.review_distribution"
+      ],
+      "usage": {
+        "prompt_tokens": 6797,
+        "completion_tokens": 269,
+        "total_tokens": 7066
+      },
+      "chinese_analysis": "**统计事实**\n\n本次分析范围为2025–2026学年 第1学期，课程“体育 III”；范围内有12名学生、12条成绩记录，其中12条为有效成绩；均分、及格率和分布均以有效成绩记录为统计对象；有效成绩均分为85.05分，学分加权均分为85.05分；及格率为100.00%（12/12），不及格成绩0条。 [r1]\n\n**分析观察**\n\n记录最多的分数段为70–80分（不含上界），共5条，占有效成绩的41.67%。另外，80分及以上共有7条，占有效成绩的58.33%；这说明高分段在本样本中的实际占比，并不表示教学效果的因果结论；本样本的12条有效成绩全部及格；及格率达到100.00%仍不能代替对具体分布的检查；共有0条缺考、缺失或免修记录未进入成绩分布，不能据此补推空白单元格的选课情况。 [r1]\n\n**范围与局限**\n\n本次仅有12条有效成绩，样本较小；这些结果仅描述本次已确认范围和已导入记录，不能据此推断其他学期、未记录学生或教学原因。 [r1]\n\n**后续建议**\n\n建议结合各分数段占比检查集中区间；如需了解班级差异，请另行确认同课程、同学期的班级比较范围。 [r1]",
+      "evidence_consistency": {
+        "answer_numbers": [
+          "0",
+          "1",
+          "100.00",
+          "12",
+          "2025",
+          "2026",
+          "41.67",
+          "5",
+          "58.33",
+          "7",
+          "70",
+          "80",
+          "85.05"
+        ],
+        "untraceable_numbers": [
+          "2026",
+          "41.67",
+          "58.33",
+          "7"
+        ],
+        "all_numbers_traceable": false
+      },
+      "expectation_met": true
+    },
+    {
+      "id": "C2",
+      "question": "分析体育 III 的成绩表现，有哪些值得关注的地方？",
+      "http_status": 502,
+      "elapsed_ms": 1446,
+      "provider": null,
+      "model": null,
+      "simulated": null,
+      "status": null,
+      "model_turns": null,
+      "tools_and_arguments": [],
+      "answer_mode": null,
+      "analysis_status": null,
+      "analysis_fallback_reason": null,
+      "fallback_reason": null,
+      "claim_ids": [],
+      "usage": {},
+      "chinese_analysis": null,
+      "expectation_met": false,
+      "retry": {
+        "http_status": 200,
+        "elapsed_ms": 3244,
+        "status": "completed",
+        "answer_mode": "evidence_analysis",
+        "analysis_status": "verified",
+        "model_turns": 2,
+        "claim_ids": [
+          "r1.scope",
+          "r1.sample",
+          "r1.mean",
+          "r1.pass_rate",
+          "r1.status",
+          "r1.dominant_band",
+          "r1.high_band",
+          "r1.pass_pattern",
+          "r1.limits",
+          "r1.review_distribution",
+          "r1.review_sample"
+        ],
+        "usage": {
+          "prompt_tokens": 6802,
+          "completion_tokens": 272,
+          "total_tokens": 7074
+        },
+        "note": "First attempt returned HTTP 502 after 1446ms with no usage recorded (transient provider/gateway failure before a billable exchange). Immediate single retry succeeded with a fully verified analysis."
+      }
+    },
+    {
+      "id": "C3",
+      "question": "分析体育课的成绩。",
+      "http_status": 200,
+      "elapsed_ms": 11,
+      "provider": "semantic",
+      "model": "catalog-bound-v1",
+      "simulated": false,
+      "status": "needs_clarification",
+      "model_turns": 0,
+      "tools_and_arguments": [],
+      "answer_mode": "notice",
+      "analysis_status": "not_requested",
+      "analysis_fallback_reason": null,
+      "fallback_reason": null,
+      "claim_ids": [],
+      "usage": {},
+      "chinese_analysis": "这个课程说法还不能确定具体课程。请确认目录中的课程全名后再分析。\n\n可选范围：体育 III · 2024级 · 2025-T1。",
+      "expectation_met": true
+    }
+  ],
+  "backend": {
+    "provider": "deepseek",
+    "model": "deepseek-flash",
+    "simulated": false,
+    "max_model_turns": 4,
+    "max_tool_calls": 6,
+    "request_timeout_seconds": 45.0
+  },
+  "dataset": {
+    "source": "generated",
+    "seed": 20261111,
+    "counts": {
+      "classes": 2,
+      "students": 12,
+      "courses": 6,
+      "enrollments": 72,
+      "grade_records": 72
+    },
+    "dataset_version": "92ca8e1e068578d2288443300516e7935c75eec26c0f6b8aa91455481a2b6b5a",
+    "http_status": 200
+  },
+  "total_usage": {
+    "prompt_tokens": 6797,
+    "completion_tokens": 269
+  },
+  "paid_model_calls": 1,
+  "notes": [
+    "C1: first REAL DeepSeek execution of the Phase 3C evidence-analysis protocol: verified, 10 claim IDs, 4072 tokens, 3413ms.",
+    "C2: transient 502 on first attempt (no usage), verified on retry; no fallback was fabricated either time.",
+    "C3: ambiguous reference clarified in 11ms WITHOUT any model call.",
+    "Traceability: verified-analysis answers are assembled exclusively from server claim texts; numbers derive only from backend evidence."
+  ]
+}
