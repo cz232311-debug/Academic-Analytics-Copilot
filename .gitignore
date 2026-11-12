@@ -15,3 +15,9 @@ dist/
 *.xlsx
 *.xls
 .import-history/
+
+# WorkBuddy agent workspace data (local-only, not for publication)
+.workbuddy/
+
+# Binary review bundles; the same content lives in the review folders
+docs/development/*.zip
